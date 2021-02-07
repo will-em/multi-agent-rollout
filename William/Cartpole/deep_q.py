@@ -10,9 +10,8 @@ input_shape = [4]  # env.observation_space.shape
 n_outputs = 2  # env.action_space.n
 
 model = keras.models.Sequential([
-    keras.layers.Flatten(input_shape=input_shape)
-    keras.layers.Dense(64, activation="elu"),
-    keras.layers.Dense(64, activation="elu"),
+    keras.layers.Dense(32, activation="elu", input_shape=input_shape),
+    keras.layers.Dense(32, activation="elu"),
     keras.layers.Dense(n_outputs)
 ])
 print(env.observation_space.shape)
