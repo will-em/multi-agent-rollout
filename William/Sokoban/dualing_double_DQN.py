@@ -90,7 +90,7 @@ def training_step(batch_size):
 # tf.random.set_seed(42)
 
 best_score = -25
-num_of_ep = 600
+num_of_ep = 3000
 rewards = []
 for episode in range(num_of_ep):
     obs = env.reset(render_mode='raw')
@@ -106,7 +106,7 @@ for episode in range(num_of_ep):
         curr_state, reward, done, info = play_one_step(
             env, curr_state, epsilon)
         reward_sum += reward
-        env.render("human")
+       env.render("human")
         if done:
             break
     rewards.append(reward_sum)
@@ -115,7 +115,7 @@ for episode in range(num_of_ep):
         best_score = reward_sum  # Not shown
     print("\rEpisode: {}, Reward: {}, eps: {:.3f}".format(
         episode, reward_sum, epsilon), end="")  # Not shown
-    if episode > 100:
+    if episode > 50:
         training_step(batch_size)
 
 model.set_weights(best_weights)

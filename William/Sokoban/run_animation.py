@@ -11,7 +11,7 @@ def epsilon_greedy_policy(state, epsilon=0):
         return np.random.randint(2)
     else:
         Q_values = model.predict(state[np.newaxis])
-        print(Q_values[0])
+        print(np.argmax(Q_values[0]))
         return np.argmax(Q_values[0])
 
 
@@ -33,7 +33,7 @@ for i in range(10):
     state = env.reset(render_mode='raw')
     reward_tot = 0
     for step in range(200):
-        action = epsilon_greedy_policy(state_transform(state))
+        action = epsilon_greedy_policy(state_transform(state), 0.2)
         state, reward, done, info = env.step(action, "raw")
         reward_tot += reward
         env.render("human")
