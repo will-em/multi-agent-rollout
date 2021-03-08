@@ -28,7 +28,7 @@ class SokobanEnv(gym.Env):
                  num_gen_steps=None,
                  reset=True):
 
-        self.num_of_agents = 2
+        self.num_of_agents = 1
 
         # General Configuration
         self.dim_room = dim_room
@@ -60,10 +60,19 @@ class SokobanEnv(gym.Env):
             # Initialize Room
             _ = self.reset()
 
-    def targetPicker(self, agent):
+    def targetPicker(self, agent, rand=False):
         if len(self.boxes_to_be_picked) > 0:
-            target_pos = self.boxes_to_be_picked.pop(
-                random.randrange(len(self.boxes_to_be_picked)))
+            if rand:
+                target_pos = self.boxes_to_be_picked.pop(
+                    random.randrange(len(self.boxes_to_be_picked)))
+            else:
+                distances = []
+                for box in self.boxes_to_be_picked:
+                    distances.append(
+                        abs(agent.pos[0]-box[0])+abs(agent.pos[1]-box[1]))
+                target_pos = self.boxes_to_be_picked.pop(
+                    distances.index(min(distances)))
+
         else:
             target_pos = None
         agent.target = target_pos
@@ -230,7 +239,7 @@ class SokobanEnv(gym.Env):
             first_row = 2
             second_row = 6
 
-            self.boxes = [(first_row, 6), (second_row, 7), (second_row, 8)]
+            self.boxes = [(first_row, 4), (second_row, 3), (second_row, 8)]
             self.boxes_to_be_picked = self.boxes.copy()
 
             for i in range(left_wall_offset, shelf_width+left_wall_offset+1):
