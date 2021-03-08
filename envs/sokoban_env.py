@@ -273,7 +273,11 @@ class SokobanEnv(gym.Env):
         self.box_on_agent = False
 
         starting_observation = self.render(render_mode)
-        return starting_observation
+
+        target_list = []
+        for agent in self.agents:
+            target_list.append(agent.target)
+        return starting_observation, target_list
 
     def render(self, mode='human', close=None, scale=1):
         assert mode in RENDERING_MODES
@@ -291,12 +295,7 @@ class SokobanEnv(gym.Env):
             return self.viewer.isopen
 
         elif 'raw' in mode:
-            arr_walls = (self.room_fixed == 0).view(np.int8)
-            arr_goals = (self.room_fixed == 2).view(np.int8)
-            arr_boxes = (self.room_state == 4).view(np.int8)
-            arr_player = (self.room_state >= 5).view(np.int8)
-            # print(self.room_state)
-            return arr_walls, arr_goals, arr_boxes, arr_player
+            return self.room_state
 
         else:
             super(SokobanEnv, self).render(
