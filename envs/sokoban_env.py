@@ -5,12 +5,14 @@ from gym.spaces import Box
 from .room_utils import generate_room, generate_static_room
 from .render_utils import room_to_rgb, room_to_tiny_world_rgb
 import numpy as np
+import random
 
 
 class Agent:
-    def __init__(self, agent_id, init_pos, has_box=False):
+    def __init__(self, agent_id, init_pos, target=None, has_box=False):
         self.id = agent_id
         self.pos = init_pos
+        self.target = target
         self.has_box = has_box
 
 
@@ -26,7 +28,7 @@ class SokobanEnv(gym.Env):
                  num_gen_steps=None,
                  reset=True):
 
-        self.num_of_agents = 3
+        self.num_of_agents = 2
 
         # General Configuration
         self.dim_room = dim_room
@@ -57,6 +59,14 @@ class SokobanEnv(gym.Env):
         if reset:
             # Initialize Room
             _ = self.reset()
+
+    def targetPicker(self, agent):
+        if len(self.boxes_to_be_picked) > 0:
+            target_pos = self.boxes_to_be_picked.pop(
+                random.randrange(len(self.boxes_to_be_picked)))
+        else:
+            target_pos = None
+        agent.target = target_pos
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -109,11 +119,14 @@ class SokobanEnv(gym.Env):
             "action.moved_player": moved_player,
             "action.moved_box": moved_box,
         }
+        target_list = []
+        for agent in self.agents:
+            target_list.append(agent.target)
         if done:
             info["maxsteps_used"] = self._check_if_maxsteps()
             info["all_boxes_on_target"] = self._check_if_goal_is_met()
 
-        return observation, self.reward_last, done, info
+        return [observation, target_list], self.reward_last, done, info
 
     def _move(self, action, agent):
         """
@@ -128,8 +141,8 @@ class SokobanEnv(gym.Env):
         # Move player if the field in the moving direction is either
         # an empty field or an empty box target.
         # print(new_position)
-        #print(self.room_state[new_position[0], new_position[1]])
-        #print(self.room_state[new_position[0], new_position[1]] == 4)
+        # print(self.room_state[new_position[0], new_position[1]])
+        # print(self.room_state[new_position[0], new_position[1]] == 4)
 
         agent_ids = [5+i for i in range(2*len(self.agents))]
 
@@ -137,13 +150,14 @@ class SokobanEnv(gym.Env):
 
             moved_box = agent.has_box
             agent.pos = new_position
-            #print(agent.id, agent.pos)
+            # print(agent.id, agent.pos)
             if self.room_state[new_position[0], new_position[1]] == 4 or agent.has_box:
                 self.room_state[new_position[0], new_position[1]] = agent.id+1
-                agent.has_box = True
+                if not agent.has_box:
+                    agent.has_box = True
+                    agent.target = self.drop_off
             else:
                 self.room_state[new_position[0], new_position[1]] = agent.id
-
             self.old_pos.append(current_position)
             self.new_pos.append(new_position)
             # self.room_state[current_position[0], current_position[1]] = \
@@ -161,9 +175,10 @@ class SokobanEnv(gym.Env):
         # that short solutions have a higher reward.
         for agent in self.agents:
             self.reward_last += self.penalty_for_step
-            if agent.has_box and agent.pos == (3, 8):
+            if agent.has_box and agent.pos == self.drop_off:
                 self.reward_last += self.reward_box_on_target
                 agent.has_box = False
+                self.targetPicker(agent)
 
         if self.collision:
             self.reward_last += self.reward_collision
@@ -180,7 +195,7 @@ class SokobanEnv(gym.Env):
     def _check_if_goal_is_met(self):
         box_check = True
         # Check if there are no boxes left on the field
-        for X, Y in zip(self.box_pos_x, self.box_pos_y):
+        for X, Y in self.boxes:
             if(self.room_state[X][Y] == 4):
                 box_check = False
 
@@ -215,31 +230,33 @@ class SokobanEnv(gym.Env):
             first_row = 2
             second_row = 6
 
-            self.box_pos_x = [first_row, second_row, second_row]
-            self.box_pos_y = [6, 7, 8]
+            self.boxes = [(first_row, 6), (second_row, 7), (second_row, 8)]
+            self.boxes_to_be_picked = self.boxes.copy()
 
             for i in range(left_wall_offset, shelf_width+left_wall_offset+1):
                 self.room_fixed[first_row][i] = 0
                 self.room_fixed[second_row][i] = 0
 
             # Extraction points
-            self.room_fixed[3][8] = 2
+            self.drop_off = (3, 8)
+            self.room_fixed[self.drop_off] = 2
             self.room_state = np.copy(self.room_fixed)
 
             # Boxes
-            self.room_fixed[self.box_pos_x[0]][self.box_pos_y[0]] = 1
-            self.room_fixed[self.box_pos_x[1]][self.box_pos_y[1]] = 1
-            self.room_fixed[self.box_pos_x[2]][self.box_pos_y[2]] = 1
+            self.room_fixed[self.boxes[0][0]][self.boxes[0][1]] = 1
+            self.room_fixed[self.boxes[1][0]][self.boxes[1][1]] = 1
+            self.room_fixed[self.boxes[2][0]][self.boxes[2][1]] = 1
 
-            self.room_state[self.box_pos_x[0]][self.box_pos_y[0]] = 4
-            self.room_state[self.box_pos_x[1]][self.box_pos_y[1]] = 4
-            self.room_state[self.box_pos_x[2]][self.box_pos_y[2]] = 4
+            self.room_state[self.boxes[0][0]][self.boxes[0][1]] = 4
+            self.room_state[self.boxes[1][0]][self.boxes[1][1]] = 4
+            self.room_state[self.boxes[2][0]][self.boxes[2][1]] = 4
 
             # Player
             for i in range(self.num_of_agents):
                 init_pos = (7, 1+2*i)
                 self.agents.append(Agent(5+2*i, init_pos))
                 self.room_state[self.agents[i].pos] = self.agents[i].id
+                self.targetPicker(self.agents[i])
 
             self.collision = False
 
@@ -248,7 +265,7 @@ class SokobanEnv(gym.Env):
             print("[SOKOBAN] Runtime Error/Warning: {}".format(e))
             print("[SOKOBAN] Retry . . .")
             return self.reset(second_player=second_player, render_mode=render_mode)
-        #self.player_position = np.argwhere(self.room_state == 5)[0]
+        # self.player_position = np.argwhere(self.room_state == 5)[0]
         self.num_env_steps = 0
         self.reward_last = 0
         self.boxes_on_target = 0
