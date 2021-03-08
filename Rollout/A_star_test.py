@@ -1,12 +1,8 @@
-import copy
-import gym
-import gym_sokoban
-import numpy as np
-
 # Credit for this: Nicholas Swift
 # as found at https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
 from warnings import warn
 import heapq
+import numpy as np
 
 
 class Node:
@@ -143,70 +139,38 @@ def astar(maze, start, end, allow_diagonal_movement=False):
     return None
 
 
-def pre_processing(state_mat, pos, target):
-    # Represent all obstacles with 1, free space with 0
-    for i in range(state_mat.shape[0]):
-        for j in range(state_mat.shape[1]):
-            # If free space or agent
-            if state_mat[i][j] == 1 or state_mat[i][j] == 2 or state_mat[i][j] >= 5:
-                state_mat[i][j] = 0
-            elif state_mat[i][j] == 0 or state_mat[i][j] == 4:  # wall or box
-                state_mat[i][j] = 1
-    state_mat[target] = 0
-    return state_mat
+def main():
 
+    maze = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                     [1, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+                     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                     [1, 0, 1, 1, 1, 1, 1, 0, 1, 1],
+                     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
 
-def base_policy(state, return_list, agent_number):
-    state_mat = state[0]
-    state_targets = state[1]
-
-    agent_id = 5+agent_number
-
-    # Linear search
-    for i in range(state_mat.shape[0]):
-        for j in range(state_mat.shape[1]):
-            if (state_mat[i][j] == agent_id) or (state_mat[i][j] == agent_id+1):
-                pos = (i, j)
-
-    processed_state_mat = pre_processing(
-        state_mat, pos, state_targets[agent_number])
-    path = astar(processed_state_mat, pos, state_targets[agent_number])
+    start = (8, 1)
+    end = (5, 7)
+    path = astar(maze, start, end)
     delta_to_action = {
         (-1, 0): 1,
         (1, 0): 2,
         (0, -1): 3,
         (0, 1): 4}
 
-    actions = []
+    action = []
     for i in range(1, len(path)):
-        actions.append(
+        action.append(
             delta_to_action[(path[i][0]-path[i-1][0], path[i][1]-path[i-1][1])])
-    return actions if return_list else actions[0]
+    print(path)
+    print(action)
+    for pos in path:
+        maze[pos[0]][pos[1]] = "-5"
+    print(maze)
 
 
-env = gym.make("Sokoban-v0")
-state = env.reset(render_mode="raw")
-env.render()
-
-reward_tot = 0
-done = False
-while not done:
-    '''
-    ac = input()
-    ac = ac.split()
-    input_list = [int(i) for i in ac]
-    target_dict = {(2, 6): "Box 1", (6, 7): "Box 2", (6, 8)
-                    : "Box 3", (3, 8): "Drop off point"}
-    '''
-    ac = base_policy(copy.deepcopy(state), False, 0)
-    state, reward, done, info = env.step([ac], "raw")
-    target_list = state[1]
-    '''
-    for i, target in enumerate(target_list):
-        print("Agent ", i+1, "target: ", target_dict[target], target)
-    '''
-    print("Reward: ", reward)
-    print(info)
-    input()
-    reward_tot += reward
-    env.render()
+if __name__ == '__main__':
+    main()
