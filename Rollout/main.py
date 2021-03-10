@@ -183,9 +183,13 @@ def base_policy(state, return_list, agent_number):
             delta_to_action[(path[i][0]-path[i-1][0], path[i][1]-path[i-1][1])])
     return actions if return_list else actions[0]
 
+def rollout(state, agents, tot_reward):
+    #for i in range()
+    pass
 
+num_of_agents = 2
 env = gym.make("Sokoban-v0")
-state = env.reset(render_mode="raw")
+state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
 env.render()
 
 reward_tot = 0
@@ -198,13 +202,18 @@ while not done:
     target_dict = {(2, 6): "Box 1", (6, 7): "Box 2", (6, 8)
                     : "Box 3", (3, 8): "Drop off point"}
     '''
-    ac = base_policy(copy.deepcopy(state), False, 0)
-    state, reward, done, info = env.step([ac], "raw")
+
+    ac0 = base_policy(copy.deepcopy(state), False, 0)
+    # in i step behöver actions innehålla vad båda ska göra
+    ac1 = base_policy(copy.deepcopy(state), False, 1)
+    print(ac0, ac1)
+    state, reward, done, info = env.step([ac0, ac1], "raw") 
     target_list = state[1]
-    '''
+    
     for i, target in enumerate(target_list):
-        print("Agent ", i+1, "target: ", target_dict[target], target)
-    '''
+        print("Agent ", i+1, "target: ", target)
+    
+    # test
     print("Reward: ", reward)
     print(info)
     input()
