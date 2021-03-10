@@ -153,7 +153,7 @@ class SokobanEnv(gym.Env):
         # print(self.room_state[new_position[0], new_position[1]])
         # print(self.room_state[new_position[0], new_position[1]] == 4)
 
-        agent_ids = [5+i for i in range(2*len(self.agents))]
+        agent_ids = [5+i for i in range(2*len(self.agents))] # all possible agent IDs
 
         if self.room_state[new_position[0], new_position[1]] in [1, 2]+agent_ids or (self.room_state[new_position[0], new_position[1]] == 4 and not agent.has_box):
 
@@ -229,7 +229,7 @@ class SokobanEnv(gym.Env):
                 second_player=second_player
             )
             '''
-
+            # Create empty room with walls around
             self.room_fixed = np.ones((8, 8), dtype=int)
             self.room_fixed = np.pad(self.room_fixed, pad_width=1, mode='constant',
                                      constant_values=0)
@@ -246,7 +246,7 @@ class SokobanEnv(gym.Env):
                 self.room_fixed[first_row][i] = 0
                 self.room_fixed[second_row][i] = 0
 
-            # Extraction points
+            # Targets
             self.drop_off = (3, 8)
             self.room_fixed[self.drop_off] = 2
             self.room_state = np.copy(self.room_fixed)
