@@ -28,7 +28,6 @@ class SokobanEnv(gym.Env):
                  num_gen_steps=None,
                  reset=True):
 
-
         # General Configuration
         self.dim_room = dim_room
         if num_gen_steps == None:
@@ -45,7 +44,7 @@ class SokobanEnv(gym.Env):
         self.reward_box_on_target = 2
         self.reward_finished = 10
         self.reward_last = 0
-        self.reward_collision = -50
+        self.reward_collision = -10000
 
         # Other Settings
         self.viewer = None
@@ -73,7 +72,9 @@ class SokobanEnv(gym.Env):
                     distances.index(min(distances)))
 
         else:
-            target_pos = None
+            target_pos = (7, 1+2*(agent.id-5))
+            if agent.pos == target_pos:
+                target_pos = None
         agent.target = target_pos
 
     def seed(self, seed=None):
@@ -185,6 +186,7 @@ class SokobanEnv(gym.Env):
             self.reward_last += self.penalty_for_step
             if agent.has_box and agent.pos == self.drop_off:
                 self.reward_last += self.reward_box_on_target
+                self.room_state[agent.pos] = agent.id
                 agent.has_box = False
                 self.targetPicker(agent)
 
@@ -217,45 +219,76 @@ class SokobanEnv(gym.Env):
     def _check_if_maxsteps(self):
         return (self.max_steps == self.num_env_steps)
 
-    def reset(self, second_player=False, render_mode='rgb_array', num_of_agents=2):
+    def reset(self, second_player=False, render_mode='rgb_array', num_of_agents=1, cached_state=None):
         self.num_of_agents = num_of_agents
         self.agents = []
-        try:
-            '''
-            self.room_fixed, self.room_state, self.box_mapping = generate_room(
-                dim=self.dim_room,
-                num_steps=self.num_gen_steps,
-                num_boxes=self.num_boxes,
-                second_player=second_player
-            )
-            '''
 
-            self.room_fixed = np.ones((8, 8), dtype=int)
-            self.room_fixed = np.pad(self.room_fixed, pad_width=1, mode='constant',
-                                     constant_values=0)
-            # Shelves
-            shelf_width = 6
-            left_wall_offset = 3
-            first_row = 2
-            second_row = 6
+        self.room_fixed = np.ones((8, 8), dtype=int)
+        self.room_fixed = np.pad(self.room_fixed, pad_width=1, mode='constant',
+                                 constant_values=0)
 
-            self.boxes = [(first_row, 4), (second_row, 3), (second_row, 8)]
+        self.reward_last = 0
+        # Shelves
+        shelf_width = 6
+        left_wall_offset = 3
+        first_row = 2
+        second_row = 6
+
+        self.boxes = [(first_row, 4), (second_row, 3), (second_row, 8)]
+
+        for i in range(left_wall_offset, shelf_width+left_wall_offset+1):
+            self.room_fixed[first_row][i] = 0
+            self.room_fixed[second_row][i] = 0
+
+        # Boxes
+        self.room_fixed[self.boxes[0][0]][self.boxes[0][1]] = 1
+        self.room_fixed[self.boxes[1][0]][self.boxes[1][1]] = 1
+        self.room_fixed[self.boxes[2][0]][self.boxes[2][1]] = 1
+
+        # Extraction points
+        self.drop_off = (3, 8)
+        self.room_fixed[self.drop_off] = 2
+
+        self.boxes_to_be_picked = []
+
+        if cached_state:  # Recreate old cached state
+            state_mat = cached_state[0]
+            self.room_state = state_mat
+
+            agent_indicies1 = [5+2*i for i in range(self.num_of_agents)]
+            agent_indicies2 = [6+2*i for i in range(self.num_of_agents)]
+            agent_indicies = agent_indicies1 + agent_indicies2
+
+            for i in range(self.room_state.shape[0]):
+                for j in range(self.room_state.shape[1]):
+                    if self.room_state[i][j] in agent_indicies:
+                        agent_id = self.room_state[i][j] - 1\
+                            if self.room_state[i][j] % 2 == 0 else self.room_state[i][j]
+                        agent_pos = (i, j)
+                        agent_has_box = True if self.room_state[i][j] % 2 == 0 else False
+                        agent = Agent(agent_id, agent_pos,
+                                      has_box=agent_has_box)
+                        self.agents.append(agent)
+
+            self.agents.sort(key=lambda x: x.id)
+
+            state_targets = cached_state[1]
+            for i in range(len(self.agents)):
+                self.agents[i].target = state_targets[i]
+
+            # Fill boxes to be picked
+            for i in range(self.room_state.shape[0]):
+                for j in range(self.room_state.shape[1]):
+                    if self.room_state[i][j] == 4 and not (i, j) in state_targets:
+                        self.boxes_to_be_picked.append((i, j))
+
+            self.num_env_steps = cached_state[2]
+
+        else:
             self.boxes_to_be_picked = self.boxes.copy()
-
-            for i in range(left_wall_offset, shelf_width+left_wall_offset+1):
-                self.room_fixed[first_row][i] = 0
-                self.room_fixed[second_row][i] = 0
-
-            # Extraction points
-            self.drop_off = (3, 8)
-            self.room_fixed[self.drop_off] = 2
             self.room_state = np.copy(self.room_fixed)
 
-            # Boxes
-            self.room_fixed[self.boxes[0][0]][self.boxes[0][1]] = 1
-            self.room_fixed[self.boxes[1][0]][self.boxes[1][1]] = 1
-            self.room_fixed[self.boxes[2][0]][self.boxes[2][1]] = 1
-
+            # Boxes room_state
             self.room_state[self.boxes[0][0]][self.boxes[0][1]] = 4
             self.room_state[self.boxes[1][0]][self.boxes[1][1]] = 4
             self.room_state[self.boxes[2][0]][self.boxes[2][1]] = 4
@@ -267,20 +300,14 @@ class SokobanEnv(gym.Env):
                 self.room_state[self.agents[i].pos] = self.agents[i].id
                 self.targetPicker(self.agents[i])
 
-            self.collision = False
-
             self.box_mapping = {}
-        except (RuntimeError, RuntimeWarning) as e:
-            print("[SOKOBAN] Runtime Error/Warning: {}".format(e))
-            print("[SOKOBAN] Retry . . .")
-            return self.reset(second_player=second_player, render_mode=render_mode)
-        # self.player_position = np.argwhere(self.room_state == 5)[0]
-        self.num_env_steps = 0
-        self.reward_last = 0
-        self.boxes_on_target = 0
 
-        self.box_on_agent = False
+            self.num_env_steps = 0
+            self.boxes_on_target = 0
 
+            self.box_on_agent = False
+
+        self.collision = False
         starting_observation = self.render(render_mode)
 
         target_list = []

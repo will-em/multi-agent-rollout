@@ -159,10 +159,10 @@ def pre_processing(state_mat, pos, target):
 def base_policy(state, return_list, agent_number):
     state_mat = state[0]
     state_targets = state[1]
-
-    agent_id = 5+agent_number
+    agent_id = 5+2*agent_number
 
     # Linear search
+    pos = (0, 0)
     for i in range(state_mat.shape[0]):
         for j in range(state_mat.shape[1]):
             if (state_mat[i][j] == agent_id) or (state_mat[i][j] == agent_id+1):
@@ -170,6 +170,10 @@ def base_policy(state, return_list, agent_number):
 
     processed_state_mat = pre_processing(
         state_mat, pos, state_targets[agent_number])
+    #print("Agent ", agent_number, " pos ", pos)
+    #print("Agent ", agent_number, "target", state_targets[agent_number])
+    if state_targets[agent_number] == None:
+        return [0] if return_list else 0
     path = astar(processed_state_mat, pos, state_targets[agent_number])
     delta_to_action = {
         (-1, 0): 1,
@@ -181,11 +185,44 @@ def base_policy(state, return_list, agent_number):
     for i in range(1, len(path)):
         actions.append(
             delta_to_action[(path[i][0]-path[i-1][0], path[i][1]-path[i-1][1])])
+    #print(agent_number, actions)
+    if len(actions) == 0:
+        return [0] if return_list else 0
     return actions if return_list else actions[0]
 
-def rollout(state, agents, tot_reward):
-    #for i in range()
-    pass
+
+def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
+    action_space = 5
+    R = [0]*action_space
+    for action in range(action_space):  # For every action
+        #print("ACTION", action, "---------------------------------------------")
+        new_state = copy.deepcopy(state)
+        cached_state = (new_state[0], new_state[1], num_of_agents)
+        env.reset(render_mode="raw", cached_state=cached_state,
+                  num_of_agents=num_of_agents)
+        next_actions = []
+        for i in range(len(prev_actions)+1, num_of_agents):  # Iterates next robots
+            next_actions.append(base_policy(copy.deepcopy(state), False, i))
+
+        action_list = prev_actions + [action] + next_actions
+        # Simulate
+        done = False
+        n = 0
+        #print("START SIMULATION")
+        while n < depth:
+            curr_state, reward, done, info = env.step(action_list, "raw")
+            # print(curr_state)
+            #print("REWARD", reward)
+            R[action] += reward
+            if done:
+                break
+            action_list = [0]*num_of_agents
+            for i in range(num_of_agents):
+                action_list[i] = base_policy(
+                    copy.deepcopy(curr_state), False, i)
+            n += 1
+    return R
+
 
 num_of_agents = 2
 env = gym.make("Sokoban-v0")
@@ -194,28 +231,29 @@ env.render()
 
 reward_tot = 0
 done = False
+num_of_steps = 0
 while not done:
-    '''
-    ac = input()
-    ac = ac.split()
-    input_list = [int(i) for i in ac]
-    target_dict = {(2, 6): "Box 1", (6, 7): "Box 2", (6, 8)
-                    : "Box 3", (3, 8): "Drop off point"}
-    '''
 
-    ac0 = base_policy(copy.deepcopy(state), False, 0)
-    # in i step behöver actions innehålla vad båda ska göra
-    ac1 = base_policy(copy.deepcopy(state), False, 1)
-    print(ac0, ac1)
-    state, reward, done, info = env.step([ac0, ac1], "raw") 
-    target_list = state[1]
-    
-    for i, target in enumerate(target_list):
-        print("Agent ", i+1, "target: ", target)
-    
+    input()
+    action_list = []
+    for i in range(num_of_agents):
+        R = action_picker(
+            env, action_list, state, num_of_agents, 50, num_of_steps)
+        print("Agent ", i, "rewards", R)
+        action_list.append(R.index(max(R)))
+    print("DECISION: ", action_list)
+    cached_state = (state[0], state[1], num_of_steps)
+    state = env.reset(render_mode="raw",
+                      num_of_agents=num_of_agents, cached_state=cached_state)
+    state, reward, done, info = env.step(action_list, "raw")
+    num_of_steps += 1
+
+    # Actionpicker ska bestämma actions för att lägga i step
+
     # test
     print("Reward: ", reward)
     print(info)
-    input()
     reward_tot += reward
     env.render()
+    print(state[1])
+    print(state[0])
