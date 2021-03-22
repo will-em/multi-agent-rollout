@@ -39,10 +39,9 @@ class SokobanEnv(gym.Env):
         self.boxes_on_target = 0
 
         # Penalties and Rewards
-        self.penalty_for_step = -0.1
-        self.penalty_box_off_target = -2
-        self.reward_box_on_target = 2
-        self.reward_finished = 10
+        self.penalty_for_step = -0.5
+        self.reward_box_on_target = 4
+        self.reward_finished = 20
         self.reward_last = 0
         self.reward_collision = -10000
 
@@ -183,12 +182,13 @@ class SokobanEnv(gym.Env):
         # Every step a small penalty is given, This ensures
         # that short solutions have a higher reward.
         for agent in self.agents:
+            station_pos = (7, 1+2*(agent.id-5))
             self.reward_last += self.penalty_for_step
             if agent.has_box and agent.pos == self.drop_off:
                 self.reward_last += self.reward_box_on_target
                 self.room_state[agent.pos] = agent.id
                 agent.has_box = False
-                self.targetPicker(agent)
+                self.targetPicker(agent)  # Switch target to dropoff
 
         if self.collision:
             self.reward_last += self.reward_collision
@@ -234,16 +234,16 @@ class SokobanEnv(gym.Env):
         first_row = 2
         second_row = 6
 
-        self.boxes = [(first_row, 4), (second_row, 3), (second_row, 8)]
+        self.boxes = [(first_row, 4), (first_row, 6),
+                      (second_row, 3), (second_row, 8)]
 
         for i in range(left_wall_offset, shelf_width+left_wall_offset+1):
             self.room_fixed[first_row][i] = 0
             self.room_fixed[second_row][i] = 0
 
         # Boxes
-        self.room_fixed[self.boxes[0][0]][self.boxes[0][1]] = 1
-        self.room_fixed[self.boxes[1][0]][self.boxes[1][1]] = 1
-        self.room_fixed[self.boxes[2][0]][self.boxes[2][1]] = 1
+        for i in range(len(self.boxes)):
+            self.room_fixed[self.boxes[i][0]][self.boxes[i][1]] = 1
 
         # Extraction points
         self.drop_off = (3, 8)
@@ -289,9 +289,8 @@ class SokobanEnv(gym.Env):
             self.room_state = np.copy(self.room_fixed)
 
             # Boxes room_state
-            self.room_state[self.boxes[0][0]][self.boxes[0][1]] = 4
-            self.room_state[self.boxes[1][0]][self.boxes[1][1]] = 4
-            self.room_state[self.boxes[2][0]][self.boxes[2][1]] = 4
+            for i in range(len(self.boxes)):
+                self.room_state[self.boxes[i][0]][self.boxes[i][1]] = 4
 
             # Player
             for i in range(self.num_of_agents):

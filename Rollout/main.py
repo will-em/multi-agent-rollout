@@ -224,7 +224,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 2
+num_of_agents = 3
 env = gym.make("Sokoban-v0")
 state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
 env.render()
@@ -257,3 +257,5 @@ while not done:
     env.render()
     print(state[1])
     print(state[0])
+print("Total reward: ", reward_tot)
+print("Number of steps: ", num_of_steps)
