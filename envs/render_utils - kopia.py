@@ -13,12 +13,11 @@ def room_to_rgb(room, agents, room_structure=None):
     resource_package = __name__
 
     room = np.array(room)
-    agent_even = {5: 5, 7: 6, 9: 7, 11: 8, 13: 9, 15: 10, 17: 11, 19: 12}
     if not room_structure is None:
         # Change the ID of a player on a target
         for agent in agents:
             room[((room == agent.id) | (room == agent.id+1))
-                 & (room_structure == 2)] = 16+agent_even[agent.id]
+                 & (room_structure == 2)] = 3
 
     # Load images, representing the corresponding situation
     box_filename = pkg_resources.resource_filename(
@@ -34,34 +33,25 @@ def room_to_rgb(room, agents, room_structure=None):
     floor = imageio.imread(floor_filename)
 
     player_filename = pkg_resources.resource_filename(
-        resource_package, '/'.join(('surface', 'player_sprite.png')))
-    player_sprite = imageio.imread(player_filename)
+        resource_package, '/'.join(('surface', 'player.png')))
+    player = imageio.imread(player_filename)
 
     player_on_target_filename = pkg_resources.resource_filename(resource_package,
-                                                                '/'.join(('surface', 'player_on_target_sprite.png')))
-    player_on_target_sprite = imageio.imread(player_on_target_filename)
+                                                                '/'.join(('surface', 'player_on_target.png')))
+    player_on_target = imageio.imread(player_on_target_filename)
 
     wall_filename = pkg_resources.resource_filename(
         resource_package, '/'.join(('surface', 'wall.png')))
     wall = imageio.imread(wall_filename)
 
     player_with_box_filename = pkg_resources.resource_filename(
-        resource_package, '/'.join(('surface', 'player_with_box_sprite.png')))
-    player_with_box_sprite = imageio.imread(player_with_box_filename)
+        resource_package, '/'.join(('surface', 'player_with_box.png')))
+    player_with_box = imageio.imread(player_with_box_filename)
 
     surfaces = [wall, floor, box_target,
-                None, box]
-    res = 64
-    for i in range(8):
-        x_i = i*res
-        surfaces.append(player_sprite[0:res, res*i:(res*(i+1)),
-                                      :])
-        surfaces.append(player_with_box_sprite[0:res, res*i:(res*(i+1)),
-                                               :])
-    for i in range(8):
-        surfaces.append(player_on_target_sprite[0:res, res*i:(res*(i+1)),
-                                                :])
+                player_on_target, box, player, player_with_box]
     # Assemble the new rgb_room, with all loaded images
+    res = 64
     room_rgb = np.zeros(
         shape=(room.shape[0] * res, room.shape[1] * res, 3), dtype=np.uint8)
     for i in range(room.shape[0]):
@@ -69,7 +59,11 @@ def room_to_rgb(room, agents, room_structure=None):
         for j in range(room.shape[1]):
             y_j = j * res
             surfaces_id = room[i, j]
-            # print(surfaces_id)
+            if surfaces_id >= 5:
+                if surfaces_id % 2 == 0:
+                    surfaces_id = 6
+                else:
+                    surfaces_id = 5
             room_rgb[x_i:(x_i + res), y_j:(y_j + res),
                      :] = surfaces[surfaces_id]
     return room_rgb

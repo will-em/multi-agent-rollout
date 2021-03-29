@@ -234,7 +234,7 @@ done = False
 num_of_steps = 0
 while not done:
 
-    input()
+    # input()
     action_list = []
     for i in range(num_of_agents):
         R = action_picker(
