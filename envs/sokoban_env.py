@@ -71,7 +71,7 @@ class SokobanEnv(gym.Env):
                     distances.index(min(distances)))
 
         else:
-            target_pos = (7, 1+2*(agent.id-5))
+            target_pos = (7, 1+(agent.id-5))
             if agent.pos == target_pos:
                 target_pos = None
         agent.target = target_pos
@@ -229,13 +229,13 @@ class SokobanEnv(gym.Env):
 
         self.reward_last = 0
         # Shelves
-        shelf_width = 6
-        left_wall_offset = 3
+        shelf_width = 5
+        left_wall_offset = 4
         first_row = 2
         second_row = 6
 
         self.boxes = [(first_row, 4), (first_row, 6),
-                      (second_row, 3), (second_row, 8)]
+                      (second_row, 5), (second_row, 6), (second_row, 8)]
 
         for i in range(left_wall_offset, shelf_width+left_wall_offset+1):
             self.room_fixed[first_row][i] = 0
@@ -294,7 +294,10 @@ class SokobanEnv(gym.Env):
 
             # Player
             for i in range(self.num_of_agents):
-                init_pos = (7, 1+2*i)
+                if i < 2:
+                    init_pos = (3, 1+2*i)
+                else:
+                    init_pos = (7, 1+2*i)
                 self.agents.append(Agent(5+2*i, init_pos))
                 self.room_state[self.agents[i].pos] = self.agents[i].id
                 self.targetPicker(self.agents[i])
