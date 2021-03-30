@@ -94,9 +94,15 @@ class SokobanEnv(gym.Env):
         self.old_pos = []
         self.new_pos = []
 
+        positions = dict()
+        self.collision = 0
+
         for action, agent in zip(actions, self.agents):
             assert action in ACTION_LOOKUP
+
             if action == 0:
+                self.old_pos.append(agent.pos)
+                self.new_pos.append(agent.pos)
                 moved_player.append(False)
                 moved_box.append(False)
             else:
@@ -104,16 +110,21 @@ class SokobanEnv(gym.Env):
                 moved_box.append(b)
                 moved_player.append(p)
 
+            old_position = self.old_pos[-1]
+            new_position = self.new_pos[-1]
+            new_vec = list(positions.values())
+            #print("new_vec ", new_vec, new_position)
+            if new_position in new_vec:
+                self.collision += 1
+
+            if new_position in positions and positions[new_position] == old_position:
+                self.collision += 1
+
+            positions[old_position] = new_position
+
         for pos in self.old_pos:
             if not pos in self.new_pos:
                 self.room_state[pos] = self.room_fixed[pos]
-
-        positions = set()
-        for agent in self.agents:
-            if agent.pos in positions:
-                self.collision = True
-                break
-            positions.add(agent.pos)
 
         self._calc_reward()
 
@@ -142,6 +153,7 @@ class SokobanEnv(gym.Env):
         :param action:
         :return: Boolean, indicating a change of the room's state
         """
+
         change = CHANGE_COORDINATES[(action - 1) % 4]
         new_position = (agent.pos[0] + change[0], agent.pos[1] + change[1])
         current_position = agent.pos
@@ -172,6 +184,9 @@ class SokobanEnv(gym.Env):
             #    self.room_fixed[current_position[0], current_position[1]]
             return True, moved_box
 
+        self.old_pos.append(current_position)
+        self.new_pos.append(current_position)
+
         return False, False
 
     def _calc_reward(self):
@@ -190,8 +205,7 @@ class SokobanEnv(gym.Env):
                 agent.has_box = False
                 self.targetPicker(agent)  # Switch target to dropoff
 
-        if self.collision:
-            self.reward_last += self.reward_collision
+        self.reward_last += self.reward_collision*self.collision
 
         game_won = self._check_if_goal_is_met()
         if game_won:
@@ -200,7 +214,7 @@ class SokobanEnv(gym.Env):
     def _check_if_done(self):
         # Check if the game is over either through reaching the maximum number
         # of available steps or by pushing all boxes on the targets.
-        return self._check_if_goal_is_met() or self._check_if_maxsteps() or self.collision
+        return self._check_if_goal_is_met() or self._check_if_maxsteps() or self.collision > 0
 
     def _check_if_goal_is_met(self):
         box_check = True
@@ -309,7 +323,7 @@ class SokobanEnv(gym.Env):
 
             self.box_on_agent = False
 
-        self.collision = False
+        self.collision = 0
         starting_observation = self.render(render_mode)
 
         target_list = []

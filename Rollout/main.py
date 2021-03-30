@@ -257,5 +257,6 @@ while not done:
     env.render()
     print(state[1])
     print(state[0])
+    input()
 print("Total reward: ", reward_tot)
 print("Number of steps: ", num_of_steps)

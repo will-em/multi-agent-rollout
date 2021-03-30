@@ -4,7 +4,7 @@ import copy
 
 
 env = gym.make("Sokoban-v0")
-test = env.reset(render_mode="raw")
+test = env.reset(render_mode="raw", num_of_agents=3)
 print(test)
 env.render()
 
@@ -27,8 +27,4 @@ while not done:
     reward_tot += reward
     env.render()
     n += 1
-
-test = env.reset(render_mode="raw", cached_state=cached_state)
-env.render()
 print(test[0], test[1])
-input()
