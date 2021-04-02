@@ -7,7 +7,6 @@ env = gym.make("Sokoban-huge-v0")
 test = env.reset(render_mode="raw", num_of_agents=3)
 print(test)
 env.render()
-
 reward_tot = 0
 done = False
 n = 1

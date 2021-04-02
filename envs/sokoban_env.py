@@ -6,6 +6,7 @@ from .room_utils import generate_room, generate_static_room
 from .render_utils import room_to_rgb, room_to_tiny_world_rgb
 import numpy as np
 import random
+from random import randint
 
 
 class Agent:
@@ -22,7 +23,7 @@ class SokobanEnv(gym.Env):
     }
 
     def __init__(self,
-                 dim_room=(10, 10),
+                 dim_room=(15, 15),
                  max_steps=120,
                  num_boxes=4,
                  num_gen_steps=None,
@@ -55,11 +56,8 @@ class SokobanEnv(gym.Env):
 
         discount_factor = 0.9
 
-        self.discount_vec = [discount_factor**i for i in range(200)]
-
-        if reset:
-            # Initialize Room
-            _ = self.reset()
+        self.discount_vec = [discount_factor**i for i in range(201)]
+        self.boxes = []
 
     def targetPicker(self, agent, rand=False):
         if len(self.boxes_to_be_picked) > 0:
@@ -234,43 +232,26 @@ class SokobanEnv(gym.Env):
         for agent in self.agents:  # Check if there are no boxes on the agents
             if agent.has_box:
                 no_box_on_agents = False
-
         return box_check and no_box_on_agents
 
     def _check_if_maxsteps(self):
         return (self.max_steps == self.num_env_steps)
 
+    def generate_box_pos(self, rows, num_boxes):
+        tuples = []
+        while len(tuples) < num_boxes:
+            rand = (randint(rows[0], rows[-1]), randint(3, self.dim_room[1]-4))
+            if rand not in tuples and rand[0] in rows:
+                tuples.append(rand)
+
+        return tuples
+
     def reset(self, second_player=False, render_mode='rgb_array', num_of_agents=1, cached_state=None):
         self.num_of_agents = num_of_agents
         self.agents = []
-
-        self.room_fixed = np.ones(self.dim_room, dtype=int)
-        self.room_fixed = np.pad(self.room_fixed, pad_width=1, mode='constant',
-                                 constant_values=0)
+        self.boxes_to_be_picked = []
 
         self.reward_last = 0
-        # Shelves
-        shelf_width = 5
-        left_wall_offset = 4
-        first_row = 2
-        second_row = 6
-
-        self.boxes = [(first_row, 4), (first_row, 6),
-                      (second_row, 5), (second_row, 6), (second_row, 8)]
-
-        for i in range(left_wall_offset, shelf_width+left_wall_offset+1):
-            self.room_fixed[first_row][i] = 0
-            self.room_fixed[second_row][i] = 0
-
-        # Boxes
-        for i in range(len(self.boxes)):
-            self.room_fixed[self.boxes[i][0]][self.boxes[i][1]] = 1
-
-        # Extraction points
-        self.drop_off = (3, 8)
-        self.room_fixed[self.drop_off] = 2
-
-        self.boxes_to_be_picked = []
 
         if cached_state:  # Recreate old cached state
             state_mat = cached_state[0]
@@ -306,19 +287,35 @@ class SokobanEnv(gym.Env):
             self.num_env_steps = cached_state[2]
 
         else:
+            self.room_fixed = np.ones(
+                (self.dim_room[0]-2, self.dim_room[1]-2), dtype=int)
+            self.room_fixed = np.pad(self.room_fixed, pad_width=1, mode='constant',
+                                     constant_values=0)
+
+            # Extraction points
+            self.drop_off = (1, self.dim_room[1]-2)
+            self.room_fixed[self.drop_off] = 2
+            # Shelves
+            rows = [3, 5, 7, 9, 11]
+
+            self.boxes = self.generate_box_pos(rows, 10)
             self.boxes_to_be_picked = self.boxes.copy()
+
+            for i in rows:
+                for j in range(3, self.dim_room[1]-3):
+                    self.room_fixed[i, j] = 0
+            # Boxes room_state
+            for i in range(len(self.boxes)):
+                self.room_fixed[self.boxes[i][0]][self.boxes[i][1]] = 1
+
             self.room_state = np.copy(self.room_fixed)
 
-            # Boxes room_state
             for i in range(len(self.boxes)):
                 self.room_state[self.boxes[i][0]][self.boxes[i][1]] = 4
 
             # Player
             for i in range(self.num_of_agents):
-                if i < 2:
-                    init_pos = (3, 1+2*i)
-                else:
-                    init_pos = (7, 1+2*i)
+                init_pos = (self.dim_room[0]-2, 4+i)
                 self.agents.append(Agent(5+2*i, init_pos))
                 self.room_state[self.agents[i].pos] = self.agents[i].id
                 self.targetPicker(self.agents[i])
@@ -326,7 +323,6 @@ class SokobanEnv(gym.Env):
             self.box_mapping = {}
 
             self.num_env_steps = 0
-            self.boxes_on_target = 0
 
             self.box_on_agent = False
 

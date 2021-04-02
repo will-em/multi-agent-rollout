@@ -224,11 +224,11 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 4
+num_of_agents = 8
 env = gym.make("Sokoban-v0")
 state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
 env.render()
-
+input()
 reward_tot = 0
 done = False
 num_of_steps = 0
@@ -238,7 +238,7 @@ while not done:
     action_list = []
     for i in range(num_of_agents):
         R = action_picker(
-            env, action_list, state, num_of_agents, 50, num_of_steps)
+            env, action_list, state, num_of_agents, 200, num_of_steps)
         print("Agent ", i, "rewards", R)
         action_list.append(R.index(max(R)))
     print("DECISION: ", action_list)
