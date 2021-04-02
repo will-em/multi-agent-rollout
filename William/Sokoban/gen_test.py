@@ -3,7 +3,7 @@ import gym_sokoban
 import copy
 
 
-env = gym.make("Sokoban-v0")
+env = gym.make("Sokoban-huge-v0")
 test = env.reset(render_mode="raw", num_of_agents=3)
 print(test)
 env.render()

@@ -53,6 +53,10 @@ class SokobanEnv(gym.Env):
         self.observation_space = Box(low=0, high=255, shape=(
             screen_height, screen_width, 3), dtype=np.uint8)
 
+        discount_factor = 0.9
+
+        self.discount_vec = [discount_factor**i for i in range(200)]
+
         if reset:
             # Initialize Room
             _ = self.reset()
@@ -113,7 +117,7 @@ class SokobanEnv(gym.Env):
             old_position = self.old_pos[-1]
             new_position = self.new_pos[-1]
             new_vec = list(positions.values())
-            #print("new_vec ", new_vec, new_position)
+            # print("new_vec ", new_vec, new_position)
             if new_position in new_vec:
                 self.collision += 1
 
@@ -166,7 +170,7 @@ class SokobanEnv(gym.Env):
 
         agent_ids = [5+i for i in range(2*len(self.agents))]
 
-        if self.room_state[new_position[0], new_position[1]] in [1, 2]+agent_ids or (self.room_state[new_position[0], new_position[1]] == 4 and not agent.has_box):
+        if self.room_state[new_position[0], new_position[1]] in [1, 2]+agent_ids or new_position == agent.target:
 
             moved_box = agent.has_box
             agent.pos = new_position
@@ -200,16 +204,19 @@ class SokobanEnv(gym.Env):
             station_pos = (7, 1+2*(agent.id-5))
             self.reward_last += self.penalty_for_step
             if agent.has_box and agent.pos == self.drop_off:
-                self.reward_last += self.reward_box_on_target
+                self.reward_last += self.reward_box_on_target * \
+                    self.discount_vec[self.num_env_steps]
                 self.room_state[agent.pos] = agent.id
                 agent.has_box = False
                 self.targetPicker(agent)  # Switch target to dropoff
 
-        self.reward_last += self.reward_collision*self.collision
+        self.reward_last += self.reward_collision * \
+            self.collision*self.discount_vec[self.num_env_steps]
 
         game_won = self._check_if_goal_is_met()
         if game_won:
-            self.reward_last += self.reward_finished
+            self.reward_last += self.reward_finished * \
+                self.discount_vec[self.num_env_steps]
 
     def _check_if_done(self):
         # Check if the game is over either through reaching the maximum number
@@ -237,7 +244,7 @@ class SokobanEnv(gym.Env):
         self.num_of_agents = num_of_agents
         self.agents = []
 
-        self.room_fixed = np.ones((8, 8), dtype=int)
+        self.room_fixed = np.ones(self.dim_room, dtype=int)
         self.room_fixed = np.pad(self.room_fixed, pad_width=1, mode='constant',
                                  constant_values=0)
 
