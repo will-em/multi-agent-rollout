@@ -11,9 +11,9 @@ class SokobanEnv1(SokobanEnv):
     }
 
     def __init__(self):
-        super(SokobanEnv1, self).__init__(
-            num_boxes=3, max_steps=200
-        )
+        super(SokobanEnv1, self).__init__(dim_room=(15, 15),
+                                          num_boxes=3, max_steps=200
+                                          )
 
 
 class SokobanEnv2(SokobanEnv):
@@ -277,7 +277,6 @@ class TwoPlayer_Env4(TwoPlayerSokobanEnv):
         )
 
 
-
 class TwoPlayer_Env5(TwoPlayerSokobanEnv):
     metadata = {
         'render.modes': ['human', 'rgb_array', 'tiny_human', 'tiny_rgb_array'],
@@ -296,7 +295,9 @@ class Boxban_Env0(BoxobanEnv):
     }
 
     def __init__(self):
-        super(Boxban_Env0, self).__init__(max_steps=200, difficulty='unfiltered', split='train')
+        super(Boxban_Env0, self).__init__(max_steps=200,
+                                          difficulty='unfiltered', split='train')
+
 
 class Boxban_Env0_val(BoxobanEnv):
     metadata = {
@@ -304,7 +305,9 @@ class Boxban_Env0_val(BoxobanEnv):
     }
 
     def __init__(self):
-        super(Boxban_Env0_val, self).__init__(max_steps=200, difficulty='unfiltered', split='valid')
+        super(Boxban_Env0_val, self).__init__(
+            max_steps=200, difficulty='unfiltered', split='valid')
+
 
 class Boxban_Env0_test(BoxobanEnv):
     metadata = {
@@ -312,7 +315,9 @@ class Boxban_Env0_test(BoxobanEnv):
     }
 
     def __init__(self):
-        super(Boxban_Env0_test, self).__init__(max_steps=200, difficulty='unfiltered', split='test')
+        super(Boxban_Env0_test, self).__init__(
+            max_steps=200, difficulty='unfiltered', split='test')
+
 
 class Boxban_Env1(BoxobanEnv):
     metadata = {
@@ -322,12 +327,12 @@ class Boxban_Env1(BoxobanEnv):
     def __init__(self):
         super(Boxban_Env1, self).__init__(max_steps=200, difficulty='medium')
 
+
 class Boxban_Env1_val(BoxobanEnv):
     metadata = {
         'render.modes': ['human', 'rgb_array', 'tiny_human', 'tiny_rgb_array'],
     }
 
     def __init__(self):
-        super(Boxban_Env1_val, self).__init__(max_steps=200, difficulty='medium', split='valid')
-
-
+        super(Boxban_Env1_val, self).__init__(
+            max_steps=200, difficulty='medium', split='valid')
