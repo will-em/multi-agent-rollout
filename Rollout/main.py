@@ -224,7 +224,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 4
+num_of_agents = 3
 env = gym.make("Sokoban-v0")
 state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
 env.render()
@@ -233,14 +233,13 @@ reward_tot = 0
 done = False
 num_of_steps = 0
 while not done:
-    agent_color = {0: "Red", 1: "Purple", 2: "Green", 3: "Deep blue",
-                   4: "Yellow", 5: "Light blue", 6: "Pink", 7: "Deep purple"}
+
     # input()
     action_list = []
     for i in range(num_of_agents):
         R = action_picker(
             env, action_list, state, num_of_agents, 50, num_of_steps)
-        print(agent_color[i], " rewards", R)
+        print("Agent ", i, "rewards", R)
         action_list.append(R.index(max(R)))
     print("DECISION: ", action_list)
     cached_state = (state[0], state[1], num_of_steps)
@@ -258,6 +257,6 @@ while not done:
     env.render()
     print(state[1])
     print(state[0])
-    # input()
+    input()
 print("Total reward: ", reward_tot)
 print("Number of steps: ", num_of_steps)
