@@ -73,7 +73,7 @@ class SokobanEnv(gym.Env):
                     distances.index(min(distances)))
 
         else:
-            target_pos = (7, 1+(agent.id-5))
+            target_pos = (7, (agent.id+1)//2)
             if agent.pos == target_pos:
                 target_pos = None
         agent.target = target_pos
@@ -200,7 +200,7 @@ class SokobanEnv(gym.Env):
         # that short solutions have a higher reward.
         for agent in self.agents:
             station_pos = (7, 1+2*(agent.id-5))
-            self.reward_last += self.penalty_for_step
+            #self.reward_last += self.penalty_for_step
             if agent.has_box and agent.pos == self.drop_off:
                 self.reward_last += self.reward_box_on_target * \
                     self.discount_vec[self.num_env_steps]
@@ -296,7 +296,7 @@ class SokobanEnv(gym.Env):
             self.drop_off = (1, self.dim_room[1]-2)
             self.room_fixed[self.drop_off] = 2
             # Shelves
-            rows = [3, 5, 7, 9, 11]
+            rows = [3, 4, 7, 8]
 
             self.boxes = self.generate_box_pos(rows, 10)
             self.boxes_to_be_picked = self.boxes.copy()
@@ -315,7 +315,7 @@ class SokobanEnv(gym.Env):
 
             # Player
             for i in range(self.num_of_agents):
-                init_pos = (self.dim_room[0]-2, 4+i)
+                init_pos = (1, 2+i)
                 self.agents.append(Agent(5+2*i, init_pos))
                 self.room_state[self.agents[i].pos] = self.agents[i].id
                 self.targetPicker(self.agents[i])

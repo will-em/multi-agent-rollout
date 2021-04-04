@@ -11,7 +11,7 @@ class SokobanEnv1(SokobanEnv):
     }
 
     def __init__(self):
-        super(SokobanEnv1, self).__init__(dim_room=(15, 15),
+        super(SokobanEnv1, self).__init__(dim_room=(13, 13),
                                           num_boxes=3, max_steps=200
                                           )
 

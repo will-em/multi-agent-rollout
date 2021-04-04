@@ -7,6 +7,7 @@ import numpy as np
 # as found at https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
 from warnings import warn
 import heapq
+import random
 
 
 class Node:
@@ -152,6 +153,7 @@ def pre_processing(state_mat, pos, target):
                 state_mat[i][j] = 0
             elif state_mat[i][j] == 0 or state_mat[i][j] == 4:  # wall or box
                 state_mat[i][j] = 1
+    # print(target)
     state_mat[target] = 0
     return state_mat
 
@@ -228,7 +230,7 @@ num_of_agents = 8
 env = gym.make("Sokoban-v0")
 state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
 env.render()
-input()
+# input()
 reward_tot = 0
 done = False
 num_of_steps = 0
@@ -240,7 +242,9 @@ while not done:
         R = action_picker(
             env, action_list, state, num_of_agents, 200, num_of_steps)
         print("Agent ", i, "rewards", R)
-        action_list.append(R.index(max(R)))
+        max_value = max(R)
+        possible_actions = [i for i, x in enumerate(R) if x == max_value]
+        action_list.append(random.choice(possible_actions))
     print("DECISION: ", action_list)
     cached_state = (state[0], state[1], num_of_steps)
     state = env.reset(render_mode="raw",
@@ -252,7 +256,6 @@ while not done:
 
     # test
     print("Reward: ", reward)
-    print(info)
     reward_tot += reward
     env.render()
     print(state[1])
