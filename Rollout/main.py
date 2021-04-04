@@ -164,11 +164,8 @@ def base_policy(state, return_list, agent_number):
     agent_id = 5+2*agent_number
 
     # Linear search
-    pos = (0, 0)
-    for i in range(state_mat.shape[0]):
-        for j in range(state_mat.shape[1]):
-            if (state_mat[i][j] == agent_id) or (state_mat[i][j] == agent_id+1):
-                pos = (i, j)
+    indicies = np.argwhere((state_mat == agent_id) | (state_mat == agent_id+1))
+    pos = (indicies[0][0], indicies[0][1])
 
     processed_state_mat = pre_processing(
         state_mat, pos, state_targets[agent_number])
