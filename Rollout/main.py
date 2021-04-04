@@ -144,7 +144,7 @@ def astar(maze, start, end, allow_diagonal_movement=False):
     return None
 
 
-def pre_processing(state_mat, pos, target):
+def pre_processing(state_mat, target):
     # Represent all obstacles with 1, free space with 0
     for i in range(state_mat.shape[0]):
         for j in range(state_mat.shape[1]):
@@ -158,6 +158,13 @@ def pre_processing(state_mat, pos, target):
     return state_mat
 
 
+delta_to_action = {
+    (-1, 0): 1,
+    (1, 0): 2,
+    (0, -1): 3,
+    (0, 1): 4}
+
+
 def base_policy(state, return_list, agent_number):
     state_mat = state[0]
     state_targets = state[1]
@@ -168,23 +175,18 @@ def base_policy(state, return_list, agent_number):
     pos = (indicies[0][0], indicies[0][1])
 
     processed_state_mat = pre_processing(
-        state_mat, pos, state_targets[agent_number])
-    #print("Agent ", agent_number, " pos ", pos)
-    #print("Agent ", agent_number, "target", state_targets[agent_number])
+        state_mat, state_targets[agent_number])
+    # print("Agent ", agent_number, " pos ", pos)
+    # print("Agent ", agent_number, "target", state_targets[agent_number])
     if state_targets[agent_number] == None:
         return [0] if return_list else 0
     path = astar(processed_state_mat, pos, state_targets[agent_number])
-    delta_to_action = {
-        (-1, 0): 1,
-        (1, 0): 2,
-        (0, -1): 3,
-        (0, 1): 4}
 
     actions = []
     for i in range(1, len(path)):
         actions.append(
             delta_to_action[(path[i][0]-path[i-1][0], path[i][1]-path[i-1][1])])
-    #print(agent_number, actions)
+    # print(agent_number, actions)
     if len(actions) == 0:
         return [0] if return_list else 0
     return actions if return_list else actions[0]
@@ -194,7 +196,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     action_space = 5
     R = [0]*action_space
     for action in range(action_space):  # For every action
-        #print("ACTION", action, "---------------------------------------------")
+        # print("ACTION", action, "---------------------------------------------")
         new_state = copy.deepcopy(state)
         cached_state = (new_state[0], new_state[1], num_of_agents)
         env.reset(render_mode="raw", cached_state=cached_state,
@@ -207,11 +209,11 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
         # Simulate
         done = False
         n = 0
-        #print("START SIMULATION")
+        # print("START SIMULATION")
         while n < depth:
             curr_state, reward, done, info = env.step(action_list, "raw")
             # print(curr_state)
-            #print("REWARD", reward)
+            # print("REWARD", reward)
             R[action] += reward
             if done:
                 break
@@ -231,6 +233,13 @@ env.render()
 reward_tot = 0
 done = False
 num_of_steps = 0
+actions_to_delta = {
+    0: (0, 0),
+    1: (-1, 0),
+    2: (1, 0),
+    3: (0, -1),
+    4: (0, 1)
+}
 while not done:
 
     # input()
@@ -241,7 +250,35 @@ while not done:
         print("Agent ", i, "rewards", R)
         max_value = max(R)
         possible_actions = [i for i, x in enumerate(R) if x == max_value]
-        action_list.append(random.choice(possible_actions))
+
+        state_mat = state[0]
+        state_targets = state[1]
+        agent_id = 5+2*i
+
+        # Linear search
+        indicies = np.argwhere((state_mat == agent_id) |
+                               (state_mat == agent_id+1))
+        pos = (indicies[0][0], indicies[0][1])
+
+        if state_targets[i] == None:
+            action_list.append(random.choice(possible_actions))
+        else:
+            path_lengths = []
+            for action in possible_actions:
+                delta = actions_to_delta[action]
+                new_mat = copy.deepcopy(state_mat)
+                processed_state_mat = pre_processing(
+                    new_mat, state_targets[i])
+                new_pos = (pos[0]+delta[0], pos[1]+delta[1])
+                if processed_state_mat[new_pos] == 0:
+                    path = astar(processed_state_mat,
+                                 new_pos, state_targets[i])
+                    path_lengths.append(len(path))
+                else:
+                    path_lengths.append(100)
+            shortest_path_length_index = path_lengths.index(min(path_lengths))
+            action_list.append(possible_actions[shortest_path_length_index])
+
     print("DECISION: ", action_list)
     cached_state = (state[0], state[1], num_of_steps)
     state = env.reset(render_mode="raw",
@@ -257,6 +294,6 @@ while not done:
     env.render()
     print(state[1])
     print(state[0])
-    # input()
+    input()
 print("Total reward: ", reward_tot)
 print("Number of steps: ", num_of_steps)

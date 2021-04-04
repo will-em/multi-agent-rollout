@@ -73,7 +73,7 @@ class SokobanEnv(gym.Env):
                     distances.index(min(distances)))
 
         else:
-            target_pos = (7, (agent.id+1)//2)
+            target_pos = (1, (agent.id+1)//2)
             if agent.pos == target_pos:
                 target_pos = None
         agent.target = target_pos
