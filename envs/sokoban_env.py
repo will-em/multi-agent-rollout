@@ -44,7 +44,7 @@ class SokobanEnv(gym.Env):
         self.reward_box_on_target = 1000
         self.reward_finished = 0
         self.reward_last = 0
-        self.reward_collision = -10000
+        self.reward_collision = -1000000
 
         # Other Settings
         self.viewer = None
@@ -58,7 +58,6 @@ class SokobanEnv(gym.Env):
 
         self.discount_vec = [discount_factor**i for i in range(201)]
         self.boxes = []
-        random.seed(421)
 
     def targetPicker(self, agent, rand=False):
         if len(self.boxes_to_be_picked) > 0:
