@@ -1,3 +1,4 @@
+import time
 import copy
 import gym
 import gym_sokoban
@@ -222,6 +223,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
                 action_list[i] = base_policy(
                     copy.deepcopy(curr_state), False, i)
             n += 1
+
     return R
 
 
@@ -240,6 +242,9 @@ actions_to_delta = {
     3: (0, -1),
     4: (0, 1)
 }
+agent_color = {0: "Red", 1: "Purple", 2: "Green", 3: "Deep blue",
+               4: "Yellow", 5: "Light blue", 6: "Pink", 7: "Deep purple"}
+decision_vec = []
 while not done:
 
     # input()
@@ -247,7 +252,7 @@ while not done:
     for i in range(num_of_agents):
         R = action_picker(
             env, action_list, state, num_of_agents, 200, num_of_steps)
-        print("Agent ", i, "rewards", R)
+        print(agent_color[i], "agents", "rewards", R)
         max_value = max(R)
         possible_actions = [i for i, x in enumerate(R) if x == max_value]
 
@@ -276,6 +281,7 @@ while not done:
                     path_lengths.append(len(path))
                 else:
                     path_lengths.append(100)
+
             shortest_path_length_index = path_lengths.index(min(path_lengths))
             action_list.append(possible_actions[shortest_path_length_index])
 
@@ -285,6 +291,7 @@ while not done:
                       num_of_agents=num_of_agents, cached_state=cached_state)
     state, reward, done, info = env.step(action_list, "raw")
     num_of_steps += 1
+    decision_vec.append(action_list)
 
     # Actionpicker ska bestämma actions för att lägga i step
 
@@ -294,6 +301,6 @@ while not done:
     env.render()
     print(state[1])
     print(state[0])
-    input()
+    # input()
 print("Total reward: ", reward_tot)
 print("Number of steps: ", num_of_steps)

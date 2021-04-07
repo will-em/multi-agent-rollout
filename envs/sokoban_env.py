@@ -40,9 +40,9 @@ class SokobanEnv(gym.Env):
         self.boxes_on_target = 0
 
         # Penalties and Rewards
-        self.penalty_for_step = -0.5
-        self.reward_box_on_target = 4
-        self.reward_finished = 20
+        self.penalty_for_step = -0.4
+        self.reward_box_on_target = 1000
+        self.reward_finished = 0
         self.reward_last = 0
         self.reward_collision = -10000
 
@@ -58,6 +58,7 @@ class SokobanEnv(gym.Env):
 
         self.discount_vec = [discount_factor**i for i in range(201)]
         self.boxes = []
+        random.seed(421)
 
     def targetPicker(self, agent, rand=False):
         if len(self.boxes_to_be_picked) > 0:
@@ -73,9 +74,7 @@ class SokobanEnv(gym.Env):
                     distances.index(min(distances)))
 
         else:
-            target_pos = (1, (agent.id+1)//2)
-            if agent.pos == target_pos:
-                target_pos = None
+            target_pos = ((agent.id+1)//2-1, 1)
         agent.target = target_pos
 
     def seed(self, seed=None):
@@ -91,7 +90,7 @@ class SokobanEnv(gym.Env):
         self.old_box_position = None
 
         moved_box = []
-        moved_player = []
+        self.moved_player = []
 
         self.old_pos = []
         self.new_pos = []
@@ -105,12 +104,12 @@ class SokobanEnv(gym.Env):
             if action == 0:
                 self.old_pos.append(agent.pos)
                 self.new_pos.append(agent.pos)
-                moved_player.append(False)
+                self.moved_player.append(False)
                 moved_box.append(False)
             else:
                 p, b = self._move(action, agent)
                 moved_box.append(b)
-                moved_player.append(p)
+                self.moved_player.append(p)
 
             old_position = self.old_pos[-1]
             new_position = self.new_pos[-1]
@@ -137,7 +136,7 @@ class SokobanEnv(gym.Env):
 
         info = {
             "action.name": actions,
-            "action.moved_player": moved_player,
+            "action.moved_player": self.moved_player,
             "action.moved_box": moved_box,
         }
         target_list = []
@@ -198,23 +197,26 @@ class SokobanEnv(gym.Env):
         """
         # Every step a small penalty is given, This ensures
         # that short solutions have a higher reward.
-        for agent in self.agents:
+        for i, agent in enumerate(self.agents):
             station_pos = (7, 1+2*(agent.id-5))
-            #self.reward_last += self.penalty_for_step
+            if self.moved_player[i]:
+                self.reward_last += self.penalty_for_step
+            else:
+                self.reward_last += self.penalty_for_step//2
             if agent.has_box and agent.pos == self.drop_off:
-                self.reward_last += self.reward_box_on_target * \
-                    self.discount_vec[self.num_env_steps]
+                self.reward_last += self.reward_box_on_target  # * \
+                # self.discount_vec[self.num_env_steps]
                 self.room_state[agent.pos] = agent.id
                 agent.has_box = False
-                self.targetPicker(agent)  # Switch target to dropoff
+                self.targetPicker(agent)  # Switch target to rest pos
 
         self.reward_last += self.reward_collision * \
             self.collision*self.discount_vec[self.num_env_steps]
 
         game_won = self._check_if_goal_is_met()
         if game_won:
-            self.reward_last += self.reward_finished * \
-                self.discount_vec[self.num_env_steps]
+            self.reward_last += self.reward_finished  # * \
+            # self.discount_vec[self.num_env_steps]
 
     def _check_if_done(self):
         # Check if the game is over either through reaching the maximum number
@@ -240,7 +242,7 @@ class SokobanEnv(gym.Env):
     def generate_box_pos(self, rows, num_boxes):
         tuples = []
         while len(tuples) < num_boxes:
-            rand = (randint(rows[0], rows[-1]), randint(3, self.dim_room[1]-4))
+            rand = (randint(rows[0], rows[-1]), randint(4, self.dim_room[1]-5))
             if rand not in tuples and rand[0] in rows:
                 tuples.append(rand)
 
@@ -293,16 +295,16 @@ class SokobanEnv(gym.Env):
                                      constant_values=0)
 
             # Extraction points
-            self.drop_off = (1, self.dim_room[1]-2)
+            self.drop_off = (2, self.dim_room[1]-3)
             self.room_fixed[self.drop_off] = 2
             # Shelves
-            rows = [3, 4, 7, 8]
+            rows = [4, 5, 8, 9]
 
             self.boxes = self.generate_box_pos(rows, 10)
             self.boxes_to_be_picked = self.boxes.copy()
 
             for i in rows:
-                for j in range(3, self.dim_room[1]-3):
+                for j in range(4, self.dim_room[1]-4):
                     self.room_fixed[i, j] = 0
             # Boxes room_state
             for i in range(len(self.boxes)):
