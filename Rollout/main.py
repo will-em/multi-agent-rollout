@@ -229,12 +229,9 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
 
 num_of_agents = 8
 env = gym.make("Sokoban-v0")
-state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
-env.render()
+
+# env.render()
 # input()
-reward_tot = 0
-done = False
-num_of_steps = 0
 actions_to_delta = {
     0: (0, 0),
     1: (-1, 0),
@@ -245,73 +242,89 @@ actions_to_delta = {
 agent_color = {0: "Red", 1: "Purple", 2: "Green", 3: "Deep blue",
                4: "Yellow", 5: "Light blue", 6: "Pink", 7: "Deep purple"}
 decision_vec = []
-while not done:
+number_of_tests = 0
+number_of_successes = 0
+while True:
+    state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
+    reward_tot = 0
+    done = False
+    num_of_steps = 0
+    while not done:
 
-    # input()
-    agent_list = [0, 1, 2, 3, 4, 5, 6, 7]
-    while True:
-        action_list = []
-        for i in agent_list:
-            R = action_picker(
-                env, action_list, state, num_of_agents, 200, num_of_steps)
-            print(agent_color[i], "agents", "rewards", R)
-            max_value = max(R)
-            possible_actions = [i for i, x in enumerate(R) if x == max_value]
+        # input()
+        agent_list = [i for i in range(num_of_agents)]
+        number_of_shuffles = 0
+        while True:
+            action_list = []
+            for i in agent_list:
+                R = action_picker(
+                    env, action_list, state, num_of_agents, 200, num_of_steps)
+                #print(agent_color[i], "agents", "rewards", R)
+                max_value = max(R)
+                possible_actions = [
+                    i for i, x in enumerate(R) if x == max_value]
 
-            state_mat = state[0]
-            state_targets = state[1]
-            agent_id = 5+2*i
+                state_mat = state[0]
+                state_targets = state[1]
+                agent_id = 5+2*i
 
-            # Linear search
-            indicies = np.argwhere((state_mat == agent_id) |
-                                   (state_mat == agent_id+1))
-            pos = (indicies[0][0], indicies[0][1])
-            if state_targets[i] == None:
-                action_list.append(random.choice(possible_actions))
-            else:
-                path_lengths = []
-                for action in possible_actions:
-                    delta = actions_to_delta[action]
-                    new_mat = copy.deepcopy(state_mat)
-                    processed_state_mat = pre_processing(
-                        new_mat, state_targets[i])
-                    new_pos = (pos[0]+delta[0], pos[1]+delta[1])
-                    if processed_state_mat[new_pos] == 0:
-                        path = astar(processed_state_mat,
-                                     new_pos, state_targets[i])
-                        path_lengths.append(len(path))
-                    else:
-                        path_lengths.append(100)
+                # Linear search
+                indicies = np.argwhere((state_mat == agent_id) |
+                                       (state_mat == agent_id+1))
+                pos = (indicies[0][0], indicies[0][1])
+                if state_targets[i] == None:
+                    action_list.append(random.choice(possible_actions))
+                else:
+                    path_lengths = []
+                    for action in possible_actions:
+                        delta = actions_to_delta[action]
+                        new_mat = copy.deepcopy(state_mat)
+                        processed_state_mat = pre_processing(
+                            new_mat, state_targets[i])
+                        new_pos = (pos[0]+delta[0], pos[1]+delta[1])
+                        if processed_state_mat[new_pos] == 0:
+                            path = astar(processed_state_mat,
+                                         new_pos, state_targets[i])
+                            path_lengths.append(len(path))
+                        else:
+                            path_lengths.append(100)
 
-                shortest_path_length_index = path_lengths.index(
-                    min(path_lengths))
-                action_list.append(
-                    possible_actions[shortest_path_length_index])
-        print("DECISION: ", action_list)
-        cached_state = (state[0], state[1], num_of_steps)
-        cached_state_copy = copy.deepcopy(cached_state)
-        state = env.reset(render_mode="raw",
-                          num_of_agents=num_of_agents, cached_state=cached_state_copy)
-        state, reward, done, info = env.step(action_list, "raw")
-
-        if reward < -8:
+                    shortest_path_length_index = path_lengths.index(
+                        min(path_lengths))
+                    action_list.append(
+                        possible_actions[shortest_path_length_index])
+            #print("DECISION: ", action_list)
+            cached_state = (state[0], state[1], num_of_steps)
+            cached_state_copy = copy.deepcopy(cached_state)
             state = env.reset(render_mode="raw",
-                              num_of_agents=num_of_agents, cached_state=cached_state)
-            random.shuffle(agent_list)
-            print("COLLISION DETECTED, SHUFFLING------------------------------------------------------------------")
-            continue
+                              num_of_agents=num_of_agents, cached_state=cached_state_copy)
+            state, reward, done, info = env.step(action_list, "raw")
 
-        num_of_steps += 1
-        break
+            if reward < -8 and number_of_shuffles < 50:
+                state = env.reset(render_mode="raw",
+                                  num_of_agents=num_of_agents, cached_state=cached_state)
+                random.shuffle(agent_list)
+                number_of_shuffles += 1
+                print(
+                    "COLLISION DETECTED, SHUFFLING------------------------------------------------------------------")
+                continue
 
-    # Actionpicker ska bestämma actions för att lägga i step
+            num_of_steps += 1
+            break
 
-    # test
-    print("Reward: ", reward)
-    reward_tot += reward
-    env.render()
-    print(state[1])
-    print(state[0])
-    # input()
-print("Total reward: ", reward_tot)
-print("Number of steps: ", num_of_steps)
+        # Actionpicker ska bestämma actions för att lägga i step
+
+        # test
+        #print("Reward: ", reward)
+        reward_tot += reward
+        env.render()
+        # print(state[1])
+        # print(state[0])
+        # input()
+    print("Total reward: ", reward_tot)
+    print("Number of steps: ", num_of_steps)
+    if reward_tot > 0:
+        number_of_successes += 1
+    number_of_tests += 1
+    print(number_of_tests, " ", 100*number_of_successes /
+          number_of_tests, "%", "success rate")
