@@ -9,6 +9,7 @@ import numpy as np
 from warnings import warn
 import heapq
 import random
+import time
 
 
 class Node:
@@ -211,17 +212,20 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
         done = False
         n = 0
         # print("START SIMULATION")
+        targets = [(-1, -1)]*8
+        path = [0]*8
         while n < depth:
             curr_state, reward, done, info = env.step(action_list, "raw")
-            # print(curr_state)
-            # print("REWARD", reward)
             R[action] += reward
             if done:
                 break
             action_list = [0]*num_of_agents
             for i in range(num_of_agents):
-                action_list[i] = base_policy(
-                    copy.deepcopy(curr_state), False, i)
+                if targets[i] != curr_state[1][i] or len(path[i]) == 0:
+                    path[i] = base_policy(
+                        copy.deepcopy(curr_state), True, i)
+                    targets[i] = curr_state[1][i]
+                action_list[i] = path[i].pop(0)
             n += 1
 
     return R
@@ -299,7 +303,7 @@ while True:
                               num_of_agents=num_of_agents, cached_state=cached_state_copy)
             state, reward, done, info = env.step(action_list, "raw")
 
-            if reward < -8 and number_of_shuffles < 50:
+            if reward < -8 and number_of_shuffles < 80:
                 state = env.reset(render_mode="raw",
                                   num_of_agents=num_of_agents, cached_state=cached_state)
                 random.shuffle(agent_list)
