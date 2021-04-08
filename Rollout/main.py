@@ -248,50 +248,61 @@ decision_vec = []
 while not done:
 
     # input()
-    action_list = []
-    for i in range(num_of_agents):
-        R = action_picker(
-            env, action_list, state, num_of_agents, 200, num_of_steps)
-        print(agent_color[i], "agents", "rewards", R)
-        max_value = max(R)
-        possible_actions = [i for i, x in enumerate(R) if x == max_value]
+    agent_list = [0, 1, 2, 3, 4, 5, 6, 7]
+    while True:
+        action_list = []
+        for i in agent_list:
+            R = action_picker(
+                env, action_list, state, num_of_agents, 200, num_of_steps)
+            print(agent_color[i], "agents", "rewards", R)
+            max_value = max(R)
+            possible_actions = [i for i, x in enumerate(R) if x == max_value]
 
-        state_mat = state[0]
-        state_targets = state[1]
-        agent_id = 5+2*i
+            state_mat = state[0]
+            state_targets = state[1]
+            agent_id = 5+2*i
 
-        # Linear search
-        indicies = np.argwhere((state_mat == agent_id) |
-                               (state_mat == agent_id+1))
-        pos = (indicies[0][0], indicies[0][1])
+            # Linear search
+            indicies = np.argwhere((state_mat == agent_id) |
+                                   (state_mat == agent_id+1))
+            pos = (indicies[0][0], indicies[0][1])
+            if state_targets[i] == None:
+                action_list.append(random.choice(possible_actions))
+            else:
+                path_lengths = []
+                for action in possible_actions:
+                    delta = actions_to_delta[action]
+                    new_mat = copy.deepcopy(state_mat)
+                    processed_state_mat = pre_processing(
+                        new_mat, state_targets[i])
+                    new_pos = (pos[0]+delta[0], pos[1]+delta[1])
+                    if processed_state_mat[new_pos] == 0:
+                        path = astar(processed_state_mat,
+                                     new_pos, state_targets[i])
+                        path_lengths.append(len(path))
+                    else:
+                        path_lengths.append(100)
 
-        if state_targets[i] == None:
-            action_list.append(random.choice(possible_actions))
-        else:
-            path_lengths = []
-            for action in possible_actions:
-                delta = actions_to_delta[action]
-                new_mat = copy.deepcopy(state_mat)
-                processed_state_mat = pre_processing(
-                    new_mat, state_targets[i])
-                new_pos = (pos[0]+delta[0], pos[1]+delta[1])
-                if processed_state_mat[new_pos] == 0:
-                    path = astar(processed_state_mat,
-                                 new_pos, state_targets[i])
-                    path_lengths.append(len(path))
-                else:
-                    path_lengths.append(100)
+                shortest_path_length_index = path_lengths.index(
+                    min(path_lengths))
+                action_list.append(
+                    possible_actions[shortest_path_length_index])
+        print("DECISION: ", action_list)
+        cached_state = (state[0], state[1], num_of_steps)
+        cached_state_copy = copy.deepcopy(cached_state)
+        state = env.reset(render_mode="raw",
+                          num_of_agents=num_of_agents, cached_state=cached_state_copy)
+        state, reward, done, info = env.step(action_list, "raw")
 
-            shortest_path_length_index = path_lengths.index(min(path_lengths))
-            action_list.append(possible_actions[shortest_path_length_index])
+        if reward < -8:
+            state = env.reset(render_mode="raw",
+                              num_of_agents=num_of_agents, cached_state=cached_state)
+            random.shuffle(agent_list)
+            print("COLLISION DETECTED, SHUFFLING------------------------------------------------------------------")
+            continue
 
-    print("DECISION: ", action_list)
-    cached_state = (state[0], state[1], num_of_steps)
-    state = env.reset(render_mode="raw",
-                      num_of_agents=num_of_agents, cached_state=cached_state)
-    state, reward, done, info = env.step(action_list, "raw")
-    num_of_steps += 1
-    decision_vec.append(action_list)
+        num_of_steps += 1
+        break
 
     # Actionpicker ska bestämma actions för att lägga i step
 
