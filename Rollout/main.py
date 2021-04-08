@@ -230,8 +230,6 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
 num_of_agents = 8
 env = gym.make("Sokoban-v0")
 
-# env.render()
-# input()
 actions_to_delta = {
     0: (0, 0),
     1: (-1, 0),
@@ -246,6 +244,7 @@ number_of_tests = 0
 number_of_successes = 0
 while True:
     state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
+    env.render()
     reward_tot = 0
     done = False
     num_of_steps = 0
