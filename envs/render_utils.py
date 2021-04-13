@@ -11,14 +11,13 @@ def room_to_rgb(room, agents, room_structure=None):
     :return:
     """
     resource_package = __name__
-
     room = np.array(room)
-    agent_even = {5: 5, 7: 6, 9: 7, 11: 8, 13: 9, 15: 10, 17: 11, 19: 12}
+    agent_even = {5: 5, 7: 6, 9: 7, 11: 8, 13: 9, 15: 10, 17: 11, 19: 12, 21: 13, 23: 14}
     if not room_structure is None:
         # Change the ID of a player on a target
         for agent in agents:
             room[((room == agent.id) | (room == agent.id+1))
-                 & (room_structure == 2)] = 16+agent_even[agent.id]
+                 & (room_structure == 2)] = 2*len(agents)+agent_even[agent.id]
 
     # Load images, representing the corresponding situation
     box_filename = pkg_resources.resource_filename(
@@ -52,15 +51,17 @@ def room_to_rgb(room, agents, room_structure=None):
     surfaces = [wall, floor, box_target,
                 None, box]
     res = 64
-    for i in range(8):
+    for i in range(len(agents)):
         x_i = i*res
         surfaces.append(player_sprite[0:res, res*i:(res*(i+1)),
                                       :])
         surfaces.append(player_with_box_sprite[0:res, res*i:(res*(i+1)),
                                                :])
-    for i in range(8):
+    
+    for i in range(len(agents)):
         surfaces.append(player_on_target_sprite[0:res, res*i:(res*(i+1)),
                                                 :])
+    
     # Assemble the new rgb_room, with all loaded images
     room_rgb = np.zeros(
         shape=(room.shape[0] * res, room.shape[1] * res, 3), dtype=np.uint8)

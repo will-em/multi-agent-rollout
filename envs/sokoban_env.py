@@ -38,7 +38,6 @@ class SokobanEnv(gym.Env):
 
         self.num_boxes = num_boxes
         self.boxes_on_target = 0
-
         # Penalties and Rewards
         self.penalty_for_step = -1
         self.reward_box_on_target = 1000
@@ -74,9 +73,9 @@ class SokobanEnv(gym.Env):
 
         else:
             if agent.pos == self.drop_off:
-                target_pos = ((agent.id+1)//2-1, 1) #End points if upper dropoff
+                target_pos = ((agent.id+1)//2, 1) #End points if upper dropoff
             else:
-                target_pos = ((agent.id+1)//2-1, 12) #End points if lower dropoff
+                target_pos = ((agent.id+1)//2-2, 12) #End points if lower dropoff
         agent.target = target_pos
 
     def seed(self, seed=None):
@@ -256,7 +255,7 @@ class SokobanEnv(gym.Env):
 
         return tuples
 
-    def reset(self, second_player=False, render_mode='rgb_array', num_of_agents=1, cached_state=None):
+    def reset(self, second_player=False, render_mode='rgb_array', num_of_agents=1, cached_state=None, num_of_boxes = 10):
         self.num_of_agents = num_of_agents
         self.agents = []
         self.boxes_to_be_picked = []
@@ -310,7 +309,7 @@ class SokobanEnv(gym.Env):
             # Shelves
             rows = [4, 5, 8, 9]
 
-            self.boxes = self.generate_box_pos(rows, 10)
+            self.boxes = self.generate_box_pos(rows, num_of_boxes)
             self.boxes_to_be_picked = self.boxes.copy()
 
             for i in rows:
@@ -327,7 +326,7 @@ class SokobanEnv(gym.Env):
 
             # Player
             for i in range(self.num_of_agents):
-                init_pos = (2, 4+i)
+                init_pos = (2, 3+i)
                 self.agents.append(Agent(5+2*i, init_pos))
                 self.room_state[self.agents[i].pos] = self.agents[i].id
                 self.targetPicker(self.agents[i])

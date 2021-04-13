@@ -232,6 +232,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
 
 
 num_of_agents = 10
+num_boxes = 12
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -247,7 +248,7 @@ decision_vec = []
 number_of_tests = 0
 number_of_successes = 0
 while True:
-    state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
+    state = env.reset(render_mode="raw", num_of_agents=num_of_agents, num_of_boxes = num_boxes)
     env.render()
     input()
     reward_tot = 0
@@ -327,7 +328,7 @@ while True:
         # input()
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
-    if reward_tot >= 11000-200*num_of_agents:
+    if reward_tot >= 1000*num_boxes+100*num_boxes-200*num_of_agents:
         number_of_successes += 1
     number_of_tests += 1
     print(number_of_tests, " ", 100*number_of_successes /
