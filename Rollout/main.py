@@ -249,6 +249,7 @@ number_of_successes = 0
 while True:
     state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
     env.render()
+    input()
     reward_tot = 0
     done = False
     num_of_steps = 0
@@ -326,7 +327,7 @@ while True:
         # input()
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
-    if reward_tot > 0:
+    if reward_tot >= 11000-200*num_of_agents:
         number_of_successes += 1
     number_of_tests += 1
     print(number_of_tests, " ", 100*number_of_successes /
