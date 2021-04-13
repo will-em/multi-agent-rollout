@@ -231,7 +231,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 10
+num_of_agents = 6
 num_boxes = 12
 env = gym.make("Sokoban-v0")
 
@@ -248,9 +248,9 @@ decision_vec = []
 number_of_tests = 0
 number_of_successes = 0
 while True:
-    state = env.reset(render_mode="raw", num_of_agents=num_of_agents, num_of_boxes = num_boxes)
+    state = env.reset(render_mode="raw",
+                      num_of_agents=num_of_agents, num_of_boxes=num_boxes)
     env.render()
-    input()
     reward_tot = 0
     done = False
     num_of_steps = 0
