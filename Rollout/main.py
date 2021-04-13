@@ -212,8 +212,8 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
         done = False
         n = 0
         # print("START SIMULATION")
-        targets = [(-1, -1)]*8
-        path = [0]*8
+        targets = [(-1, -1)]*10
+        path = [0]*10
         while n < depth:
             curr_state, reward, done, info = env.step(action_list, "raw")
             R[action] += reward
@@ -231,7 +231,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 8
+num_of_agents = 10
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -304,7 +304,7 @@ while True:
                               num_of_agents=num_of_agents, cached_state=cached_state_copy)
             state, reward, done, info = env.step(action_list, "raw")
 
-            if reward < -8 and number_of_shuffles < 80:
+            if reward < -10 and number_of_shuffles < 80:
                 state = env.reset(render_mode="raw",
                                   num_of_agents=num_of_agents, cached_state=cached_state)
                 random.shuffle(agent_list)
