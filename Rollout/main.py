@@ -243,15 +243,20 @@ actions_to_delta = {
 }
 agent_color = {0: "Red", 1: "Purple", 2: "Green", 3: "Deep blue",
                4: "Yellow", 5: "Light blue", 6: "Pink", 7: "Deep purple"}
-decision_vec = []
 number_of_tests = 0
 number_of_successes = 0
+
+state_vec = []
+action_vec = []
 while True:
     state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
     env.render()
     reward_tot = 0
     done = False
     num_of_steps = 0
+
+    mini_state_vec = []
+    mini_action_vec = []
     while not done:
 
         # input()
@@ -312,22 +317,40 @@ while True:
                     "COLLISION DETECTED, SHUFFLING------------------------------------------------------------------")
                 continue
 
+            reward_tot += reward
+            mini_state_vec.append(state)
+            mini_action_vec.append(action_list)
             num_of_steps += 1
             break
-
-        # Actionpicker ska bestämma actions för att lägga i step
-
-        # test
-        #print("Reward: ", reward)
-        reward_tot += reward
-        env.render()
-        # print(state[1])
-        # print(state[0])
-        # input()
+        # env.render()
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
+    import pickle
+    import os
+    interval = 5
     if reward_tot >= 11000-200*num_of_agents:
+        state_vec = state_vec+mini_state_vec
+        action_vec = action_vec+mini_action_vec
         number_of_successes += 1
+        if number_of_successes % interval == 0:
+            file_list = os.listdir("./Dataset")
+            file_name = ""
+            temp = ()
+            if len(file_list) > 0:
+                sorted(file_list)
+                index = int(file_list[-1][4:])
+                infile = open("./Dataset/data"+str(index), 'rb')
+                prev = pickle.load(infile)
+                infile.close()
+                filename = "data"+str(index+1)
+                temp = (prev[0]+state_vec, prev[1]+action_vec)
+            else:
+                filename = "data0"
+                temp = (state_vec, action_vec)
+            outfile = open("./Dataset/"+filename, 'wb')
+            pickle.dump(temp, outfile)
+            outfile.close()
+
     number_of_tests += 1
     print(number_of_tests, " ", 100*number_of_successes /
           number_of_tests, "%", "success rate")
