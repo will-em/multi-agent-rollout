@@ -249,7 +249,6 @@ number_of_successes = 0
 while True:
     state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
     env.render()
-    input()
     reward_tot = 0
     done = False
     num_of_steps = 0
