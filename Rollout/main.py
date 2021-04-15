@@ -3,6 +3,8 @@ import copy
 import gym
 import gym_sokoban
 import numpy as np
+import pickle
+import os
 
 # Credit for this: Nicholas Swift
 # as found at https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
@@ -325,8 +327,6 @@ while True:
         # env.render()
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
-    import pickle
-    import os
     interval = 5
     if reward_tot >= 11000-200*num_of_agents:
         state_vec = state_vec+mini_state_vec
