@@ -305,7 +305,7 @@ while True:
                               num_of_agents=num_of_agents, cached_state=cached_state_copy)
             state, reward, done, info = env.step(action_list, "raw")
 
-            if reward < -10 and number_of_shuffles < 80:
+            if reward < -num_of_agents and number_of_shuffles < 80:
                 state = env.reset(render_mode="raw",
                                   num_of_agents=num_of_agents, cached_state=cached_state)
                 random.shuffle(agent_list)
