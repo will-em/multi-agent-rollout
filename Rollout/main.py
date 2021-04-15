@@ -5,6 +5,7 @@ import gym_sokoban
 import numpy as np
 import pickle
 import os
+from natsort import natsorted
 
 # Credit for this: Nicholas Swift
 # as found at https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
@@ -337,7 +338,7 @@ while True:
             file_name = ""
             temp = ()
             if len(file_list) > 0:
-                sorted(file_list)
+                natsorted(file_list)
                 index = int(file_list[-1][4:])
                 infile = open("./Dataset/data"+str(index), 'rb')
                 prev = pickle.load(infile)
