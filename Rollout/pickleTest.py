@@ -1,7 +1,7 @@
 import pickle
 import os
 
-infile = open("./Dataset/data2", 'rb')
+infile = open("./Dataset/data1", 'rb')
 test = pickle.load(infile)
-print(len(test[0]))
+print(len(test[1]))
 infile.close()

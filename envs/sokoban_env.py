@@ -55,6 +55,7 @@ class SokobanEnv(gym.Env):
             screen_height, screen_width, 3), dtype=np.uint8)
 
         discount_factor = 0.9
+        
 
         self.discount_vec = [discount_factor**i for i in range(201)]
         self.boxes = []
@@ -74,9 +75,9 @@ class SokobanEnv(gym.Env):
 
         else:
             if agent.pos == self.drop_off:
-                target_pos = ((agent.id+1)//2-1, 1) #End points if upper dropoff
+                target_pos = ((agent.id+1)//2, 1) #End points if upper dropoff
             else:
-                target_pos = ((agent.id+1)//2-1, 12) #End points if lower dropoff
+                target_pos = ((agent.id+1)//2-2, 12) #End points if lower dropoff
         agent.target = target_pos
 
     def seed(self, seed=None):
@@ -225,6 +226,8 @@ class SokobanEnv(gym.Env):
         if game_won:
             self.reward_last += self.reward_finished  # * \
             # self.discount_vec[self.num_env_steps]
+        if self._check_if_maxsteps():
+            self.reward_last += -(10*self.reward_box_on_target + 10*100 - self.max_steps*self.num_of_agents)#Terminal reward        
 
     def _check_if_done(self):
         # Check if the game is over either through reaching the maximum number

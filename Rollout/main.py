@@ -203,7 +203,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     for action in range(action_space):  # For every action
         # print("ACTION", action, "---------------------------------------------")
         new_state = copy.deepcopy(state)
-        cached_state = (new_state[0], new_state[1], num_of_agents)
+        cached_state = (new_state[0], new_state[1], num_of_steps)
         env.reset(render_mode="raw", cached_state=cached_state,
                   num_of_agents=num_of_agents)
         next_actions = []
@@ -234,7 +234,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 8
+num_of_agents = 1
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -253,16 +253,14 @@ state_vec = []
 action_vec = []
 while True:
     state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
-    # env.render()
+    env.render()
     reward_tot = 0
     done = False
     num_of_steps = 0
-
     mini_state_vec = []
     mini_action_vec = []
     while not done:
 
-        # input()
         agent_list = [i for i in range(num_of_agents)]
         number_of_shuffles = 0
         while True:
@@ -299,18 +297,19 @@ while True:
                             path_lengths.append(len(path))
                         else:
                             path_lengths.append(100)
+                    #print(agent_color[i], "agents", "path lengths",path_lengths)
 
-                    shortest_path_length_index = path_lengths.index(
-                        min(path_lengths))
+                    min_value = min(path_lengths)
+                    best_actions = [
+                    i for i, x in enumerate(path_lengths) if x == min_value]
                     action_list.append(
-                        possible_actions[shortest_path_length_index])
+                        possible_actions[random.choice(best_actions)])
             #print("DECISION: ", action_list)
             cached_state = (state[0], state[1], num_of_steps)
             cached_state_copy = copy.deepcopy(cached_state)
             state = env.reset(render_mode="raw",
                               num_of_agents=num_of_agents, cached_state=cached_state_copy)
             state, reward, done, info = env.step(action_list, "raw")
-
             if reward < -8 and number_of_shuffles < 80:
                 state = env.reset(render_mode="raw",
                                   num_of_agents=num_of_agents, cached_state=cached_state)
@@ -325,11 +324,12 @@ while True:
             mini_action_vec.append(action_list)
             num_of_steps += 1
             break
-        # env.render()
+        env.render()
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
+    input()
     interval = 5
-    if reward_tot >= 11000-200*num_of_agents:
+    if reward_tot >= 0:
         state_vec = state_vec+mini_state_vec
         action_vec = action_vec+mini_action_vec
         number_of_successes += 1
@@ -338,7 +338,7 @@ while True:
             file_name = ""
             temp = ()
             if len(file_list) > 0:
-                natsorted(file_list)
+                file_list = natsorted(file_list)
                 index = int(file_list[-1][4:])
                 infile = open("./Dataset/data"+str(index), 'rb')
                 prev = pickle.load(infile)
@@ -351,6 +351,8 @@ while True:
             outfile = open("./Dataset/"+filename, 'wb')
             pickle.dump(temp, outfile)
             outfile.close()
+            state_vec=[]
+            action_vec=[]
 
     number_of_tests += 1
     print(number_of_tests, " ", 100*number_of_successes /
