@@ -215,8 +215,8 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
         done = False
         n = 0
         # print("START SIMULATION")
-        targets = [(-1, -1)]*8
-        path = [0]*8
+        targets = [(-1, -1)]*num_of_agents
+        path = [0]*num_of_agents
         while n < depth:
             curr_state, reward, done, info = env.step(action_list, "raw")
             R[action] += reward
@@ -234,7 +234,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 1
+num_of_agents = 10
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
