@@ -44,7 +44,7 @@ class SokobanEnv(gym.Env):
         self.reward_box_on_target = 1000
         self.reward_finished = 0
         self.reward_last = 0
-        self.reward_collision = -10000000
+        self.reward_collision = -10**(12)
 
         # Other Settings
         self.viewer = None
@@ -54,8 +54,8 @@ class SokobanEnv(gym.Env):
         self.observation_space = Box(low=0, high=255, shape=(
             screen_height, screen_width, 3), dtype=np.uint8)
 
-        discount_factor = 0.9
-        
+        discount_factor = 0.95
+        #random.seed(99)
 
         self.discount_vec = [discount_factor**i for i in range(201)]
         self.boxes = []
@@ -330,7 +330,7 @@ class SokobanEnv(gym.Env):
 
             # Player
             for i in range(self.num_of_agents):
-                init_pos = (2, 4+i)
+                init_pos = (2, 2+i)
                 self.agents.append(Agent(5+2*i, init_pos))
                 self.room_state[self.agents[i].pos] = self.agents[i].id
                 self.targetPicker(self.agents[i])

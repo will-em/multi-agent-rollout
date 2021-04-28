@@ -234,7 +234,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 10
+num_of_agents = 5
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -248,10 +248,11 @@ agent_color = {0: "Red", 1: "Purple", 2: "Green", 3: "Deep blue",
                4: "Yellow", 5: "Light blue", 6: "Pink", 7: "Deep purple"}
 number_of_tests = 0
 number_of_successes = 0
+number_of_200 = 0
 
 state_vec = []
 action_vec = []
-while True:
+while number_of_tests<=100:
     state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
     env.render()
     reward_tot = 0
@@ -286,14 +287,14 @@ while True:
                 else:
                     path_lengths = []
                     for action in possible_actions:
-                        delta = actions_to_delta[action]
+                        delta = actions_to_delta[action] #coordinate changes action leads to
                         new_mat = copy.deepcopy(state_mat)
                         processed_state_mat = pre_processing(
-                            new_mat, state_targets[i])
-                        new_pos = (pos[0]+delta[0], pos[1]+delta[1])
-                        if processed_state_mat[new_pos] == 0:
+                            new_mat, state_targets[i]) #all obstacles 1
+                        new_pos = (pos[0]+delta[0], pos[1]+delta[1]) #New coordinates
+                        if processed_state_mat[new_pos] == 0: #If there are no obstacles at new coordinate
                             path = astar(processed_state_mat,
-                                         new_pos, state_targets[i])
+                                         new_pos, state_targets[i]) #returns path from new coord. to target
                             path_lengths.append(len(path))
                         else:
                             path_lengths.append(100)
@@ -310,7 +311,7 @@ while True:
             state = env.reset(render_mode="raw",
                               num_of_agents=num_of_agents, cached_state=cached_state_copy)
             state, reward, done, info = env.step(action_list, "raw")
-            if reward < -8 and number_of_shuffles < 80:
+            if reward < -num_of_agents and number_of_shuffles < 80:
                 state = env.reset(render_mode="raw",
                                   num_of_agents=num_of_agents, cached_state=cached_state)
                 random.shuffle(agent_list)
@@ -325,6 +326,7 @@ while True:
             num_of_steps += 1
             break
         env.render()
+        input()
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
     input()
@@ -353,7 +355,13 @@ while True:
             outfile.close()
             state_vec=[]
             action_vec=[]
-
+    else:
+        if num_of_steps == 200:
+            number_of_200 += 1
     number_of_tests += 1
-    print(number_of_tests, " ", 100*number_of_successes /
-          number_of_tests, "%", "success rate")
+    if number_of_tests != number_of_successes:
+        print(number_of_tests, " ", 100*number_of_successes /
+            number_of_tests, "%", "success rate", 100*number_of_200/(number_of_tests-number_of_successes), "%", "overstep")
+    else: 
+        print(number_of_tests, " ", 100*number_of_successes /
+            number_of_tests, "%", "success rate", 0, "%", "overstep")
