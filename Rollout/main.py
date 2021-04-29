@@ -234,7 +234,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 5
+#num_of_agents = 5
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -250,118 +250,92 @@ number_of_tests = 0
 number_of_successes = 0
 number_of_200 = 0
 
-state_vec = []
-action_vec = []
-while number_of_tests<=100:
-    state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
-    env.render()
-    reward_tot = 0
-    done = False
-    num_of_steps = 0
-    mini_state_vec = []
-    mini_action_vec = []
-    while not done:
+while number_of_tests <= 100:
+    seed = random.randint(0, 10000)
+    steps_vec = []
+    for num_of_agents in [10, 9, 8, 7, 6, 5]:
 
-        agent_list = [i for i in range(num_of_agents)]
-        number_of_shuffles = 0
-        while True:
-            action_list = []
-            for i in agent_list:
-                R = action_picker(
-                    env, action_list, state, num_of_agents, 200, num_of_steps)
-                #print(agent_color[i], "agents", "rewards", R)
-                max_value = max(R)
-                possible_actions = [
-                    i for i, x in enumerate(R) if x == max_value]
-
-                state_mat = state[0]
-                state_targets = state[1]
-                agent_id = 5+2*i
-
-                # Linear search
-                indicies = np.argwhere((state_mat == agent_id) |
-                                       (state_mat == agent_id+1))
-                pos = (indicies[0][0], indicies[0][1])
-                if state_targets[i] == None:
-                    action_list.append(random.choice(possible_actions))
-                else:
-                    path_lengths = []
-                    for action in possible_actions:
-                        delta = actions_to_delta[action] #coordinate changes action leads to
-                        new_mat = copy.deepcopy(state_mat)
-                        processed_state_mat = pre_processing(
-                            new_mat, state_targets[i]) #all obstacles 1
-                        new_pos = (pos[0]+delta[0], pos[1]+delta[1]) #New coordinates
-                        if processed_state_mat[new_pos] == 0: #If there are no obstacles at new coordinate
-                            path = astar(processed_state_mat,
-                                         new_pos, state_targets[i]) #returns path from new coord. to target
-                            path_lengths.append(len(path))
-                        else:
-                            path_lengths.append(100)
-                    #print(agent_color[i], "agents", "path lengths",path_lengths)
-
-                    min_value = min(path_lengths)
-                    best_actions = [
-                    i for i, x in enumerate(path_lengths) if x == min_value]
-                    action_list.append(
-                        possible_actions[random.choice(best_actions)])
-            #print("DECISION: ", action_list)
-            cached_state = (state[0], state[1], num_of_steps)
-            cached_state_copy = copy.deepcopy(cached_state)
-            state = env.reset(render_mode="raw",
-                              num_of_agents=num_of_agents, cached_state=cached_state_copy)
-            state, reward, done, info = env.step(action_list, "raw")
-            if reward < -num_of_agents and number_of_shuffles < 80:
-                state = env.reset(render_mode="raw",
-                                  num_of_agents=num_of_agents, cached_state=cached_state)
-                random.shuffle(agent_list)
-                number_of_shuffles += 1
-                print(
-                    "COLLISION DETECTED, SHUFFLING------------------------------------------------------------------")
-                continue
-
-            reward_tot += reward
-            mini_state_vec.append(state)
-            mini_action_vec.append(action_list)
-            num_of_steps += 1
-            break
+        state = env.reset(render_mode="raw",
+                          num_of_agents=num_of_agents, seed=seed)
         env.render()
-        input()
-    print("Total reward: ", reward_tot)
-    print("Number of steps: ", num_of_steps)
-    input()
-    interval = 5
-    if reward_tot >= 0:
-        state_vec = state_vec+mini_state_vec
-        action_vec = action_vec+mini_action_vec
-        number_of_successes += 1
-        if number_of_successes % interval == 0:
-            file_list = os.listdir("./Dataset")
-            file_name = ""
-            temp = ()
-            if len(file_list) > 0:
-                file_list = natsorted(file_list)
-                index = int(file_list[-1][4:])
-                infile = open("./Dataset/data"+str(index), 'rb')
-                prev = pickle.load(infile)
-                infile.close()
-                filename = "data"+str(index+1)
-                temp = (prev[0]+state_vec, prev[1]+action_vec)
-            else:
-                filename = "data0"
-                temp = (state_vec, action_vec)
-            outfile = open("./Dataset/"+filename, 'wb')
-            pickle.dump(temp, outfile)
-            outfile.close()
-            state_vec=[]
-            action_vec=[]
-    else:
-        if num_of_steps == 200:
-            number_of_200 += 1
-    number_of_tests += 1
-    if number_of_tests != number_of_successes:
-        print(number_of_tests, " ", 100*number_of_successes /
-            number_of_tests, "%", "success rate", 100*number_of_200/(number_of_tests-number_of_successes), "%", "overstep")
-    else: 
-        print(number_of_tests, " ", 100*number_of_successes /
-            number_of_tests, "%", "success rate", 0, "%", "overstep")
+        reward_tot = 0
+        done = False
+        num_of_steps = 0
+        while not done:
+
+            agent_list = [i for i in range(num_of_agents)]
+            number_of_shuffles = 0
+            while True:
+                action_list = []
+                for i in agent_list:
+                    R = action_picker(
+                        env, action_list, state, num_of_agents, 200, num_of_steps)
+                    #print(agent_color[i], "agents", "rewards", R)
+                    max_value = max(R)
+                    possible_actions = [
+                        i for i, x in enumerate(R) if x == max_value]
+
+                    state_mat = state[0]
+                    state_targets = state[1]
+                    agent_id = 5+2*i
+
+                    # Linear search
+                    indicies = np.argwhere((state_mat == agent_id) |
+                                           (state_mat == agent_id+1))
+                    pos = (indicies[0][0], indicies[0][1])
+                    if state_targets[i] == None:
+                        action_list.append(random.choice(possible_actions))
+                    else:
+                        path_lengths = []
+                        for action in possible_actions:
+                            # coordinate changes action leads to
+                            delta = actions_to_delta[action]
+                            new_mat = copy.deepcopy(state_mat)
+                            processed_state_mat = pre_processing(
+                                new_mat, state_targets[i])  # all obstacles 1
+                            new_pos = (pos[0]+delta[0], pos[1] +
+                                       delta[1])  # New coordinates
+                            # If there are no obstacles at new coordinate
+                            if processed_state_mat[new_pos] == 0:
+                                path = astar(processed_state_mat,
+                                             new_pos, state_targets[i])  # returns path from new coord. to target
+                                path_lengths.append(len(path))
+                            else:
+                                path_lengths.append(100)
+                        #print(agent_color[i], "agents", "path lengths",path_lengths)
+
+                        min_value = min(path_lengths)
+                        best_actions = [
+                            i for i, x in enumerate(path_lengths) if x == min_value]
+                        action_list.append(
+                            possible_actions[random.choice(best_actions)])
+                #print("DECISION: ", action_list)
+                cached_state = (state[0], state[1], num_of_steps)
+                cached_state_copy = copy.deepcopy(cached_state)
+                state = env.reset(render_mode="raw",
+                                  num_of_agents=num_of_agents, cached_state=cached_state_copy)
+                state, reward, done, info = env.step(action_list, "raw")
+                if reward < -num_of_agents and number_of_shuffles < 80:
+                    state = env.reset(render_mode="raw",
+                                      num_of_agents=num_of_agents, cached_state=cached_state)
+                    random.shuffle(agent_list)
+                    number_of_shuffles += 1
+                    # print(
+                    #    "COLLISION DETECTED, SHUFFLING------------------------------------------------------------------")
+                    continue
+
+                reward_tot += reward
+                num_of_steps += 1
+                break
+            env.render()
+            # input()
+        #print("Total reward: ", reward_tot)
+        #print("Number of steps: ", num_of_steps)
+        # input()
+        interval = 5
+        if reward_tot < 0:
+            break
+
+        steps_vec.append(num_of_steps)
+        print(
+            "Seed", seed, "Number of agents", num_of_agents, "Number of steps", steps_vec)
