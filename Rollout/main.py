@@ -252,6 +252,7 @@ number_of_200 = 0
 
 state_vec = []
 action_vec = []
+time_vec = []
 while number_of_tests <= 100:
     state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
     env.render()
@@ -260,7 +261,6 @@ while number_of_tests <= 100:
     num_of_steps = 0
     mini_state_vec = []
     mini_action_vec = []
-    time_avg = 0
     while not done:
         t0 = time.time()
         agent_list = [i for i in range(num_of_agents)]
@@ -332,8 +332,9 @@ while number_of_tests <= 100:
         env.render()
         # input()
         t1 = time.time()
-        time_avg += ((t1-t0))
-    print("Average step time", time_avg/num_of_steps)
+        time_vec.append(t1-t0)
+
+    print(time_vec)
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
     # input()
