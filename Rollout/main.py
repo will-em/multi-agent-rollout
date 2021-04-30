@@ -252,7 +252,7 @@ number_of_200 = 0
 
 state_vec = []
 action_vec = []
-while number_of_tests<=100:
+while number_of_tests <= 100:
     state = env.reset(render_mode="raw", num_of_agents=num_of_agents)
     env.render()
     reward_tot = 0
@@ -260,8 +260,9 @@ while number_of_tests<=100:
     num_of_steps = 0
     mini_state_vec = []
     mini_action_vec = []
+    time_avg = 0
     while not done:
-
+        t0 = time.time()
         agent_list = [i for i in range(num_of_agents)]
         number_of_shuffles = 0
         while True:
@@ -287,14 +288,17 @@ while number_of_tests<=100:
                 else:
                     path_lengths = []
                     for action in possible_actions:
-                        delta = actions_to_delta[action] #coordinate changes action leads to
+                        # coordinate changes action leads to
+                        delta = actions_to_delta[action]
                         new_mat = copy.deepcopy(state_mat)
                         processed_state_mat = pre_processing(
-                            new_mat, state_targets[i]) #all obstacles 1
-                        new_pos = (pos[0]+delta[0], pos[1]+delta[1]) #New coordinates
-                        if processed_state_mat[new_pos] == 0: #If there are no obstacles at new coordinate
+                            new_mat, state_targets[i])  # all obstacles 1
+                        new_pos = (pos[0]+delta[0], pos[1] +
+                                   delta[1])  # New coordinates
+                        # If there are no obstacles at new coordinate
+                        if processed_state_mat[new_pos] == 0:
                             path = astar(processed_state_mat,
-                                         new_pos, state_targets[i]) #returns path from new coord. to target
+                                         new_pos, state_targets[i])  # returns path from new coord. to target
                             path_lengths.append(len(path))
                         else:
                             path_lengths.append(100)
@@ -302,7 +306,7 @@ while number_of_tests<=100:
 
                     min_value = min(path_lengths)
                     best_actions = [
-                    i for i, x in enumerate(path_lengths) if x == min_value]
+                        i for i, x in enumerate(path_lengths) if x == min_value]
                     action_list.append(
                         possible_actions[random.choice(best_actions)])
             #print("DECISION: ", action_list)
@@ -326,10 +330,13 @@ while number_of_tests<=100:
             num_of_steps += 1
             break
         env.render()
-        input()
+        # input()
+        t1 = time.time()
+        time_avg += ((t1-t0))
+    print("Average step time", time_avg/num_of_steps)
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
-    input()
+    # input()
     interval = 5
     if reward_tot >= 0:
         state_vec = state_vec+mini_state_vec
@@ -353,15 +360,15 @@ while number_of_tests<=100:
             outfile = open("./Dataset/"+filename, 'wb')
             pickle.dump(temp, outfile)
             outfile.close()
-            state_vec=[]
-            action_vec=[]
+            state_vec = []
+            action_vec = []
     else:
         if num_of_steps == 200:
             number_of_200 += 1
     number_of_tests += 1
     if number_of_tests != number_of_successes:
         print(number_of_tests, " ", 100*number_of_successes /
-            number_of_tests, "%", "success rate", 100*number_of_200/(number_of_tests-number_of_successes), "%", "overstep")
-    else: 
+              number_of_tests, "%", "success rate", 100*number_of_200/(number_of_tests-number_of_successes), "%", "overstep")
+    else:
         print(number_of_tests, " ", 100*number_of_successes /
-            number_of_tests, "%", "success rate", 0, "%", "overstep")
+              number_of_tests, "%", "success rate", 0, "%", "overstep")
