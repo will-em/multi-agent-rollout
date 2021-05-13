@@ -40,11 +40,14 @@ class SokobanEnv(gym.Env):
         self.boxes_on_target = 0
 
         # Penalties and Rewards
-        self.penalty_for_step = -1
+        self.penalty_for_step = 0
         self.reward_box_on_target = 1000
         self.reward_finished = 0
         self.reward_last = 0
         self.reward_collision = -10**(12)
+        self.reward_pickup = 0
+        self.reward_move = 10
+        
 
         # Other Settings
         self.viewer = None
@@ -54,8 +57,9 @@ class SokobanEnv(gym.Env):
         self.observation_space = Box(low=0, high=255, shape=(
             screen_height, screen_width, 3), dtype=np.uint8)
 
-        discount_factor = 0.95
-        #random.seed(99)
+        
+        discount_factor = 0.99
+        #random.seed(899)
 
         self.discount_vec = [discount_factor**i for i in range(201)]
         self.boxes = []
@@ -75,9 +79,11 @@ class SokobanEnv(gym.Env):
 
         else:
             if agent.pos == self.drop_off:
-                target_pos = ((agent.id+1)//2, 1) #End points if upper dropoff
+                # End points if upper dropoff
+                target_pos = ((agent.id+1)//2, 1)
             else:
-                target_pos = ((agent.id+1)//2-2, 12) #End points if lower dropoff
+                # End points if lower dropoff
+                target_pos = ((agent.id+1)//2-2, 12)
         agent.target = target_pos
 
     def seed(self, seed=None):
@@ -99,12 +105,15 @@ class SokobanEnv(gym.Env):
 
         self.old_pos = []
         self.new_pos = []
+        self.old_targets = []
 
         positions = dict()
         self.collision = 0
 
         for action, agent in zip(actions, self.agents):
             assert action in ACTION_LOOKUP
+
+            self.old_targets.append(agent.target)
 
             if action == 0:
                 self.old_pos.append(agent.pos)
@@ -133,7 +142,7 @@ class SokobanEnv(gym.Env):
                 self.room_state[pos] = self.room_fixed[pos]
 
         self._calc_reward()
-
+        #print(self.reward_last)
         done = self._check_if_done()
 
         # Convert the observation to RGB frame
@@ -181,11 +190,11 @@ class SokobanEnv(gym.Env):
                 self.room_state[new_position[0], new_position[1]] = agent.id+1
                 if not agent.has_box:
                     agent.has_box = True
-                    if new_position[0] in [4,5]: #if rows 4 or 5
+                    if new_position[0] in [4, 5]:  # if rows 4 or 5
                         agent.target = self.drop_off
-                    elif new_position[0] in [8,9]: #or if rows 8 or 9
+                    elif new_position[0] in [8, 9]:  # or if rows 8 or 9
                         agent.target = self.drop_off2
-                    self.reward_last += 100
+                    self.reward_last += self.reward_pickup 
             else:
                 self.room_state[new_position[0], new_position[1]] = agent.id
             self.old_pos.append(current_position)
@@ -206,8 +215,12 @@ class SokobanEnv(gym.Env):
         """
         # Every step a small penalty is given, This ensures
         # that short solutions have a higher reward.
-
         for i, agent in enumerate(self.agents):
+            dist_old = abs(self.old_targets[i][0]-self.old_pos[i][0]) + abs(self.old_targets[i][1] - self.old_pos[i][1])
+            dist_new = abs(self.old_targets[i][0]-self.new_pos[i][0]) + abs(self.old_targets[i][1] - self.new_pos[i][1])
+            moved_closer = dist_old > dist_new
+            if agent.target != agent.pos:
+                self.reward_last += self.reward_move if moved_closer else -10*self.reward_move
             if self.moved_player[i]:
                 self.reward_last += self.penalty_for_step
             else:
@@ -227,7 +240,7 @@ class SokobanEnv(gym.Env):
             self.reward_last += self.reward_finished  # * \
             # self.discount_vec[self.num_env_steps]
         if self._check_if_maxsteps():
-            self.reward_last += -(10*self.reward_box_on_target + 10*100 - self.max_steps*self.num_of_agents)#Terminal reward        
+            self.reward_last += self.terminal_reward  # Terminal reward
 
     def _check_if_done(self):
         # Check if the game is over either through reaching the maximum number
@@ -253,18 +266,23 @@ class SokobanEnv(gym.Env):
     def generate_box_pos(self, rows, num_boxes):
         tuples = []
         while len(tuples) < num_boxes:
-            rand = (randint(rows[0], rows[-1]), randint(4, self.dim_room[1]-5)) #------------------------------------------------------------------
+            # ------------------------------------------------------------------
+            rand = (randint(rows[0], rows[-1]), randint(4, self.dim_room[1]-5))
             if rand not in tuples and rand[0] in rows:
                 tuples.append(rand)
 
         return tuples
 
-    def reset(self, second_player=False, render_mode='rgb_array', num_of_agents=1, cached_state=None):
+    def reset(self, second_player=False, render_mode='rgb_array', num_of_agents=1, cached_state=None, seed=None):
         self.num_of_agents = num_of_agents
         self.agents = []
         self.boxes_to_be_picked = []
+        self.terminal_reward = -(10*self.reward_box_on_target + 10 *
+                                  self.reward_pickup - self.max_steps*self.num_of_agents)
 
         self.reward_last = 0
+        if seed:
+            random.seed(seed)
 
         if cached_state:  # Recreate old cached state
             state_mat = cached_state[0]

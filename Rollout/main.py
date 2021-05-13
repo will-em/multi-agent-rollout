@@ -234,7 +234,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 5
+num_of_agents = 8
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -261,6 +261,7 @@ while number_of_tests <= 100:
     num_of_steps = 0
     mini_state_vec = []
     mini_action_vec = []
+    #input()
     while not done:
         t0 = time.time()
         agent_list = [i for i in range(num_of_agents)]
@@ -315,7 +316,8 @@ while number_of_tests <= 100:
             state = env.reset(render_mode="raw",
                               num_of_agents=num_of_agents, cached_state=cached_state_copy)
             state, reward, done, info = env.step(action_list, "raw")
-            if reward < -num_of_agents and number_of_shuffles < 80:
+            print(reward)
+            if reward < -100*num_of_agents and number_of_shuffles < 80:
                 state = env.reset(render_mode="raw",
                                   num_of_agents=num_of_agents, cached_state=cached_state)
                 random.shuffle(agent_list)
@@ -330,11 +332,11 @@ while number_of_tests <= 100:
             num_of_steps += 1
             break
         env.render()
-        # input()
+        #input()
         t1 = time.time()
         time_vec.append(t1-t0)
 
-    print(time_vec)
+    #print(time_vec)
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
     # input()
