@@ -197,7 +197,7 @@ def base_policy(state, return_list, agent_number):
     return actions if return_list else actions[0]
 
 
-def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
+def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, prev_pass_actions):
     action_space = 5
     R = [0]*action_space
     for action in range(action_space):  # For every action
@@ -208,9 +208,14 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
                   num_of_agents=num_of_agents)
         next_actions = []
         for i in range(len(prev_actions)+1, num_of_agents):  # Iterates next robots
-            next_actions.append(base_policy(copy.deepcopy(state), False, i))
+            if len(prev_pass_actions) == 0:
+                next_actions.append(base_policy(copy.deepcopy(state), False, i))
+            else:
+                next_actions.append(prev_pass_actions[i])
+
 
         action_list = prev_actions + [action] + next_actions
+
         # Simulate
         done = False
         n = 0
@@ -234,7 +239,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps):
     return R
 
 
-num_of_agents = 5
+num_of_agents = 10
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -264,12 +269,13 @@ while number_of_tests <= 100:
     while not done:
         t0 = time.time()
         agent_list = [i for i in range(num_of_agents)]
-        number_of_shuffles = 0
+        number_of_passes = 0
+        prev_pass_actions = []
         while True:
             action_list = []
             for i in agent_list:
                 R = action_picker(
-                    env, action_list, state, num_of_agents, 200, num_of_steps)
+                    env, action_list, state, num_of_agents, 200, num_of_steps, prev_pass_actions)
                 #print(agent_color[i], "agents", "rewards", R)
                 max_value = max(R)
                 possible_actions = [
@@ -281,7 +287,7 @@ while number_of_tests <= 100:
 
                 # Linear search
                 indicies = np.argwhere((state_mat == agent_id) |
-                                       (state_mat == agent_id+1))
+                                    (state_mat == agent_id+1))
                 pos = (indicies[0][0], indicies[0][1])
                 if state_targets[i] == None:
                     action_list.append(random.choice(possible_actions))
@@ -294,11 +300,11 @@ while number_of_tests <= 100:
                         processed_state_mat = pre_processing(
                             new_mat, state_targets[i])  # all obstacles 1
                         new_pos = (pos[0]+delta[0], pos[1] +
-                                   delta[1])  # New coordinates
+                                delta[1])  # New coordinates
                         # If there are no obstacles at new coordinate
                         if processed_state_mat[new_pos] == 0:
                             path = astar(processed_state_mat,
-                                         new_pos, state_targets[i])  # returns path from new coord. to target
+                                        new_pos, state_targets[i])  # returns path from new coord. to target
                             path_lengths.append(len(path))
                         else:
                             path_lengths.append(100)
@@ -315,13 +321,22 @@ while number_of_tests <= 100:
             state = env.reset(render_mode="raw",
                               num_of_agents=num_of_agents, cached_state=cached_state_copy)
             state, reward, done, info = env.step(action_list, "raw")
-            if reward < -num_of_agents and number_of_shuffles < 80:
+
+
+            if reward < -num_of_agents and number_of_passes < 25:
                 state = env.reset(render_mode="raw",
                                   num_of_agents=num_of_agents, cached_state=cached_state)
-                random.shuffle(agent_list)
-                number_of_shuffles += 1
-                print(
-                    "COLLISION DETECTED, SHUFFLING------------------------------------------------------------------")
+                prev_pass_actions = copy.deepcopy(action_list)
+
+                if number_of_passes!=0 and number_of_passes % 5 == 0:
+                    random.shuffle(agent_list)
+                    prev_pass_actions = []
+                    print(
+                        "COLLISION DETECTED, SHUFFLING ------------------------------------------------------------------")
+                else:
+                    print(
+                        "COLLISION DETECTED, PASSING AGAIN ------------------------------------------------------------------")
+                number_of_passes += 1
                 continue
 
             reward_tot += reward
@@ -338,6 +353,8 @@ while number_of_tests <= 100:
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
     # input()
+    
+    '''
     interval = 5
     if reward_tot >= 0:
         state_vec = state_vec+mini_state_vec
@@ -366,10 +383,13 @@ while number_of_tests <= 100:
     else:
         if num_of_steps == 200:
             number_of_200 += 1
+    '''
+    if reward_tot >= 0:
+        number_of_successes+=1
     number_of_tests += 1
     if number_of_tests != number_of_successes:
         print(number_of_tests, " ", 100*number_of_successes /
-              number_of_tests, "%", "success rate", 100*number_of_200/(number_of_tests-number_of_successes), "%", "overstep")
+              number_of_tests, "%", "success rate")
     else:
         print(number_of_tests, " ", 100*number_of_successes /
               number_of_tests, "%", "success rate", 0, "%", "overstep")
