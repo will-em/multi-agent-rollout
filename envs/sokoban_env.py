@@ -30,13 +30,9 @@ class SokobanEnv(gym.Env):
                  reset=True):
 
         # General Configuration
-        self.dim_room = dim_room
-        if num_gen_steps == None:
-            self.num_gen_steps = int(1.7 * (dim_room[0] + dim_room[1]))
-        else:
-            self.num_gen_steps = num_gen_steps
+        self.dim_room = (32, 32)
+        self.num_of_boxes = 50
 
-        self.num_boxes = num_boxes
         self.boxes_on_target = 0
 
         # Penalties and Rewards
@@ -307,13 +303,13 @@ class SokobanEnv(gym.Env):
 
             # Extraction points
             self.drop_off = (2, 2)
-            self.drop_off2 = (11, self.dim_room[1]-3)
+            self.drop_off2 = (29, self.dim_room[1]-3)
             self.room_fixed[self.drop_off] = 2
             self.room_fixed[self.drop_off2] = 2
             # Shelves
-            rows = [4, 5, 8, 9]
+            rows = [4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 24, 25]
 
-            self.boxes = self.generate_box_pos(rows, 10)
+            self.boxes = self.generate_box_pos(rows, self.num_of_boxes)
             self.boxes_to_be_picked = self.boxes.copy()
 
             for i in rows:
@@ -360,7 +356,7 @@ class SokobanEnv(gym.Env):
         elif 'human' in mode:
             from gym.envs.classic_control import rendering
             if self.viewer is None:
-                self.viewer = rendering.SimpleImageViewer()
+                self.viewer = rendering.SimpleImageViewer(maxwidth=1200)
             self.viewer.imshow(img)
             return self.viewer.isopen
 

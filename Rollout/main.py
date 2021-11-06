@@ -239,7 +239,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
     return R
 
 
-num_of_agents = 10
+num_of_agents = 28
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -275,7 +275,7 @@ while number_of_tests <= 100:
             action_list = []
             for i in agent_list:
                 R = action_picker(
-                    env, action_list, state, num_of_agents, 200, num_of_steps, prev_pass_actions)
+                    env, action_list, state, num_of_agents, 10, num_of_steps, prev_pass_actions)
                 #print(agent_color[i], "agents", "rewards", R)
                 max_value = max(R)
                 possible_actions = [
@@ -328,14 +328,14 @@ while number_of_tests <= 100:
                                   num_of_agents=num_of_agents, cached_state=cached_state)
                 prev_pass_actions = copy.deepcopy(action_list)
 
-                if number_of_passes!=0 and number_of_passes % 5 == 0:
-                    random.shuffle(agent_list)
-                    prev_pass_actions = []
-                    print(
-                        "COLLISION DETECTED, SHUFFLING ------------------------------------------------------------------")
-                else:
-                    print(
-                        "COLLISION DETECTED, PASSING AGAIN ------------------------------------------------------------------")
+                #if number_of_passes!=0 and number_of_passes % 5 == 0:
+                #    random.shuffle(agent_list)
+                #    prev_pass_actions = []
+                #    print(
+                #        "COLLISION DETECTED, SHUFFLING ------------------------------------------------------------------")
+                #else:
+                print(
+                    "COLLISION DETECTED, PASSING AGAIN ------------------------------------------------------------------")
                 number_of_passes += 1
                 continue
 
