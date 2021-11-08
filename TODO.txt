@@ -1,0 +1,3 @@
+1. Fix Amazon-like layout 
+3. Fix after drop-off 
+2. Import sokoban package from repository instead of from Python libs-folder 
