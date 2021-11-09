@@ -181,17 +181,15 @@ def base_policy(state, return_list, agent_number):
 
     processed_state_mat = pre_processing(
         state_mat, state_targets[agent_number])
-    # print("Agent ", agent_number, " pos ", pos)
-    # print("Agent ", agent_number, "target", state_targets[agent_number])
     if state_targets[agent_number] == None:
         return [0] if return_list else 0
+    
     path = astar(processed_state_mat, pos, state_targets[agent_number])
 
     actions = []
     for i in range(1, len(path)):
         actions.append(
             delta_to_action[(path[i][0]-path[i-1][0], path[i][1]-path[i-1][1])])
-    # print(agent_number, actions)
     if len(actions) == 0:
         return [0] if return_list else 0
     return actions if return_list else actions[0]
@@ -239,7 +237,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
     return R
 
 
-num_of_agents = 28
+num_of_agents = 10
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -275,7 +273,7 @@ while number_of_tests <= 100:
             action_list = []
             for i in agent_list:
                 R = action_picker(
-                    env, action_list, state, num_of_agents, 10, num_of_steps, prev_pass_actions)
+                    env, action_list, state, num_of_agents, 200, num_of_steps, prev_pass_actions)
                 #print(agent_color[i], "agents", "rewards", R)
                 max_value = max(R)
                 possible_actions = [

@@ -30,8 +30,19 @@ class SokobanEnv(gym.Env):
                  reset=True):
 
         # General Configuration
-        self.dim_room = (32, 32)
-        self.num_of_boxes = 50
+        self.wall_offset = 2
+        self.box_offset = 1
+        self.n = 3
+        dim = 2 + 2*self.wall_offset + (self.n-1)*self.box_offset + 2*self.n
+        self.dim_room = (dim, dim)
+        self.num_of_boxes = 40
+        self.drop_off_vec = []
+
+        for i in range(self.n):
+            x = dim - 2
+            y = self.wall_offset + i*(2+self.box_offset) 
+            self.drop_off_vec.append((y, x))
+
 
         self.boxes_on_target = 0
 
@@ -57,7 +68,7 @@ class SokobanEnv(gym.Env):
         self.boxes = []
 
     def targetPicker(self, agent, rand=False):
-        if len(self.boxes_to_be_picked) > 0:
+        if len(self.boxes_to_be_picked) > 0: #If there are boxes left
             if rand:
                 target_pos = self.boxes_to_be_picked.pop(
                     random.randrange(len(self.boxes_to_be_picked)))
@@ -70,10 +81,7 @@ class SokobanEnv(gym.Env):
                     distances.index(min(distances)))
 
         else:
-            if agent.pos == self.drop_off:
-                target_pos = ((agent.id+1)//2, 1) #End points if upper dropoff
-            else:
-                target_pos = ((agent.id+1)//2-2, 12) #End points if lower dropoff
+            target_pos = (1, 1)
         agent.target = target_pos
 
     def seed(self, seed=None):
@@ -115,7 +123,7 @@ class SokobanEnv(gym.Env):
             old_position = self.old_pos[-1]
             new_position = self.new_pos[-1]
             new_vec = list(positions.values())
-            # print("new_vec ", new_vec, new_position)
+
             if new_position in new_vec:
                 self.collision += 1
 
@@ -160,34 +168,32 @@ class SokobanEnv(gym.Env):
         new_position = (agent.pos[0] + change[0], agent.pos[1] + change[1])
         current_position = agent.pos
 
-        # Move player if the field in the moving direction is either
-        # an empty field or an empty box target.
-        # print(new_position)
-        # print(self.room_state[new_position[0], new_position[1]])
-        # print(self.room_state[new_position[0], new_position[1]] == 4)
-
         agent_ids = [5+i for i in range(2*len(self.agents))]
 
         if self.room_state[new_position[0], new_position[1]] in [1, 2]+agent_ids or new_position == agent.target:
 
             moved_box = agent.has_box
             agent.pos = new_position
-            # print(agent.id, agent.pos)
+
             if self.room_state[new_position[0], new_position[1]] == 4 or agent.has_box:
                 self.room_state[new_position[0], new_position[1]] = agent.id+1
                 if not agent.has_box:
                     agent.has_box = True
+
+                    agent.target = random.sample(self.drop_off_vec, 1)[0] 
+
+                    '''
                     if new_position[0] in [4,5]: #if rows 4 or 5
                         agent.target = self.drop_off
                     elif new_position[0] in [8,9]: #or if rows 8 or 9
                         agent.target = self.drop_off2
+                    '''
                     self.reward_last += 100
             else:
                 self.room_state[new_position[0], new_position[1]] = agent.id
             self.old_pos.append(current_position)
             self.new_pos.append(new_position)
-            # self.room_state[current_position[0], current_position[1]] = \
-            #    self.room_fixed[current_position[0], current_position[1]]
+
             return True, moved_box
 
         self.old_pos.append(current_position)
@@ -208,7 +214,7 @@ class SokobanEnv(gym.Env):
                 self.reward_last += self.penalty_for_step
             else:
                 self.reward_last += self.penalty_for_step
-            if agent.has_box and (agent.pos == self.drop_off or agent.pos == self.drop_off2):
+            if agent.has_box and agent.pos in self.drop_off_vec:
                 self.reward_last += self.reward_box_on_target  # * \
                 # self.discount_vec[self.num_env_steps]
                 self.room_state[agent.pos] = agent.id
@@ -246,14 +252,23 @@ class SokobanEnv(gym.Env):
     def _check_if_maxsteps(self):
         return (self.max_steps == self.num_env_steps)
 
-    def generate_box_pos(self, rows, num_boxes):
-        tuples = []
-        while len(tuples) < num_boxes:
-            rand = (randint(rows[0], rows[-1]), randint(4, self.dim_room[1]-5)) #------------------------------------------------------------------
-            if rand not in tuples and rand[0] in rows:
-                tuples.append(rand)
+    def generate_box_pos(self):
+        box_pos_vec = []
+        
+        for n_i in range(self.n):
+            for n_j in range(self.n):
+                i = 1 + self.wall_offset + n_i*(2+self.box_offset)
+                j = 1 + self.wall_offset + n_j*(2+self.box_offset)
+                box_pos_vec.append((i, j))
+                box_pos_vec.append((i+1, j))
+                box_pos_vec.append((i+1, j+1)) 
+                box_pos_vec.append((i, j+1)) 
+        #while len(tuples) < num_boxes:
+        #    rand = (randint(rows[0], rows[-1]), randint(4, self.dim_room[1]-5)) 
+        #    if rand not in tuples and rand[0] in rows:
+        #        tuples.append(rand)
 
-        return tuples
+        return box_pos_vec 
 
     def reset(self, second_player=False, render_mode='rgb_array', num_of_agents=1, cached_state=None):
         self.num_of_agents = num_of_agents
@@ -266,9 +281,9 @@ class SokobanEnv(gym.Env):
             state_mat = cached_state[0]
             self.room_state = state_mat
 
-            agent_indicies1 = [5+2*i for i in range(self.num_of_agents)]
-            agent_indicies2 = [6+2*i for i in range(self.num_of_agents)]
-            agent_indicies = agent_indicies1 + agent_indicies2
+            agent_without_box_indicies = [5+2*i for i in range(self.num_of_agents)] 
+            agent_with_box_indicies = [6+2*i for i in range(self.num_of_agents)]
+            agent_indicies = agent_without_box_indicies + agent_with_box_indicies
 
             for i in range(self.room_state.shape[0]):
                 for j in range(self.room_state.shape[1]):
@@ -302,19 +317,13 @@ class SokobanEnv(gym.Env):
                                      constant_values=0)
 
             # Extraction points
-            self.drop_off = (2, 2)
-            self.drop_off2 = (29, self.dim_room[1]-3)
-            self.room_fixed[self.drop_off] = 2
-            self.room_fixed[self.drop_off2] = 2
+            for point in self.drop_off_vec:
+                self.room_fixed[point] = 2
+
             # Shelves
-            rows = [4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 24, 25]
-
-            self.boxes = self.generate_box_pos(rows, self.num_of_boxes)
+            self.boxes = self.generate_box_pos()
             self.boxes_to_be_picked = self.boxes.copy()
-
-            for i in rows:
-                for j in range(4, self.dim_room[1]-4):
-                    self.room_fixed[i, j] = 0
+            
             # Boxes room_state
             for i in range(len(self.boxes)):
                 self.room_fixed[self.boxes[i][0]][self.boxes[i][1]] = 1
@@ -326,12 +335,10 @@ class SokobanEnv(gym.Env):
 
             # Player
             for i in range(self.num_of_agents):
-                init_pos = (2, 2+i)
+                init_pos = (1, 2+i)
                 self.agents.append(Agent(5+2*i, init_pos))
                 self.room_state[self.agents[i].pos] = self.agents[i].id
                 self.targetPicker(self.agents[i])
-
-            self.box_mapping = {}
 
             self.num_env_steps = 0
 
