@@ -198,19 +198,26 @@ def base_policy(state, return_list, agent_number):
 def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, prev_pass_actions):
     action_space = 5
     R = [0]*action_space
+    pre_pick_time = 0
+    A_star_time = 0
+    sim_time = 0 
     for action in range(action_space):  # For every action
-        # print("ACTION", action, "---------------------------------------------")
+        pre_pick_start = time.time()
         new_state = copy.deepcopy(state)
+
         cached_state = (new_state[0], new_state[1], num_of_steps)
         env.reset(render_mode="raw", cached_state=cached_state,
                   num_of_agents=num_of_agents)
+
         next_actions = []
         for i in range(len(prev_actions)+1, num_of_agents):  # Iterates next robots
             if len(prev_pass_actions) == 0:
-                next_actions.append(base_policy(copy.deepcopy(state), False, i))
+                next_actions.append(base_policy(copy.deepcopy(state), False, i)) #MAYBE SAVE?  
             else:
                 next_actions.append(prev_pass_actions[i])
 
+        pre_pick_end = time.time()
+        pre_pick_time += (pre_pick_end - pre_pick_start)
 
         action_list = prev_actions + [action] + next_actions
 
@@ -220,6 +227,8 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
         # print("START SIMULATION")
         targets = [(-1, -1)]*num_of_agents
         path = [0]*num_of_agents
+
+        start_sim = time.time()
         while n < depth:
             curr_state, reward, done, info = env.step(action_list, "raw")
             R[action] += reward
@@ -228,16 +237,33 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
             action_list = [0]*num_of_agents
             for i in range(num_of_agents):
                 if targets[i] != curr_state[1][i] or len(path[i]) == 0:
+                    start_A_star = time.time()
                     path[i] = base_policy(
                         copy.deepcopy(curr_state), True, i)
                     targets[i] = curr_state[1][i]
+                    end_A_star = time.time()
+                    A_star_time += (end_A_star - start_A_star)
+                    #print(end_A_star - start_A_star)
                 action_list[i] = path[i].pop(0)
             n += 1
+        end_sim = time.time()
+        sim_time += (end_sim - start_sim)
+    
+    #print("Pre-pick time "+ str(pre_pick_time))
+    #print("Sim time: "+ str(sim_time))
+    #print("Sim time without A*: " + str(sim_time - A_star_time))
+    #print("Percent A-star "+str(100*A_star_time/sim_time)+"%")
+    #print("Percent pre-pick "+str(100*pre_pick_time/(sim_time+pre_pick_time))+"%")
+
+
+    #print("Percent pre-pick "+str(100*pre_pick_time/(sim_time+pre_pick_time))+"%    Sim time: "+str(sim_time)+"    Sim time without A*: "+str(sim_time-A_star_time)+"    Percent A-star "+str(100*A_star_time/sim_time)+"%")
+
+
 
     return R
 
 
-num_of_agents = 10
+num_of_agents = 16
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
