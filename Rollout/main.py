@@ -195,7 +195,7 @@ def base_policy(state, return_list, agent_number):
     return actions if return_list else actions[0]
 
 
-def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, prev_pass_actions):
+def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, prev_pass_actions, base_policy_actions):
     action_space = 5
     R = [0]*action_space
     pre_pick_time = 0
@@ -212,7 +212,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
         next_actions = []
         for i in range(len(prev_actions)+1, num_of_agents):  # Iterates next robots
             if len(prev_pass_actions) == 0:
-                next_actions.append(base_policy(copy.deepcopy(state), False, i)) #MAYBE SAVE?  
+                next_actions.append(base_policy_actions[i]) #MAYBE SAVE?  
             else:
                 next_actions.append(prev_pass_actions[i])
 
@@ -297,9 +297,15 @@ while number_of_tests <= 100:
         prev_pass_actions = []
         while True:
             action_list = []
+
+            base_policy_actions = []
+            state_copy = copy.deepcopy(state)
+            for i in agent_list:
+                base_policy_actions.append(base_policy(copy.deepcopy(state_copy), False, i))
+
             for i in agent_list:
                 R = action_picker(
-                    env, action_list, state, num_of_agents, 200, num_of_steps, prev_pass_actions)
+                    env, action_list, state, num_of_agents, 200, num_of_steps, prev_pass_actions, base_policy_actions)
                 #print(agent_color[i], "agents", "rewards", R)
                 max_value = max(R)
                 possible_actions = [
