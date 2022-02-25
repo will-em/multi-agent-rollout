@@ -13,11 +13,13 @@ from natsort import natsorted
 import random
 import time
 from A_star import astar
+import pyastar2d
 
 
 
 def pre_processing(state_mat, target):
     # Represent all obstacles with 1, free space with 0
+    '''
     for i in range(state_mat.shape[0]):
         for j in range(state_mat.shape[1]):
             # If free space or agent
@@ -26,8 +28,11 @@ def pre_processing(state_mat, target):
             elif state_mat[i][j] == 0 or state_mat[i][j] == 4:  # wall or box
                 state_mat[i][j] = 1
     # print(target)
-    state_mat[target] = 0
-    return state_mat
+    '''
+    state_mat = np.where((state_mat == 1) | (state_mat == 2) | (state_mat >= 5), 1, state_mat)
+    state_mat = np.where((state_mat == 0) | (state_mat == 4), np.inf, state_mat)
+    state_mat[target] = 1
+    return state_mat.astype(np.float32)
 
 
 delta_to_action = {
@@ -51,12 +56,12 @@ def base_policy(state, return_list, agent_number):
     if state_targets[agent_number] == None:
         return [0] if return_list else 0
     
-    path = astar(processed_state_mat, pos, state_targets[agent_number])
-
+    path = pyastar2d.astar_path(processed_state_mat, pos, state_targets[agent_number], allow_diagonal=False)
     actions = []
     for i in range(1, len(path)):
         actions.append(
-            delta_to_action[(path[i][0]-path[i-1][0], path[i][1]-path[i-1][1])])
+            delta_to_action[(path[i][0]-path[i-1][0], path[i][1]-path[i-1][1])]) 
+ 
     if len(actions) == 0:
         return [0] if return_list else 0
     return actions if return_list else actions[0]
@@ -75,6 +80,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
         env.reset(render_mode="raw", cached_state=cached_state,
                   num_of_agents=num_of_agents)
 
+        pre_pick_end = time.time()
         next_actions = []
         for i in range(len(prev_actions)+1, num_of_agents):  # Iterates next robots
             if len(prev_pass_actions) == 0:
@@ -82,7 +88,6 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
             else:
                 next_actions.append(prev_pass_actions[i])
 
-        pre_pick_end = time.time()
         pre_pick_time += (pre_pick_end - pre_pick_start)
 
         action_list = prev_actions + [action] + next_actions
@@ -123,9 +128,9 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
         sim_time += (end_sim - start_sim)
     
     print(f"Step time: {step_time}")
-    #print("Pre-pick time "+ str(pre_pick_time))
+    print("Pre-pick time "+ str(pre_pick_time))
     print("Sim time: "+ str(sim_time))
-    print(f"Action picker: {action_picker_time}")
+    #print(f"Action picker: {action_picker_time}")
     print(f"A-star: {A_star_time}")
     #print("Sim time without A*: " + str(sim_time - A_star_time))
     #print("Percent A-star "+str(100*A_star_time/sim_time)+"%")
@@ -208,9 +213,10 @@ while number_of_tests <= 100:
                         new_pos = (pos[0]+delta[0], pos[1] +
                                 delta[1])  # New coordinates
                         # If there are no obstacles at new coordinate
-                        if processed_state_mat[new_pos] == 0:
-                            path = astar(processed_state_mat,
-                                        new_pos, state_targets[i])  # returns path from new coord. to target
+                        if processed_state_mat[new_pos] == 1:
+                            #path = astar(processed_state_mat,
+                            #            new_pos, state_targets[i])  # returns path from new coord. to target
+                            path = pyastar2d.astar_path(processed_state_mat, new_pos, state_targets[i], allow_diagonal=False)
                             path_lengths.append(len(path))
                         else:
                             path_lengths.append(100)
