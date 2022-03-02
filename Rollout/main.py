@@ -55,13 +55,13 @@ def base_policy(state, return_list, agent_number):
         state_mat, state_targets[agent_number])
     if state_targets[agent_number] == None:
         return [0] if return_list else 0
-    
+
     path = pyastar2d.astar_path(processed_state_mat, pos, state_targets[agent_number], allow_diagonal=False)
     actions = []
     for i in range(1, len(path)):
         actions.append(
-            delta_to_action[(path[i][0]-path[i-1][0], path[i][1]-path[i-1][1])]) 
- 
+            delta_to_action[(path[i][0]-path[i-1][0], path[i][1]-path[i-1][1])])
+
     if len(actions) == 0:
         return [0] if return_list else 0
     return actions if return_list else actions[0]
@@ -70,8 +70,8 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
     R = [0]*action_space
     pre_pick_time = 0
     A_star_time = 0
-    sim_time = 0 
-    action_picker_time = 0 
+    sim_time = 0
+    action_picker_time = 0
     for action in range(action_space):  # For every action
         pre_pick_start = time.time()
         new_state = copy.deepcopy(state)
@@ -84,7 +84,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
         next_actions = []
         for i in range(len(prev_actions)+1, num_of_agents):  # Iterates next robots
             if len(prev_pass_actions) == 0:
-                next_actions.append(base_policy_actions[i]) #MAYBE SAVE?  
+                next_actions.append(base_policy_actions[i]) #MAYBE SAVE?
             else:
                 next_actions.append(prev_pass_actions[i])
 
@@ -104,6 +104,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
         while n < depth:
 
             step_start = time.time()
+            print(env.step.__globals__['__file__'])
             curr_state, reward, done, info = env.step(action_list, "raw")
             step_time = time.time() - step_start
             R[action] += reward
@@ -126,7 +127,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
             n += 1
         end_sim = time.time()
         sim_time += (end_sim - start_sim)
-    
+
     print(f"Step time: {step_time}")
     print("Pre-pick time "+ str(pre_pick_time))
     print("Sim time: "+ str(sim_time))
@@ -144,7 +145,7 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
     return R
 
 
-num_of_agents = 16
+num_of_agents = 8
 env = gym.make("Sokoban-v0")
 
 actions_to_delta = {
@@ -265,7 +266,7 @@ while number_of_tests <= 100:
     print("Total reward: ", reward_tot)
     print("Number of steps: ", num_of_steps)
     # input()
-    
+
     '''
     interval = 5
     if reward_tot >= 0:
