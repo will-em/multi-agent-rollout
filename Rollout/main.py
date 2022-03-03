@@ -104,7 +104,6 @@ def action_picker(env, prev_actions, state, num_of_agents, depth, num_of_steps, 
         while n < depth:
 
             step_start = time.time()
-            print(env.step.__globals__['__file__'])
             curr_state, reward, done, info = env.step(action_list, "raw")
             step_time = time.time() - step_start
             R[action] += reward
