@@ -3,5 +3,5 @@
 3. Import sokoban package from repository instead of from Python libs-folder 
 
 
-Maybe have heuristc/base policy regard previous agents' new positions as 
+Maybe have heuristc/base policy regard previous agents' new positions as occupied
 

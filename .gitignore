@@ -1,3 +1,4 @@
 .vscode
 RL/
 pybind11/
+.DS_Store
