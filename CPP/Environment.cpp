@@ -8,7 +8,8 @@ Environment::Environment() : m_stepCount(0) {
 void Environment::printMatrix(){
     for(auto &row : m_matrix){
         for(auto &el : row){
-            std::cout << el<< std::endl;
+            std::cout << el << " ";
         }
+        std::cout << '\n';
     }
 }
