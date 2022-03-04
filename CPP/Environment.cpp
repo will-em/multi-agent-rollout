@@ -32,39 +32,45 @@ void Environment::printMatrix(){
 }
 
 // Returns false if a collision between agents occurred
-bool Environment::step(std::vector<uint8_t> actions){
+bool Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<int, int>> targets){
     assert(actions.size() == m_agentPositions.size());
+    assert(targets.size() == m_agentPositions.size());
+
+    std::vector< std::pair<int int> > newPositions;
 
     for(size_t agent_index = 0; i < m_agentPositions.size(); i++){
         std::pair agentPos = m_agentPositions[agent_index];
+        std::pair target = targets[agent_index];
         uint8_t action = actions[agent_index];
 
-        switch(action){
+        std::pair newPos(agentPos.first, agentPos.second); 
 
-            case 0: // Stand still
-                break;
+        switch(action){
             case 1: // Move up
-                int newPos = m_matrx[agentPos.first - 1][agentPos.second]
-                if(newPos != wall && newPos != box){
-                    m_agentPositions[agent_index].first -= 1;
-                }
+                newPos.first = agentPos.first - 1;
                 break;
             case 2: // Move down
-            
+                newPos.first = agentPos.first + 1;
                 break;
             case 3: // Move left
-
+                newPos.second = agentPos.second - 1;
                 break;
             case 4: // Move right
-
+                newPos.second = agentPos.second + 1;
                 break;
             default: // Stand still
+        }
 
+        int newPosEl = m_matrix[newPos.first][newPos.second];
+        // If the agent picks up its designated box or the new position is empty space
+        if((newPosEl == box && newPos == targets[agent_index]) || newPosEl == space){
+            newPositions.push_back(newPos);
         }
 
     }
 
     // Check for collisions
+    
 
     return true;
 }
