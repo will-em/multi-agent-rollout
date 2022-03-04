@@ -38,6 +38,7 @@ bool Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<int, 
 
     std::vector< std::pair<int int> > newPositions;
 
+    // Find new positions 
     for(size_t agent_index = 0; i < m_agentPositions.size(); i++){
         std::pair agentPos = m_agentPositions[agent_index];
         std::pair target = targets[agent_index];
@@ -62,15 +63,27 @@ bool Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<int, 
         }
 
         int newPosEl = m_matrix[newPos.first][newPos.second];
-        // If the agent picks up its designated box or the new position is empty space
+        /*
+        If the agent picks up its designated box or 
+        the new position is empty space, then add position to newPositions
+        */
         if((newPosEl == box && newPos == targets[agent_index]) || newPosEl == space){
             newPositions.push_back(newPos);
         }
-
     }
 
-    // Check for collisions
-    
 
+    // Check for collisions
+        /*
+        Implement unordered map from coordinate pair to integer and count occurances of
+        that coordinate
+        */
+
+    // Check for swap 
+        /*
+        Implement unordered map from coordinate pair to coordinate pair
+
+        BEWARE OF STANDSTILL!
+        */
     return true;
 }

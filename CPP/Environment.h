@@ -15,4 +15,6 @@ class Environment{
         // Should also take a vector of targets
         bool step(std::vector<uint8_t> actions, std::vector< std::pair<int, int> > targets); 
 
+        // Implement getters for targets
+
 };
