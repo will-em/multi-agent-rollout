@@ -1,13 +1,11 @@
 #include "Environment.h"
 #include <iostream>
-#include <cstdlib>
-#include <cassert>
 
 // Objects in matrix
 enum object {space, wall, box, dropOff};
 
 // Costs
-const double c_step = 1.0, c_boxOnTarget = -1000.0, c_collision = 1e10;
+const double c_step = 1.0, c_pickUp = 0.0, c_dropOff = -1000.0, c_collision = 1e10;
 
 Environment::Environment() : m_stepCount(0) {
     m_matrix = std::vector< std::vector <int> > {
@@ -20,6 +18,7 @@ Environment::Environment() : m_stepCount(0) {
         };
     
     std::vector< std::pair< unsigned int, unsigned int > > { {4, 1}, {4, 3} };
+    m_stepCount = 0;
 }
 
 void Environment::printMatrix(){
@@ -45,7 +44,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
     double cost;
 
     // Find new positions 
-    for(size_t agent_index = 0; i < m_agentPositions.size(); ++agent_index){
+    for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         std::pair agentPos = m_agentPositions[agent_index];
         std::pair target = targets[agent_index];
         uint8_t action = actions[agent_index];
@@ -96,17 +95,30 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
         }
     }
 
-    // Update matrix and calculate costs 
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
-        int temp = m_matrix[m_agentPositions.first][m_agentPositions.second];
-        m_matrix[m_agentPositions.first][m_agentPositions.second] = space;
-        m_matrix[newPositions.first][newPositions.second] = temp;
+        
+        // Update matrix
+        int temp = m_matrix[m_agentPositions[agent_index].first][m_agentPositions[agent_index].second];
+        m_matrix[m_agentPositions[agent_index].first][m_agentPositions[agent_index].second] = space;
+        m_matrix[newPositions[agent_index].first][newPositions[agent_index].second] = temp;
 
+        // If an agent reaches its target
+        if(newPositions[agent_index] == targets[agent_index]){
+            if(m_matrix[newPositions[agent_index].first][newPositions[agent_index].second] > 0){ // If the agent has a box
+                cost += c_dropOff;
+            }else{
+                cost += c_pickUp;
+            }
+            m_matrix[newPositions[agent_index].first][newPositions[agent_index].second] = -m_matrix[newPositions[agent_index].first][newPositions[agent_index].second];
+        }
 
-        if(newPositions[i] == targets[i])
+        // If an agent moves
+        if(m_agentPositions[agent_index] != newPositions[agent_index])
+            cost += c_step;
     }
 
     m_agentPositions = newPositions;
+    m_stepCount += 1;
 
-    return true;
+    return cost;
 }
