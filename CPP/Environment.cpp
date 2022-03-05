@@ -3,7 +3,11 @@
 #include <cstdlib>
 #include <cassert>
 
+// Objects in matrix
 enum object {space, wall, box, dropOff};
+
+// Costs
+const double c_step = 1.0, c_boxOnTarget = -1000.0, c_collision = 1e10;
 
 Environment::Environment() : m_stepCount(0) {
     m_matrix = std::vector< std::vector <int> > {
@@ -32,11 +36,13 @@ void Environment::printMatrix(){
 }
 
 // Returns false if a collision between agents occurred
-bool Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<int, int>> targets){
+double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<unsigned int, unsigned int>> targets){
     assert(actions.size() == m_agentPositions.size());
     assert(targets.size() == m_agentPositions.size());
 
-    std::vector< std::pair<int int> > newPositions;
+    std::vector< std::pair<unsigned int, unsigned int> > newPositions;
+
+    double cost;
 
     // Find new positions 
     for(size_t agent_index = 0; i < m_agentPositions.size(); ++agent_index){
@@ -77,18 +83,30 @@ bool Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<int, 
     which is fine since n is rather small (<100) and a linear or O(nlogn)
     solution would be slower due to cache locality etc.
     */
-    for(size_t i = 0; < m_agentPositions.size(); ++i){
+    for(size_t i = 0; i < m_agentPositions.size(); ++i){
+        std::vector<unsigned int> oldToNew = {m_agentPositions[i].first, m_agentPositions[i].second, newPositions[i].first, newPositions[i].second};
         for(size_t j = i; j < m_agentPositions.size(); ++j){
-            if(newPositions[i] == newPositions[j])
-                return false;
+            if(newPositions[i] == newPositions[j]) // If two agents have the same position
+                cost += c_collision;
+
+            std::vector<unsigned int> complement = {newPositions[j].first, newPositions[j].second, m_agentPositions[j].first, m_agentPositions[j].second};
+
+            if(oldToNew == complement) // If to agents swap positions
+                cost += c_collision;
         }
     }
 
-    // Check for swap 
-        /*
-        Implement unordered map from coordinate pair to coordinate pair
+    // Update matrix and calculate costs 
+    for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
+        int temp = m_matrix[m_agentPositions.first][m_agentPositions.second];
+        m_matrix[m_agentPositions.first][m_agentPositions.second] = space;
+        m_matrix[newPositions.first][newPositions.second] = temp;
 
-        BEWARE OF STANDSTILL!
-        */
+
+        if(newPositions[i] == targets[i])
+    }
+
+    m_agentPositions = newPositions;
+
     return true;
 }
