@@ -11,13 +11,15 @@ Environment::Environment() : m_stepCount(0) {
     m_matrix = std::vector< std::vector <int> > {
         {1, 1, 1, 1, 1, 1}, 
         {1, 0, 0, 0, 0, 1},
-        {1, 0, 0, box, 0, 1},
         {1, 0, 0, 0, 0, 1},
+        {1, 0, 0, box, 0, 1},
         {1, -4, 0, -5, 0, 1},
         {1, 1, 1, 1, 1, 1},
         };
     
-    std::vector< std::pair< unsigned int, unsigned int > > { {4, 1}, {4, 3} };
+    //std::vector< std::pair< unsigned int, unsigned int > > m_agentPositions = { {4, 1}, {4, 3} };
+    m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(4, 1));
+    m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(4, 3));
     m_stepCount = 0;
 }
 
@@ -34,12 +36,12 @@ void Environment::printMatrix(){
     }
 }
 
-// Returns false if a collision between agents occurred
+// Returns the cost of a given set of actions as well as updates the environment
 double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<unsigned int, unsigned int>> targets){
     assert(actions.size() == m_agentPositions.size());
     assert(targets.size() == m_agentPositions.size());
 
-    std::vector< std::pair<unsigned int, unsigned int> > newPositions;
+    std::vector< std::pair<unsigned int, unsigned int> > newPositions(m_agentPositions.size());
 
     double cost;
 
@@ -49,7 +51,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
         std::pair target = targets[agent_index];
         uint8_t action = actions[agent_index];
 
-        std::pair newPos(agentPos.first, agentPos.second); // Stand still
+        std::pair<unsigned int, unsigned int> newPos(agentPos.first, agentPos.second); // Stand still
 
         switch(action){
             case 1: // Move up
@@ -65,17 +67,18 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
                 newPos.second = agentPos.second + 1;
                 break;
         }
-
         int newPosEl = m_matrix[newPos.first][newPos.second];
         /*
         If the agent picks up its designated box or 
         the new position is empty space, then add position to newPositions
         */
         if((newPosEl == box && newPos == targets[agent_index]) || newPosEl == space){
-            newPositions.push_back(newPos);
+            newPositions[agent_index] = newPos;
+        }
+        else{
+            newPositions[agent_index] = m_agentPositions[agent_index];
         }
     }
-
     // Check for collisions
     /*
     Algorithm is O(n^2) in time where n is the number of agents
@@ -84,21 +87,29 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
     */
     for(size_t i = 0; i < m_agentPositions.size(); ++i){
         std::vector<unsigned int> oldToNew = {m_agentPositions[i].first, m_agentPositions[i].second, newPositions[i].first, newPositions[i].second};
-        for(size_t j = i; j < m_agentPositions.size(); ++j){
-            if(newPositions[i] == newPositions[j]) // If two agents have the same position
+        for(size_t j = i + 1; j < m_agentPositions.size(); ++j){
+            if(newPositions[i] == newPositions[j]){ // If two agents have the same position
                 cost += c_collision;
-
+            }
             std::vector<unsigned int> complement = {newPositions[j].first, newPositions[j].second, m_agentPositions[j].first, m_agentPositions[j].second};
 
-            if(oldToNew == complement) // If to agents swap positions
+            if(oldToNew == complement){ // If to agents swap positions
                 cost += c_collision;
+            }
         }
     }
 
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         
+        if(actions[agent_index] != 0)
+            cost += c_step;
+
+        // If an agent moves
+        if(m_agentPositions[agent_index] == newPositions[agent_index])
+            continue;
+        
         // Update matrix
-        int temp = m_matrix[m_agentPositions[agent_index].first][m_agentPositions[agent_index].second];
+        unsigned int temp = m_matrix[m_agentPositions[agent_index].first][m_agentPositions[agent_index].second];
         m_matrix[m_agentPositions[agent_index].first][m_agentPositions[agent_index].second] = space;
         m_matrix[newPositions[agent_index].first][newPositions[agent_index].second] = temp;
 
@@ -111,10 +122,6 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
             }
             m_matrix[newPositions[agent_index].first][newPositions[agent_index].second] = -m_matrix[newPositions[agent_index].first][newPositions[agent_index].second];
         }
-
-        // If an agent moves
-        if(m_agentPositions[agent_index] != newPositions[agent_index])
-            cost += c_step;
     }
 
     m_agentPositions = newPositions;
