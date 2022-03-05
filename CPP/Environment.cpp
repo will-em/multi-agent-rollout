@@ -39,12 +39,12 @@ bool Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<int, 
     std::vector< std::pair<int int> > newPositions;
 
     // Find new positions 
-    for(size_t agent_index = 0; i < m_agentPositions.size(); i++){
+    for(size_t agent_index = 0; i < m_agentPositions.size(); ++agent_index){
         std::pair agentPos = m_agentPositions[agent_index];
         std::pair target = targets[agent_index];
         uint8_t action = actions[agent_index];
 
-        std::pair newPos(agentPos.first, agentPos.second); 
+        std::pair newPos(agentPos.first, agentPos.second); // Stand still
 
         switch(action){
             case 1: // Move up
@@ -59,7 +59,6 @@ bool Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<int, 
             case 4: // Move right
                 newPos.second = agentPos.second + 1;
                 break;
-            default: // Stand still
         }
 
         int newPosEl = m_matrix[newPos.first][newPos.second];
@@ -72,12 +71,18 @@ bool Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<int, 
         }
     }
 
-
     // Check for collisions
-        /*
-        Implement unordered map from coordinate pair to integer and count occurances of
-        that coordinate
-        */
+    /*
+    Algorithm is O(n^2) in time where n is the number of agents
+    which is fine since n is rather small (<100) and a linear or O(nlogn)
+    solution would be slower due to cache locality etc.
+    */
+    for(size_t i = 0; < m_agentPositions.size(); ++i){
+        for(size_t j = i; j < m_agentPositions.size(); ++j){
+            if(newPositions[i] == newPositions[j])
+                return false;
+        }
+    }
 
     // Check for swap 
         /*
