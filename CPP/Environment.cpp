@@ -17,7 +17,6 @@ Environment::Environment() : m_stepCount(0) {
         {1, 1, 1, 1, 1, 1},
         };
     
-    //std::vector< std::pair< unsigned int, unsigned int > > m_agentPositions = { {4, 1}, {4, 3} };
     m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(4, 1));
     m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(4, 3));
     m_stepCount = 0;
