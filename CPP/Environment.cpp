@@ -48,6 +48,12 @@ void Environment::printMatrix(){
     }
 }
 
+// Getter for environment matrix
+
+std::vector< std::vector< int > > Environment::getMatrix(){
+    return m_matrix;
+}
+
 // Returns the cost of a given set of actions as well as updates the environment
 double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<unsigned int, unsigned int>> targets){
     assert(actions.size() == m_agentPositions.size());

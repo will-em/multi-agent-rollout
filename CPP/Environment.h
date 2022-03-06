@@ -10,6 +10,7 @@ class Environment{
         Environment();
 
         void printMatrix();
+        std::vector< std::vector< int > > getMatrix();
 
         // Returns false if a collision between agents occurred
         // Should also take a vector of targets
