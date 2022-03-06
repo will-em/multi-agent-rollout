@@ -27,8 +27,21 @@ void Environment::printMatrix(){
         for(auto &el : row){
             if(el < 0){
                 std::cout << " " << el;
-            }else{
-            std::cout << "  " << el; 
+            }
+            else
+            {
+                std::cout << "  ";
+                switch(el){
+                    case 0:
+                        std::cout << " ";
+                        break;
+                    case 1:
+                        std::cout << 'X';
+                        break;
+                    default:
+                        std::cout << el;
+                        break;
+                }
             }
         }
         std::cout << '\n';
