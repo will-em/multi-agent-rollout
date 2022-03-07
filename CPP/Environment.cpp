@@ -8,10 +8,14 @@ enum object {space, wall, box, dropOff, firstAgent};
 const double c_step = 1.0, c_pickUp = 0.0, c_dropOff = -1000.0, c_collision = 1e10;
 
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
-    int dim = 2 * wallOffset + (n - 1) * boxOffset + 2 * n;
+    int dim = 2 + 2 * wallOffset + (n - 1) * boxOffset + 2 * n;
 
+    // Populate matrix with walls and boxes
     for(int i = 0; i < dim; ++i){
-        std::vector<int> row(dim, 0);
+        int fill_value = (i == 0 || i == dim - 1) ? wall : space;
+        std::vector<int> row(dim, fill_value);
+        row[0] = wall;
+        row[dim - 1] = wall;
         m_matrix.push_back(row);
     }
 
@@ -19,6 +23,18 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
     for(int i = 0; i < agentCount; ++i){ 
         m_matrix[1][1 + i] = -firstAgent + i;
         m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(1, 1 + i));
+    }
+
+    // Populate matrix with boxes
+    for(int n_i = 0; n_i < n; ++n_i){
+        for(int n_j = 0; n_j < n; ++n_j){
+            int i = 1 + wallOffset + n_i * (2 + boxOffset);
+            int j = 1 + wallOffset + n_j * (2 + boxOffset);
+            m_matrix[i][j] = box; 
+            m_matrix[i + 1][j] = box; 
+            m_matrix[i][j + 1] = box; 
+            m_matrix[i + 1][j + 1] = box; 
+        }
     }
 
 }
