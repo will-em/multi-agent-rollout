@@ -2,24 +2,25 @@
 #include <iostream>
 
 // Objects in matrix
-enum object {space, wall, box, dropOff};
+enum object {space, wall, box, dropOff, firstAgent};
 
 // Costs
 const double c_step = 1.0, c_pickUp = 0.0, c_dropOff = -1000.0, c_collision = 1e10;
 
-Environment::Environment() : m_stepCount(0) {
-    m_matrix = std::vector< std::vector <int> > {
-        {1, 1, 1, 1, 1, 1}, 
-        {1, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 1},
-        {1, 0, 0, box, 0, 1},
-        {1, -4, 0, -5, 0, 1},
-        {1, 1, 1, 1, 1, 1},
-        };
-    
-    m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(4, 1));
-    m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(4, 3));
-    m_stepCount = 0;
+Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
+    int dim = 2 * wallOffset + (n - 1) * boxOffset + 2 * n;
+
+    for(int i = 0; i < dim; ++i){
+        std::vector<int> row(dim, 0);
+        m_matrix.push_back(row);
+    }
+
+    // Populate matrix with agents
+    for(int i = 0; i < agentCount; ++i){ 
+        m_matrix[1][1 + i] = -firstAgent + i;
+        m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(1, 1 + i));
+    }
+
 }
 
 void Environment::printMatrix(){
@@ -49,7 +50,6 @@ void Environment::printMatrix(){
 }
 
 // Getter for environment matrix
-
 std::vector< std::vector< int > > Environment::getMatrix(){
     return m_matrix;
 }

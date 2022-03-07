@@ -7,7 +7,7 @@ class Environment{
         std::vector< std::pair< unsigned int, unsigned int > > m_agentPositions; 
 
     public:
-        Environment();
+        Environment(int wallOffset, int boxOffset, int n, int agentCount);
 
         void printMatrix();
         std::vector< std::vector< int > > getMatrix();
