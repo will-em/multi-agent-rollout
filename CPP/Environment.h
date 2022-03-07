@@ -10,12 +10,12 @@ class Environment{
         Environment(int wallOffset, int boxOffset, int n, int agentCount);
 
         void printMatrix();
+
+        // Getter for environment matrix
         std::vector< std::vector< int > > getMatrix();
 
-        // Returns false if a collision between agents occurred
-        // Should also take a vector of targets
+        // Returns the cost of a given set of actions as well as updates the environment
         double step(std::vector<uint8_t> actions, std::vector< std::pair<unsigned int, unsigned int> > targets); 
 
-        // Implement getters for targets
 
 };
