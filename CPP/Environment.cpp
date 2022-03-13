@@ -171,8 +171,6 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
             m_matrix[newPositions[agent_index].first][newPositions[agent_index].second] = -m_matrix[newPositions[agent_index].first][newPositions[agent_index].second];
         }
     }
-    for(auto &pos : newPositions)
-        std::cout << pos.first << pos.second << std::endl;
     m_agentPositions = newPositions;
     m_stepCount += 1;
 
