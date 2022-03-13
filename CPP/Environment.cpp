@@ -1,4 +1,4 @@
-#include "Environment.h"
+#include "Environment.hpp"
 #include <iostream>
 
 // Objects in matrix
@@ -6,6 +6,7 @@ enum object {space, wall, box, dropOff, firstAgent};
 
 // Costs
 const double c_step = 1.0, c_pickUp = -100.0, c_dropOff = -1000.0, c_collision = 1e10;
+
 
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
     int dim = 2 + 2 * wallOffset + (n - 1) * boxOffset + 2 * n;
