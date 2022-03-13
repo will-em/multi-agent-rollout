@@ -37,7 +37,7 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
 
     // Populate matrix with agents
     for(int i = 0; i < agentCount; ++i){ 
-        m_matrix[1][1 + i] = -firstAgent + i;
+        m_matrix[1][1 + i] = -firstAgent - i;
         m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(1, 1 + i));
     }
 
@@ -122,12 +122,21 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
         If the agent picks up its designated box or 
         the new position is empty space, then add position to newPositions
         */
+        if(newPosEl == wall || (newPosEl == box && newPos != targets[agent_index])){
+            newPositions[agent_index] = m_agentPositions[agent_index];
+        }
+        else{
+            newPositions[agent_index] = newPos;
+        }
+        std::cout << newPositions[agent_index].first << newPositions[agent_index].second << std::endl;
+        /*
         if((newPosEl == box && newPos == targets[agent_index]) || newPosEl == space){
             newPositions[agent_index] = newPos;
         }
         else{
             newPositions[agent_index] = m_agentPositions[agent_index];
         }
+        */
     }
     // Check for collisions
     /*
@@ -175,6 +184,8 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
     }
 
     m_agentPositions = newPositions;
+    for(auto &pos : newPositions)
+        std::cout << pos.first << pos.second << std::endl;
     m_stepCount += 1;
 
     return cost;
