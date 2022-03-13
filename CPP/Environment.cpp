@@ -5,7 +5,22 @@
 enum object {space, wall, box, dropOff, firstAgent};
 
 // Costs
-const double c_step = 1.0, c_pickUp = -100.0, c_dropOff = -1000.0, c_collision = 1e10;
+static const double c_step = 1.0, c_pickUp = -100.0, c_dropOff = -1000.0, c_collision = 1e10;
+
+static constexpr double discountFactor = 0.99;
+
+template<int N>
+struct Discount {
+    double arr[N];
+    constexpr Discount () : arr() {
+        arr[0] = 1.0;
+        for (int i = 1; i <  N; ++i)
+            arr[i] = arr[i - 1] * discountFactor;
+    }
+};
+static constexpr auto discountFactors = Discount<10000>();
+
+
 
 
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
