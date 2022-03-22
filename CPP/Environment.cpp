@@ -94,6 +94,8 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
     std::vector< std::pair<unsigned int, unsigned int> > newPositions(m_agentPositions.size());
 
     double cost;
+    const unsigned int dim = m_matrix.size(); 
+    std::vector<std::vector<unsigned int> > coll_mat( dim, std::vector<unsigned int> (dim, 0));  
 
     // Find new positions 
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
@@ -126,6 +128,13 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
         else{
             newPositions[agent_index] = newPos;
         }
+
+        // Check for collisions
+        if(coll_mat[newPositions[agent_index].first][newPositions[agent_index].second] != 0){
+            cost += c_collision * discountFactors.arr[m_stepCount];
+        }else{
+            coll_mat[newPositions[agent_index].first][newPositions[agent_index].second] = 1;
+        }
     }
 
     /*
@@ -135,6 +144,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
     solution would be slower due to cache locality etc.
     */
     // OPTIMIZE
+    /*
     const unsigned int dim = m_matrix.size(); 
     std::vector<std::vector<unsigned int> > coll_mat( dim, std::vector<unsigned int> (dim, 0));  
 
@@ -146,6 +156,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
             coll_mat[newPositions[i].first][newPositions[i].second] = 1;
         }
     }
+    */
     /*
     for(size_t i = 0; i < m_agentPositions.size(); ++i){
         std::vector<unsigned int> oldToNew = {m_agentPositions[i].first, m_agentPositions[i].second, newPositions[i].first, newPositions[i].second};
