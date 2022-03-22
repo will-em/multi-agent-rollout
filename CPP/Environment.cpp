@@ -134,6 +134,19 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
     which is fine since n is rather small (<100) and a linear or O(nlogn)
     solution would be slower due to cache locality etc.
     */
+    // OPTIMIZE
+    const unsigned int dim = m_matrix.size(); 
+    std::vector<std::vector<unsigned int> > coll_mat( dim, std::vector<unsigned int> (dim, 0));  
+
+
+    for(size_t i = 0; i < m_agentPositions.size(); ++i){
+        if(coll_mat[newPositions[i].first][newPositions[i].second] != 0){
+            cost += c_collision * discountFactors.arr[m_stepCount];
+        }else{
+            coll_mat[newPositions[i].first][newPositions[i].second] = 1;
+        }
+    }
+    /*
     for(size_t i = 0; i < m_agentPositions.size(); ++i){
         std::vector<unsigned int> oldToNew = {m_agentPositions[i].first, m_agentPositions[i].second, newPositions[i].first, newPositions[i].second};
         for(size_t j = i + 1; j < m_agentPositions.size(); ++j){
@@ -145,7 +158,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
 
         }
     }
-
+    */
     std::vector<int> oldEl(m_agentPositions.size());
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         oldEl[agent_index] = m_matrix[m_agentPositions[agent_index].first][m_agentPositions[agent_index].second];
