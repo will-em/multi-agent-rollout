@@ -24,20 +24,22 @@ static constexpr auto discountFactors = Discount<10000>();
 
 
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
-    int dim = 2 + 2 * wallOffset + (n - 1) * boxOffset + 2 * n;
+    m_dim = 2 + 2 * wallOffset + (n - 1) * boxOffset + 2 * n;
+    m_matrix = new int[m_dim * m_dim]();
 
     // Populate matrix with walls and boxes
-    for(int i = 0; i < dim; ++i){
-        int fill_value = (i == 0 || i == dim - 1) ? wall : space;
-        std::vector<int> row(dim, fill_value);
-        row[0] = wall;
-        row[dim - 1] = wall;
-        m_matrix.push_back(row);
+    for(int i = 0; i < m_dim; ++i){
+        int fill_value = (i == 0 || i == m_dim - 1) ? wall : space;
+        for(int j = 0; j < m_dim; ++j){
+            envMat(i, j) = fill_value;
+        }
+        envMat(i, 0) = wall;
+        envMat(i, m_dim - 1) = wall;
     }
 
     // Populate matrix with agents
     for(int i = 0; i < agentCount; ++i){ 
-        m_matrix[1][1 + i] = -firstAgent - i;
+        envMat(1, 1 + i) = -firstAgent - i;
         m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(1, 1 + i));
     }
 
@@ -46,18 +48,27 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
         for(int n_j = 0; n_j < n; ++n_j){
             int i = 1 + wallOffset + n_i * (2 + boxOffset);
             int j = 1 + wallOffset + n_j * (2 + boxOffset);
-            m_matrix[i][j] = box; 
-            m_matrix[i + 1][j] = box; 
-            m_matrix[i][j + 1] = box; 
-            m_matrix[i + 1][j + 1] = box; 
+            envMat(i, j) = box; 
+            envMat(i + 1, j) = box; 
+            envMat(i, j + 1) = box; 
+            envMat(i + 1, j + 1) = box; 
         }
     }
 
 }
 
+Environment::~Environment(){
+    if(m_matrix != nullptr)
+        delete[] m_matrix;
+}
+
+int &Environment::envMat(int n, int m){
+    return m_matrix[m + n * m_dim];
+}
 void Environment::printMatrix(){
-    for(auto &row : m_matrix){
-        for(auto &el : row){
+    for(int i = 0; i < m_dim; i++){
+        for(int j = 0; j < m_dim; j++){
+            int el = envMat(i, j);
             if(el < 0){
                 std::cout << " " << el;
             }
@@ -80,12 +91,13 @@ void Environment::printMatrix(){
         std::cout << '\n';
     }
 }
-
+/*
 // Getter for environment matrix
 std::vector< std::vector< int > > Environment::getMatrix(){
     return m_matrix;
 }
 
+*/
 // Returns the cost of a given set of actions as well as updates the environment
 double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<unsigned int, unsigned int>> targets){
     assert(actions.size() == m_agentPositions.size());
@@ -94,8 +106,9 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
     std::vector< std::pair<unsigned int, unsigned int> > newPositions(m_agentPositions.size());
 
     double cost;
-    const unsigned int dim = m_matrix.size(); 
-    std::vector<std::vector<unsigned int> > coll_mat( dim, std::vector<unsigned int> (dim, 0));  
+    //std::vector<std::vector<unsigned int> > coll_mat( dim, std::vector<unsigned int> (dim, 0));  
+    const int tot_dim = m_dim * m_dim;
+    int coll_mat[tot_dim];
 
     // Find new positions 
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
@@ -119,7 +132,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
                 newPos.second = agentPos.second + 1;
                 break;
         }
-        int newPosEl = m_matrix[newPos.first][newPos.second];
+        int newPosEl = envMat(newPos.first, newPos.second);
 
         // If the new position is a wall or an undesired box, stand still, otherwise move
         if(newPosEl == wall || (newPosEl == box && newPos != targets[agent_index])){
@@ -130,10 +143,10 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
         }
 
         // Check for collisions
-        if(coll_mat[newPositions[agent_index].first][newPositions[agent_index].second] != 0){
+        if(coll_mat[m_dim * newPositions[agent_index].first + newPositions[agent_index].second] != 0){
             cost += c_collision * discountFactors.arr[m_stepCount];
         }else{
-            coll_mat[newPositions[agent_index].first][newPositions[agent_index].second] = 1;
+            coll_mat[m_dim * newPositions[agent_index].first + newPositions[agent_index].second] = 1;
         }
     }
 
@@ -172,8 +185,8 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
     */
     std::vector<int> oldEl(m_agentPositions.size());
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
-        oldEl[agent_index] = m_matrix[m_agentPositions[agent_index].first][m_agentPositions[agent_index].second];
-        m_matrix[m_agentPositions[agent_index].first][m_agentPositions[agent_index].second] = space;
+        oldEl[agent_index] = envMat(m_agentPositions[agent_index].first, m_agentPositions[agent_index].second);
+        envMat(m_agentPositions[agent_index].first, m_agentPositions[agent_index].second) = space;
     }
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         
@@ -181,16 +194,16 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
             cost += c_step;
 
         // Update matrix
-        m_matrix[newPositions[agent_index].first][newPositions[agent_index].second] = oldEl[agent_index];
+        envMat(newPositions[agent_index].first, newPositions[agent_index].second) = oldEl[agent_index];
 
         // If an agent reaches its target
         if(newPositions[agent_index] == targets[agent_index]){
-            if(m_matrix[newPositions[agent_index].first][newPositions[agent_index].second] > 0){ // If the agent has a box
+            if(envMat(newPositions[agent_index].first, newPositions[agent_index].second) > 0){ // If the agent has a box
                 cost += c_dropOff;
             }else{
                 cost += c_pickUp;
             }
-            m_matrix[newPositions[agent_index].first][newPositions[agent_index].second] = -m_matrix[newPositions[agent_index].first][newPositions[agent_index].second];
+            envMat(newPositions[agent_index].first, newPositions[agent_index].second) = -envMat(newPositions[agent_index].first, newPositions[agent_index].second);
         }
     }
     m_agentPositions = newPositions;
