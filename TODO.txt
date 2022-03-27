@@ -1,3 +1,4 @@
+Implement 1D-array instead of vector of vectors to allow for better cache locality
 
 Maybe have heuristc/base policy regard previous agents' new positions as occupied
 
