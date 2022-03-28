@@ -106,9 +106,10 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
     std::vector< std::pair<unsigned int, unsigned int> > newPositions(m_agentPositions.size());
 
     double cost;
-    //std::vector<std::vector<unsigned int> > coll_mat( dim, std::vector<unsigned int> (dim, 0));  
     const int tot_dim = m_dim * m_dim;
     int coll_mat[tot_dim];
+    for(int i = 0; i < tot_dim; ++i)
+        coll_mat[i] = 0;
 
     // Find new positions 
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
@@ -142,7 +143,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
             newPositions[agent_index] = newPos;
         }
 
-        // Check for collisions
+        // Check for penalize collisions
         if(coll_mat[m_dim * newPositions[agent_index].first + newPositions[agent_index].second] != 0){
             cost += c_collision * discountFactors.arr[m_stepCount];
         }else{
@@ -150,6 +151,14 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
         }
     }
 
+    // Check for and penalize swaps 
+    for(size_t i = 0; i < m_agentPositions.size(); ++i){
+        int agent_index = envMat(newPositions[i].first, newPositions[i].second); // Which agent stood here before?
+        agent_index = (agent_index>=0) ? agent_index : -agent_index; 
+
+        if(newPositions[i] == m_agentPositions[firstAgent - agent_index])
+            cost += c_collision * discountFactors.arr[m_stepCount];
+    }
     /*
     Check for collisions.
     Algorithm is O(n^2) in time where n is the number of agents
