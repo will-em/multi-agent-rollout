@@ -62,7 +62,23 @@ Environment::Environment(Environment &other) : m_stepCount(other.m_stepCount), m
     for (size_t i = 0; i < m_dim * m_dim; ++i)
         m_matrix[i] = other.m_matrix[i];
 }
+Environment& Environment::operator=(const Environment &other){
+    if (this != &other) 
+    {
+        int *new_m_matrix = new int[other.m_dim * other.m_dim];
+        for (size_t i = 0; i < (other.m_dim * other.m_dim); ++i)
+            new_m_matrix[i] = other.m_matrix[i];
 
+        m_stepCount = other.m_stepCount;
+        m_dim = other.m_dim;
+        m_agentPositions = other.m_agentPositions;
+
+        delete[] m_matrix;
+        m_matrix = new_m_matrix; // Point to new place in memory 
+    }
+
+    return *this;
+}
 Environment::~Environment(){
     if(m_matrix != nullptr)
         delete[] m_matrix;
