@@ -1,5 +1,6 @@
 #include "Environment.hpp"
 #include <iostream>
+#include "Astar.cpp"
 
 // Objects in matrix
 enum object {space, wall, box, dropOff, firstAgent};
@@ -26,6 +27,7 @@ static constexpr auto discountFactors = Discount<10000>();
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
     m_dim = 2 + 2 * wallOffset + (n - 1) * boxOffset + 2 * n;
     m_matrix = new int[m_dim * m_dim]();
+    m_boxesLeft = 0;
 
     // Populate matrix with walls and boxes
     for(int i = 0; i < m_dim; ++i){
@@ -52,12 +54,13 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
             envMat(i + 1, j) = box; 
             envMat(i, j + 1) = box; 
             envMat(i + 1, j + 1) = box; 
+            m_boxesLeft += 4;
         }
     }
 
 }
 
-Environment::Environment(Environment &other) : m_stepCount(other.m_stepCount), m_dim(other.m_dim), m_agentPositions(other.m_agentPositions){
+Environment::Environment(Environment &other) : m_stepCount(other.m_stepCount), m_dim(other.m_dim), m_agentPositions(other.m_agentPositions), m_boxesLeft(other.m_boxesLeft){
     m_matrix = new int[m_dim * m_dim]();
     for (size_t i = 0; i < m_dim * m_dim; ++i)
         m_matrix[i] = other.m_matrix[i];
@@ -71,6 +74,7 @@ Environment& Environment::operator=(const Environment &other){
 
         m_stepCount = other.m_stepCount;
         m_dim = other.m_dim;
+        m_boxesLeft = other.m_boxesLeft;
         m_agentPositions = other.m_agentPositions;
 
         delete[] m_matrix;
@@ -113,6 +117,15 @@ void Environment::printMatrix(){
         std::cout << '\n';
     }
 }
+
+int getNumOfAgents(){
+    return m_agentPositions.size();
+}
+
+bool isDone(){
+    return m_boxesLeft == 0 ? true : false;
+}
+
 /*
 // Getter for environment matrix
 std::vector< std::vector< int > > Environment::getMatrix(){
@@ -165,7 +178,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
             newPositions[agent_index] = newPos;
         }
 
-        // Check for penalize collisions
+        // Check for and penalize collisions
         if(coll_mat[m_dim * newPositions[agent_index].first + newPositions[agent_index].second] != 0){
             cost += c_collision * discountFactors.arr[m_stepCount];
         }else{
@@ -199,6 +212,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
         if(newPositions[agent_index] == targets[agent_index]){
             if(envMat(newPositions[agent_index].first, newPositions[agent_index].second) > 0){ // If the agent has a box
                 cost += c_dropOff;
+                m_boxesLeft--;
             }else{
                 cost += c_pickUp;
             }

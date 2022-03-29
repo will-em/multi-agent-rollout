@@ -4,6 +4,7 @@ class Environment{
     private:
         int m_stepCount;
         int m_dim;
+        int m_boxesLeft;
         int *m_matrix;
         std::vector< std::pair< unsigned int, unsigned int > > m_agentPositions; 
 
@@ -15,6 +16,8 @@ class Environment{
 
         int &envMat(int n, int m);
         void printMatrix();
+        int getNumOfAgents();
+        bool isDone();
 
         // Getter for environment matrix
         //std::vector< std::vector< int > > getMatrix();
