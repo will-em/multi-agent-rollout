@@ -181,39 +181,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
         if(newPositions[i] == m_agentPositions[firstAgent - agent_index])
             cost += c_collision * discountFactors.arr[m_stepCount];
     }
-    /*
-    Check for collisions.
-    Algorithm is O(n^2) in time where n is the number of agents
-    which is fine since n is rather small (<100) and a linear or O(nlogn)
-    solution would be slower due to cache locality etc.
-    */
-    // OPTIMIZE
-    /*
-    const unsigned int dim = m_matrix.size(); 
-    std::vector<std::vector<unsigned int> > coll_mat( dim, std::vector<unsigned int> (dim, 0));  
 
-
-    for(size_t i = 0; i < m_agentPositions.size(); ++i){
-        if(coll_mat[newPositions[i].first][newPositions[i].second] != 0){
-            cost += c_collision * discountFactors.arr[m_stepCount];
-        }else{
-            coll_mat[newPositions[i].first][newPositions[i].second] = 1;
-        }
-    }
-    */
-    /*
-    for(size_t i = 0; i < m_agentPositions.size(); ++i){
-        std::vector<unsigned int> oldToNew = {m_agentPositions[i].first, m_agentPositions[i].second, newPositions[i].first, newPositions[i].second};
-        for(size_t j = i + 1; j < m_agentPositions.size(); ++j){
-            std::vector<unsigned int> complement = {newPositions[j].first, newPositions[j].second, m_agentPositions[j].first, m_agentPositions[j].second};
-            // If two agents have the same position or swap positions
-            if(newPositions[i] == newPositions[j] || oldToNew == complement){ 
-                cost += c_collision * discountFactors.arr[m_stepCount];
-            }
-
-        }
-    }
-    */
     std::vector<int> oldEl(m_agentPositions.size());
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         oldEl[agent_index] = envMat(m_agentPositions[agent_index].first, m_agentPositions[agent_index].second);
