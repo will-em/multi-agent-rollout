@@ -57,10 +57,10 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
 
 }
 
-Environment::Environment(Environment &env) : m_stepCount(env.m_stepCount), m_dim(env.m_dim), m_agentPositions(env.m_agentPositions){
+Environment::Environment(Environment &other) : m_stepCount(other.m_stepCount), m_dim(other.m_dim), m_agentPositions(other.m_agentPositions){
     m_matrix = new int[m_dim * m_dim]();
     for (size_t i = 0; i < m_dim * m_dim; ++i)
-        m_matrix[i] = env.m_matrix[i];
+        m_matrix[i] = other.m_matrix[i];
 }
 
 Environment::~Environment(){

@@ -9,7 +9,8 @@ class Environment{
 
     public:
         Environment(int wallOffset, int boxOffset, int n, int agentCount);
-        Environment(Environment &env); // Copy constructor
+        Environment(Environment &other); // Copy constructor
+        Environment &operator=(const Environment &other);
         ~Environment(); // Destructor
 
         int &envMat(int n, int m);
