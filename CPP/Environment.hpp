@@ -17,6 +17,8 @@ class Environment{
         int &envMat(int n, int m);
         void printMatrix();
         int getNumOfAgents();
+        int getDim();
+        int* getMatPtr();
         bool isDone();
 
         // Getter for environment matrix

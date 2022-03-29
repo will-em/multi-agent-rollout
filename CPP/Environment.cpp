@@ -122,6 +122,18 @@ int getNumOfAgents(){
     return m_agentPositions.size();
 }
 
+int getDim(){
+    return m_dim;
+}
+
+int getMatPtr(){
+    return m_matrix;
+
+int* getMatPtr(){
+    return m_matrix;
+}
+}
+
 bool isDone(){
     return m_boxesLeft == 0 ? true : false;
 }
