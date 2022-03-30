@@ -125,19 +125,15 @@ int Environment::getDim(){
     return m_dim;
 }
 
-int Environment::getMatPtr(){
-    return m_matrix;
-
 int* Environment::getMatPtr(){
     return m_matrix;
 }
-}
 
-bool isDone(){
+bool Environment::isDone(){
     return m_boxesLeft == 0 ? true : false;
 }
 
-std::vector<int> getAgentValues(){
+std::vector<int> Environment::getAgentValues(){
     std::vector<int> output(m_agentPositions.size());
 
     for(size_t i; i < m_agentPositions.size(); ++i)
