@@ -1,6 +1,5 @@
 #include "Environment.hpp"
 #include <iostream>
-#include "Astar.cpp"
 
 // Objects in matrix
 enum object {space, wall, box, dropOff, firstAgent};
@@ -118,24 +117,33 @@ void Environment::printMatrix(){
     }
 }
 
-int getNumOfAgents(){
+int Environment::getNumOfAgents(){
     return m_agentPositions.size();
 }
 
-int getDim(){
+int Environment::getDim(){
     return m_dim;
 }
 
-int getMatPtr(){
+int Environment::getMatPtr(){
     return m_matrix;
 
-int* getMatPtr(){
+int* Environment::getMatPtr(){
     return m_matrix;
 }
 }
 
 bool isDone(){
     return m_boxesLeft == 0 ? true : false;
+}
+
+std::vector<int> getAgentValues(){
+    std::vector<int> output(m_agentPositions.size());
+
+    for(size_t i; i < m_agentPositions.size(); ++i)
+        output[i] = m_matrix[m_dim * m_agentPositions[i].first + m_agentPositions[i].second];
+
+    return output;
 }
 
 /*
@@ -146,11 +154,11 @@ std::vector< std::vector< int > > Environment::getMatrix(){
 
 */
 // Returns the cost of a given set of actions as well as updates the environment
-double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<unsigned int, unsigned int>> targets){
+double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, int>> &targets){
     assert(actions.size() == m_agentPositions.size());
     assert(targets.size() == m_agentPositions.size());
 
-    std::vector< std::pair<unsigned int, unsigned int> > newPositions(m_agentPositions.size());
+    std::vector< std::pair<int, int> > newPositions(m_agentPositions.size());
 
     double cost;
     const int tot_dim = m_dim * m_dim;
@@ -164,7 +172,7 @@ double Environment::step(std::vector<uint8_t> actions, std::vector<std::pair<uns
         std::pair target = targets[agent_index];
         uint8_t action = actions[agent_index];
 
-        std::pair<unsigned int, unsigned int> newPos(agentPos.first, agentPos.second); // Stand still
+        std::pair<int, int> newPos(agentPos.first, agentPos.second); // Stand still
 
         switch(action){
             case 1: // Move up

@@ -20,12 +20,14 @@ class Environment{
         int getDim();
         int* getMatPtr();
         bool isDone();
+        
+        std::vector<int> getAgentValues();
 
         // Getter for environment matrix
         //std::vector< std::vector< int > > getMatrix();
 
         // Returns the cost of a given set of actions as well as updates the environment
-        double step(std::vector<uint8_t> actions, std::vector< std::pair<unsigned int, unsigned int> > targets); 
+        double step(std::vector<int> &actions, std::vector< std::pair<int, int> > &targets); 
 
 
 };
