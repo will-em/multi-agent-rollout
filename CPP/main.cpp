@@ -35,25 +35,25 @@ void targetPicker(Environment &env, std::vector< std::pair<int,int> > &targets, 
                     if(boxPos == target)
                         continue;
                 }
-                targets.push_back(boxPos);
+                targets[agentIdx] = boxPos;
             }
         }        
     }
 }
 
-std::vector<int> basePolicy(Environment &env, int agentIdx){
-    
+std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int.int>> &targets, int agentIdx){ 
+    std::vector<int> test(3, 2);
+    return test;
 }
 
-std::vector<int> actionPicker(Environment &env){
+std::vector<int> actionPicker(Environment &env, std::vector<std::pair<int.int>> &targets){
 
     int numOfAgents = env.getNumOfAgents(); 
-
 
     // Get base policies for numOfAgents - 1 agents 
     std::vector< std::vector<int> > basePolicies(numOfAgents - 1);
     for(size_t i = 1; i < numOfAgents; ++i){
-        basePolicies.push_back(basePolicy(env, i));
+        basePolicies.push_back(basePolicy(env, targets, i));
     } 
 }
 
@@ -62,6 +62,9 @@ void simulate(int numOfAgents){
     int boxOffset = 1;
     int n = (int)ceil(sqrt(numOfAgents));
     Environment env(wallOffset, boxOffset, n, numOfAgents);
+
+    std::vector< std::pair<int, int> > targets;
+    targetPicker(env, targets, -1); // Initialize targets
 
     while(!env.isDone()){
 
