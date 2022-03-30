@@ -41,7 +41,7 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
     // Populate matrix with agents
     for(int i = 0; i < agentCount; ++i){ 
         envMat(1, 1 + i) = -firstAgent - i;
-        m_agentPositions.push_back(std::pair<unsigned int, unsigned int>(1, 1 + i));
+        m_agentPositions.push_back(std::pair<int, int>(1, 1 + i));
     }
 
     // Populate matrix with boxes

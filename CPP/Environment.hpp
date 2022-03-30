@@ -6,7 +6,7 @@ class Environment{
         int m_dim;
         int m_boxesLeft;
         int *m_matrix;
-        std::vector< std::pair< unsigned int, unsigned int > > m_agentPositions; 
+        std::vector< std::pair<int, int > > m_agentPositions; 
 
     public:
         Environment(int wallOffset, int boxOffset, int n, int agentCount);
