@@ -133,6 +133,12 @@ bool Environment::isDone(){
     return m_boxesLeft == 0 ? true : false;
 }
 
+
+int Environment::getMatrixIndex(int agentIdx){
+    auto pos = m_agentPositions[agentIdx];
+    return [m_dim * pos.first + pos.second];
+}
+
 std::vector<int> Environment::getAgentValues(){
     std::vector<int> output(m_agentPositions.size());
 

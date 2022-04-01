@@ -20,7 +20,8 @@ class Environment{
         int getDim();
         int* getMatPtr();
         bool isDone();
-        
+
+        int getMatrixIndex(int agentIdx); 
         std::vector<int> getAgentValues();
 
         // Getter for environment matrix
