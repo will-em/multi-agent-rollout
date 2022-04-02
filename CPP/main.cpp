@@ -2,6 +2,8 @@
 #include "Environment.hpp"
 #include <math.h>   
 #include "astar.cpp"
+#include <thread>
+#include <chrono>
 
 std::pair<int, int> indexToPair(int i, const int dim){
     // Convert flattened index to 2d coordinate
@@ -44,7 +46,6 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
 }
 
 std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx){ 
-
     int dim = env.getDim();
     int* matrix = env.getMatPtr();
 
@@ -61,7 +62,9 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
     auto goal = targets[agentIdx];
     int goalIdx = dim * goal.first + goal.second;
 
-    astar(obstacles, dim, dim, startIdx, goalIdx, false, path);
+    bool foundPath = astar(obstacles, dim, dim, startIdx, goalIdx, false, path); 
+    assert(foundPath);
+
     std::vector<int> controls;
 
     int index = goalIdx;
@@ -76,7 +79,7 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
         int dj = curr.second - prev.second;
 
         int control;
-        if(di > 0){ // Move up
+        if(di > 0){      // Move up
             control = 2;
         }
         else if(di < 0){ // Move down
@@ -85,11 +88,13 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
         else if(dj < 0){ // Move left
             control = 4;
         }
-        else{ // Move right
+        else{            // Move right
             control = 3;
         }
 
         controls.push_back(control);
+
+        index = prevIndex;
     }
 
     delete[] obstacles;
@@ -105,7 +110,8 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     // Get base policies for numOfAgents - 1 agents 
     std::vector< std::vector<int> > basePolicies(numOfAgents - 1);
     for(size_t i = 1; i < numOfAgents; ++i){
-        basePolicies.push_back(basePolicy(env, targets, i));
+        auto controls = basePolicy(env, targets, i);
+        basePolicies[i - 1] = controls;
     } 
 
     std::vector<int> optimizedControls;
@@ -115,25 +121,45 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
         for(size_t control = 0; control < 5; ++control){
             std::vector<int> controls(optimizedControls);
             controls.push_back(control);
-            controls.insert(controls.end(), basePolicies[agentIdx].begin() + control, basePolicies[agentIdx].end()); // BUG?
+
+            //controls.insert(controls.end(), basePolicies[agentIdx].begin() + control, basePolicies[agentIdx].end()); // BUG?
+
+            for(size_t i = optimizedControls.size() + 1; i < numOfAgents; ++i){
+                int n = basePolicies[i - 1].size();
+                controls.push_back(basePolicies[i - 1][n - 1]);
+                basePolicies[i - 1].pop_back();
+            }
 
             Environment simEnv = env; // Copy environment
             int* matrix = simEnv.getMatPtr();
             
             double cost = 0.0;
+            
             while(!simEnv.isDone()){
                 std::vector<int> agentValuesBefore = simEnv.getAgentValues();
 
                 cost += simEnv.step(controls, targets); 
+
+                if(cost < -1000.0){
+                    simEnv.printMatrix();
+                }
+
+                if(cost > 10000.0)
+                    break;
+
                 std::vector<int> agentValuesAfter = simEnv.getAgentValues();
 
+                //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                
                 // Update targets if necessary !!! ALSO UPDATE BASE-POLICY 
                 for(size_t i = 0; i < numOfAgents; ++i){
                     if(agentValuesAfter[i] > agentValuesBefore[i]){ // Agent i picks up box
                         targets[i] = dropOff; 
+                        basePolicies[i] = basePolicy(simEnv, targets, i);
                     }
                     else if(agentValuesAfter[i] < agentValuesBefore[i]){ // Agent drops off box
                         boxPicker(env, targets, i);
+                        basePolicies[i] = basePolicy(simEnv, targets, i);
                     }
                 }
             }
@@ -155,7 +181,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 }
 
 void simulate(int numOfAgents){ 
-    int wallOffset = 2;
+    int wallOffset = 5;
     int boxOffset = 1;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
@@ -169,6 +195,7 @@ void simulate(int numOfAgents){
     while(!env.isDone()){
         auto controls = controlPicker(env, targets, dropOff);
         env.step(controls, targets);
+        //env.printMatrix();
     }
 }
 
