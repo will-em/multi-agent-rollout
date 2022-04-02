@@ -1,8 +1,9 @@
 #include <iostream>
 #include "Environment.hpp"
 #include <math.h>   
+#include "astar.cpp"
 
-std::pair indexToPair(int i, dim){
+std::pair<int, int> indexToPair(int i, const int dim){
     // Convert flattened index to 2d coordinate
     int x = (int) floor(i / dim);
     int y = i % dim; 
@@ -11,7 +12,7 @@ std::pair indexToPair(int i, dim){
     return target;
 }
 
-void targetPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int agentIdx){
+void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int agentIdx){
     const int dim = env.getDim();
     int* matrix = env.getMatPtr();
 
@@ -26,7 +27,7 @@ void targetPicker(Environment &env, std::vector< std::pair<int,int> > &targets, 
             }
         }
     }
-    else{
+    else{ // Find the first box that is not the target of an other agent
         for(size_t i = 0; i < (dim * dim); ++i){
             if(matrix[i] == 2){
                 // Check that this box is not the target of another agent
@@ -36,17 +37,68 @@ void targetPicker(Environment &env, std::vector< std::pair<int,int> > &targets, 
                         continue;
                 }
                 targets[agentIdx] = boxPos;
+                break;
             }
         }        
     }
 }
 
-std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int.int>> &targets, int agentIdx){ 
-    std::vector<int> test(3, 2);
-    return test;
+std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx){ 
+
+    int dim = env.getDim();
+    int* matrix = env.getMatPtr();
+
+    float* obstacles = new float[dim * dim](); // Maybe remove outer wall
+    int* path = new int[dim * dim]();    
+
+    for(size_t i = 0; i < dim * dim; ++i){
+        if(matrix[i] == 1 || matrix[i] == 2)
+            obstacles[i] = (float) matrix[i];
+    }
+
+    int startIdx = env.getMatrixIndex(agentIdx);
+
+    auto goal = targets[agentIdx];
+    int goalIdx = dim * goal.first + goal.second;
+
+    astar(obstacles, dim, dim, startIdx, goalIdx, false, path);
+    std::vector<int> controls;
+
+    int index = goalIdx;
+    while(index != startIdx){
+        int prevIndex = path[index];
+        
+        // Calculate control
+        auto curr = indexToPair(index, dim);
+        auto prev = indexToPair(prevIndex, dim);
+
+        int di = curr.first - prev.first;
+        int dj = curr.second - prev.second;
+
+        int control;
+        if(di > 0){ // Move up
+            control = 2;
+        }
+        else if(di < 0){ // Move down
+            control = 1;
+        }
+        else if(dj < 0){ // Move left
+            control = 4;
+        }
+        else{ // Move right
+            control = 3;
+        }
+
+        controls.push_back(control);
+    }
+
+    delete[] obstacles;
+    delete[] path;
+
+    return controls;
 }
 
-std::vector<int> actionPicker(Environment &env, std::vector<std::pair<int.int>> &targets){
+std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::pair<int, int> dropOff){
 
     int numOfAgents = env.getNumOfAgents(); 
 
@@ -55,19 +107,68 @@ std::vector<int> actionPicker(Environment &env, std::vector<std::pair<int.int>> 
     for(size_t i = 1; i < numOfAgents; ++i){
         basePolicies.push_back(basePolicy(env, targets, i));
     } 
+
+    std::vector<int> optimizedControls;
+
+    for(size_t agentIdx = 0; agentIdx < numOfAgents; ++agentIdx){
+        std::vector<double> costs(5);
+        for(size_t control = 0; control < 5; ++control){
+            std::vector<int> controls(optimizedControls);
+            controls.push_back(control);
+            controls.insert(controls.end(), basePolicies[agentIdx].begin() + control, basePolicies[agentIdx].end()); // BUG?
+
+            Environment simEnv = env; // Copy environment
+            int* matrix = simEnv.getMatPtr();
+            
+            double cost = 0.0;
+            while(!simEnv.isDone()){
+                std::vector<int> agentValuesBefore = simEnv.getAgentValues();
+
+                cost += simEnv.step(controls, targets); 
+                std::vector<int> agentValuesAfter = simEnv.getAgentValues();
+
+                // Update targets if necessary !!! ALSO UPDATE BASE-POLICY 
+                for(size_t i = 0; i < numOfAgents; ++i){
+                    if(agentValuesAfter[i] > agentValuesBefore[i]){ // Agent i picks up box
+                        targets[i] = dropOff; 
+                    }
+                    else if(agentValuesAfter[i] < agentValuesBefore[i]){ // Agent drops off box
+                        boxPicker(env, targets, i);
+                    }
+                }
+            }
+
+            costs[control] = cost;
+        }
+
+        // Pick the control with the lowest cost
+        int lowestCostIdx = 0;
+        for(size_t i = 1; i < 5; ++i){
+            if(costs[i] < costs[lowestCostIdx])
+                lowestCostIdx = i;
+        }
+
+        optimizedControls.push_back(lowestCostIdx);
+    }
+
+    return optimizedControls;
 }
 
 void simulate(int numOfAgents){ 
-    int wallOffset = 1;
+    int wallOffset = 2;
     int boxOffset = 1;
-    int n = (int)ceil(sqrt(numOfAgents));
+    int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
+
     Environment env(wallOffset, boxOffset, n, numOfAgents);
 
+    std::pair<int, int> dropOff = {env.getDim() - 2, 1};
+
     std::vector< std::pair<int, int> > targets;
-    targetPicker(env, targets, -1); // Initialize targets
+    boxPicker(env, targets, -1); // Initialize targets
 
     while(!env.isDone()){
-
+        auto controls = controlPicker(env, targets, dropOff);
+        env.step(controls, targets);
     }
 }
 
@@ -88,7 +189,6 @@ int main(){
     targets[1] = {2, 3};
     std::cout << env.step(actions, targets) << std::endl;
     env.printMatrix();
-    */
     std::pair<unsigned int, unsigned int> target(150, 150);
     int N = 100;
     std::vector<std::pair<unsigned int, unsigned int>> targets(N, target);
@@ -100,5 +200,7 @@ int main(){
             env.step(actions, targets);
         }
     }
+    */
+    simulate(10);
     return 0;
 }
