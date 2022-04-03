@@ -210,6 +210,10 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
 
     // Check for and penalize swaps 
     for(size_t i = 0; i < m_agentPositions.size(); ++i){
+        // Cannot swap if standing still
+        if(actions[i] == 0) 
+            continue;
+
         int agent_index = envMat(newPositions[i].first, newPositions[i].second); // Which agent stood here before?
         agent_index = (agent_index>=0) ? agent_index : -agent_index; 
 
