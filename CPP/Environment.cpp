@@ -136,7 +136,7 @@ bool Environment::isDone(){
 
 int Environment::getMatrixIndex(int agentIdx){
     auto pos = m_agentPositions[agentIdx];
-    return m_matrix[m_dim * pos.first + pos.second];
+    return m_dim * pos.first + pos.second;
 }
 
 std::vector<int> Environment::getAgentValues(){
