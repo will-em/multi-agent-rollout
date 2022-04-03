@@ -5,7 +5,7 @@
 enum object {space, wall, box, dropOff, firstAgent};
 
 // Costs
-static const double c_step = 1.0, c_pickUp = -100.0, c_dropOff = -1000.0, c_collision = 1e10;
+static const double c_step = 1.0, c_pickUp = -100.0, c_dropOff = -1000.0, c_collision = 1e20;
 
 static constexpr double discountFactor = 0.99;
 
@@ -162,7 +162,7 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
 
     std::vector< std::pair<int, int> > newPositions(m_agentPositions.size());
 
-    double cost;
+    double cost = 0;
     const int tot_dim = m_dim * m_dim;
     int coll_mat[tot_dim];
     for(int i = 0; i < tot_dim; ++i)
@@ -199,7 +199,6 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
         else{
             newPositions[agent_index] = newPos;
         }
-
         // Check for and penalize collisions
         if(coll_mat[m_dim * newPositions[agent_index].first + newPositions[agent_index].second] != 0){
             cost += c_collision * discountFactors.arr[m_stepCount];
