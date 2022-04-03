@@ -213,8 +213,15 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
         int agent_index = envMat(newPositions[i].first, newPositions[i].second); // Which agent stood here before?
         agent_index = (agent_index>=0) ? agent_index : -agent_index; 
 
-        if(newPositions[i] == m_agentPositions[firstAgent - agent_index])
+        // Neglect non-agents 
+        if(agent_index < firstAgent)
+            continue;
+
+        // Is the agent that stood here before now at my previous position?
+        if(newPositions[agent_index - firstAgent] == m_agentPositions[i]){ 
+            std::cout << "SWAP" << std::endl;
             cost += c_collision * discountFactors.arr[m_stepCount];
+        }
     }
 
     std::vector<int> oldEl(m_agentPositions.size());
