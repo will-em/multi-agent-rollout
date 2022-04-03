@@ -142,7 +142,7 @@ int Environment::getMatrixIndex(int agentIdx){
 std::vector<int> Environment::getAgentValues(){
     std::vector<int> output(m_agentPositions.size());
 
-    for(size_t i; i < m_agentPositions.size(); ++i)
+    for(size_t i = 0; i < m_agentPositions.size(); ++i)
         output[i] = m_matrix[m_dim * m_agentPositions[i].first + m_agentPositions[i].second];
 
     return output;

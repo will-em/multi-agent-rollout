@@ -32,8 +32,8 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
     else{ // Find the first box that is not the target of an other agent
         for(size_t i = 0; i < (dim * dim); ++i){
             if(matrix[i] == 2){
-                // Check that this box is not the target of another agent
                 auto boxPos = indexToPair(i, dim);
+                // Check that this box is not the target of another agent
                 for(auto target : targets){
                     if(boxPos == target)
                         continue;
@@ -54,7 +54,10 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
 
     for(size_t i = 0; i < dim * dim; ++i){
         if(matrix[i] == 1 || matrix[i] == 2)
-            obstacles[i] = (float) matrix[i];
+            obstacles[i] = std::numeric_limits<float>::max();
+        else{
+            obstacles[i] = 1.0f;
+        }
     }
 
     int startIdx = env.getMatrixIndex(agentIdx);
@@ -85,7 +88,7 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
         else if(di < 0){ // Move down
             control = 1;
         }
-        else if(dj < 0){ // Move left
+        else if(dj > 0){ // Move left
             control = 4;
         }
         else{            // Move right
@@ -99,7 +102,6 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
 
     delete[] obstacles;
     delete[] path;
-
     return controls;
 }
 
@@ -108,10 +110,10 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     int numOfAgents = env.getNumOfAgents(); 
 
     // Get base policies for numOfAgents - 1 agents 
-    std::vector< std::vector<int> > basePolicies(numOfAgents - 1);
+    std::vector< std::vector<int> > preComputedBasePolicies(numOfAgents);
     for(size_t i = 1; i < numOfAgents; ++i){
-        auto controls = basePolicy(env, targets, i);
-        basePolicies[i - 1] = controls;
+        auto basePolicyControls = basePolicy(env, targets, i);
+        preComputedBasePolicies[i - 1] = basePolicyControls;
     } 
 
     std::vector<int> optimizedControls;
@@ -119,37 +121,51 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     for(size_t agentIdx = 0; agentIdx < numOfAgents; ++agentIdx){
         std::vector<double> costs(5);
         for(size_t control = 0; control < 5; ++control){
-            std::vector<int> controls(optimizedControls);
-            controls.push_back(control);
 
-            //controls.insert(controls.end(), basePolicies[agentIdx].begin() + control, basePolicies[agentIdx].end()); // BUG?
+            std::vector<int> controls(numOfAgents);
 
-            for(size_t i = optimizedControls.size() + 1; i < numOfAgents; ++i){
-                int n = basePolicies[i - 1].size();
-                controls.push_back(basePolicies[i - 1][n - 1]);
-                basePolicies[i - 1].pop_back();
-            }
+            std::vector<std::vector<int>> basePolicies(preComputedBasePolicies);
+
+            for(size_t i = 0; i < optimizedControls.size(); ++i)
+                controls[i] = optimizedControls[i];
+
+            controls[agentIdx] = control;
 
             Environment simEnv = env; // Copy environment
             int* matrix = simEnv.getMatPtr();
             
             double cost = 0.0;
-            
-            while(!simEnv.isDone()){
-                std::vector<int> agentValuesBefore = simEnv.getAgentValues();
+            int iteration = 0; 
+
+            std::vector<int> agentIdxBasePolicy;
+
+            while(!simEnv.isDone() && iteration < 100){
+
+                for(size_t i = optimizedControls.size(); i < numOfAgents; ++i){
+                    int n = basePolicies[i].size();
+                    //controls.push_back(basePolicies[i - 1][n - 1]);
+
+                    if(n == 0)
+                        continue;
+
+                    controls[i] = basePolicies[i][n - 1];
+                    basePolicies[i].pop_back();
+                }
+
+                auto agentValuesBefore = simEnv.getAgentValues();
 
                 cost += simEnv.step(controls, targets); 
 
-                if(cost < -1000.0){
-                    simEnv.printMatrix();
+                std::this_thread::sleep_for(std::chrono::milliseconds(300));
+                simEnv.printMatrix();
+
+                if(cost > 10000.0){
+                    std::cout << "COLLISSION" << std::endl;
+                    break;
                 }
 
-                if(cost > 10000.0)
-                    break;
+                auto agentValuesAfter = simEnv.getAgentValues();
 
-                std::vector<int> agentValuesAfter = simEnv.getAgentValues();
-
-                //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 
                 // Update targets if necessary !!! ALSO UPDATE BASE-POLICY 
                 for(size_t i = 0; i < numOfAgents; ++i){
@@ -158,10 +174,15 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                         basePolicies[i] = basePolicy(simEnv, targets, i);
                     }
                     else if(agentValuesAfter[i] < agentValuesBefore[i]){ // Agent drops off box
-                        boxPicker(env, targets, i);
+                        boxPicker(simEnv, targets, i);
                         basePolicies[i] = basePolicy(simEnv, targets, i);
                     }
                 }
+
+                iteration++;
+
+                if(basePolicies[agentIdx].empty())
+                    basePolicies[agentIdx] = basePolicy(simEnv, targets, agentIdx);
             }
 
             costs[control] = cost;
@@ -228,6 +249,25 @@ int main(){
         }
     }
     */
-    simulate(10);
+    /* 
+    Environment env(3, 3, 3, 3);
+    env.printMatrix();
+
+    std::vector<int> actions = {2, 4, 4};
+
+    std::pair<int, int> target1(0, 0);
+    std::pair<int, int> target2(2, 2);
+    std::pair<int, int> target3(1, 2);
+    std::vector<std::pair<int, int>> targets = {target1, target2, target3};
+    std::cout << env.step(actions, targets) << std::endl;
+    env.printMatrix(); 
+
+    actions[2] = 3;
+    std::cout << env.step(actions, targets) << std::endl;
+    env.printMatrix(); 
+    */
+
+    simulate(2);
+
     return 0;
 }
