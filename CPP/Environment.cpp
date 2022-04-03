@@ -211,7 +211,7 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
     // Check for and penalize swaps 
     for(size_t i = 0; i < m_agentPositions.size(); ++i){
         // Cannot swap if standing still
-        if(actions[i] == 0) 
+        if(newPositions[i] == m_agentPositions[i]) 
             continue;
 
         int agent_index = envMat(newPositions[i].first, newPositions[i].second); // Which agent stood here before?
@@ -223,7 +223,6 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
 
         // Is the agent that stood here before now at my previous position?
         if(newPositions[agent_index - firstAgent] == m_agentPositions[i]){ 
-            std::cout << "SWAP" << std::endl;
             cost += c_collision * discountFactors.arr[m_stepCount];
         }
     }
