@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Environment.hpp"
 #include <math.h>   
+#include <stdlib.h> 
 #include "astar.cpp"
 #include <thread>
 #include <chrono>
@@ -12,6 +13,87 @@ std::pair<int, int> indexToPair(int i, const int dim){
 
     std::pair target = {x, y};
     return target;
+}
+
+int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env){
+        // Pick the control with the lowest cost
+        int lowestCostIdx = 0;
+        for(size_t i = 0; i < 5; ++i){
+            if(costs[i] < costs[lowestCostIdx])
+                lowestCostIdx = i;
+        }
+
+        // Find if there are several controls with the same lowest cost
+        std::vector<int> lowestCostIndices;
+        for(size_t i = 0; i < 5; ++i){
+            if(costs[i] == costs[lowestCostIdx])
+                lowestCostIndices.push_back(i);
+        }
+
+        if(lowestCostIndices.size() == 1)
+            return lowestCostIndices[0];
+
+
+        int agentMatrixIndex = env.getMatrixIndex(agentIdx);
+        auto agentPos = indexToPair(agentMatrixIndex, env.getDim());
+
+        std::vector<int> distances;
+
+        // Find out which one of these controls moves the agent closest to its target
+        for(int control : lowestCostIndices){
+            auto newPos = agentPos; 
+            switch(control){
+                case 1: // Move up
+                    newPos.first = agentPos.first - 1;
+                    break;
+                case 2: // Move down
+                    newPos.first = agentPos.first + 1;
+                    break;
+                case 3: // Move left
+                    newPos.second = agentPos.second - 1;
+                    break;
+                case 4: // Move right
+                    newPos.second = agentPos.second + 1;
+                    break;
+            }
+
+            int newPosEl = env.envMat(newPos.first, newPos.second);
+
+            // Calculate Manhattan distance
+            int distance;
+
+            // If the new position is a wall or an undesired box, stand still, otherwise move
+            if(newPosEl == 1 || (newPosEl == 2 && newPos != targets[agentIdx])){
+                distance = abs(agentPos.first - targets[agentIdx].first) + abs(agentPos.second - targets[agentIdx].second);
+            }
+            else{
+                distance = abs(newPos.first - targets[agentIdx].first) + abs(newPos.second - targets[agentIdx].second);
+            }
+
+            distances.push_back(distance);
+        }
+
+
+        // Pick the control with the lowest distance 
+        int lowestDistanceIdx = 0;
+        for(size_t i = 0; i < distances.size(); ++i){
+            if(distances[i] < distances[lowestDistanceIdx])
+                lowestDistanceIdx = i;
+        }
+
+        // Find if there are several controls with the same lowest distance 
+        std::vector<int> lowestDistanceIndices;
+        for(size_t i = 0; i < distances.size(); ++i){
+            if(distances[i] == distances[lowestDistanceIdx])
+                lowestDistanceIndices.push_back(i);
+        }
+
+
+        // If there is a tie, i.e lowestCostIndices.size() > 1, just take a random one out of them
+        srand(42);
+        int control = rand() % lowestDistanceIndices.size();
+
+        return control;
 }
 
 void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int agentIdx){
@@ -136,7 +218,6 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
             controls[agentIdx] = control;
 
             Environment simEnv = env; // Copy environment
-            int* matrix = simEnv.getMatPtr();
             
             double cost = 0.0;
             int iteration = 0; 
@@ -189,22 +270,17 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
                 for(size_t i = 0; i < numOfAgents; ++i){
                     if(basePolicies[i].empty())
-                        basePolicies[i] = basePolicy(simEnv, targets, agentIdx);
+                        basePolicies[i] = basePolicy(simEnv, targets, i);
                 }
+                
                 iteration++;
             }
 
             costs[control] = cost;
         }
 
-        // Pick the control with the lowest cost
-        int lowestCostIdx = 0;
-        for(size_t i = 1; i < 5; ++i){
-            if(costs[i] < costs[lowestCostIdx])
-                lowestCostIdx = i;
-        }
 
-        optimizedControls.push_back(lowestCostIdx);
+        optimizedControls.push_back(costsToControl(costs, agentIdx, targets, env));
     }
 
     return optimizedControls;
