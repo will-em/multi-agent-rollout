@@ -109,11 +109,11 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
     int numOfAgents = env.getNumOfAgents(); 
 
-    // Get base policies for numOfAgents - 1 agents 
     std::vector< std::vector<int> > preComputedBasePolicies(numOfAgents);
+    // Get base policies for numOfAgents 
     for(size_t i = 1; i < numOfAgents; ++i){
         auto basePolicyControls = basePolicy(env, targets, i);
-        preComputedBasePolicies[i - 1] = basePolicyControls;
+        preComputedBasePolicies[i] = basePolicyControls;
     } 
 
     std::vector<int> optimizedControls;
@@ -122,12 +122,16 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
         std::vector<double> costs(5);
         for(size_t control = 0; control < 5; ++control){
 
+            std::vector<std::pair<int, int>> simTargets(targets);
             std::vector<int> controls(numOfAgents);
 
             std::vector<std::vector<int>> basePolicies(preComputedBasePolicies);
 
-            for(size_t i = 0; i < optimizedControls.size(); ++i)
+
+            for(size_t i = 0; i < optimizedControls.size(); ++i){
                 controls[i] = optimizedControls[i];
+                basePolicies[i].clear();
+            }
 
             controls[agentIdx] = control;
 
@@ -143,7 +147,6 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
                 for(size_t i = optimizedControls.size(); i < numOfAgents; ++i){
                     int n = basePolicies[i].size();
-                    //controls.push_back(basePolicies[i - 1][n - 1]);
 
                     if(n == 0)
                         continue;
@@ -152,37 +155,44 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                     basePolicies[i].pop_back();
                 }
 
+                for(auto el : controls)
+                    std::cout << el << " ";
+                std::cout << '\n';
+                for(auto el : targets)
+                    std::cout << "(" << el.first << ", " << el.second << ") ";
+                std::cout << '\n';
                 auto agentValuesBefore = simEnv.getAgentValues();
 
-                cost += simEnv.step(controls, targets); 
+                cost += simEnv.step(controls, simTargets); 
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(300));
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 simEnv.printMatrix();
-
-                if(cost > 10000.0){
-                    std::cout << "COLLISSION" << std::endl;
+                if(cost > 1000.0){
+                    std::cout << "COLLISSION " << cost << std::endl;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     break;
                 }
 
                 auto agentValuesAfter = simEnv.getAgentValues();
 
                 
-                // Update targets if necessary !!! ALSO UPDATE BASE-POLICY 
+                // Update targets if necessary 
                 for(size_t i = 0; i < numOfAgents; ++i){
                     if(agentValuesAfter[i] > agentValuesBefore[i]){ // Agent i picks up box
-                        targets[i] = dropOff; 
-                        basePolicies[i] = basePolicy(simEnv, targets, i);
+                        simTargets[i] = dropOff; 
+                        basePolicies[i] = basePolicy(simEnv, simTargets, i);
                     }
                     else if(agentValuesAfter[i] < agentValuesBefore[i]){ // Agent drops off box
-                        boxPicker(simEnv, targets, i);
-                        basePolicies[i] = basePolicy(simEnv, targets, i);
+                        boxPicker(simEnv, simTargets, i);
+                        basePolicies[i] = basePolicy(simEnv, simTargets, i);
                     }
                 }
 
+                for(size_t i = 0; i < numOfAgents; ++i){
+                    if(basePolicies[i].empty())
+                        basePolicies[i] = basePolicy(simEnv, targets, agentIdx);
+                }
                 iteration++;
-
-                if(basePolicies[agentIdx].empty())
-                    basePolicies[agentIdx] = basePolicy(simEnv, targets, agentIdx);
             }
 
             costs[control] = cost;
@@ -249,25 +259,22 @@ int main(){
         }
     }
     */
-    /* 
-    Environment env(3, 3, 3, 3);
+   /*
+    Environment env(5, 1, 1, 2);
     env.printMatrix();
 
-    std::vector<int> actions = {2, 4, 4};
+    std::vector<int> actions = {1, 4};
 
     std::pair<int, int> target1(0, 0);
     std::pair<int, int> target2(2, 2);
-    std::pair<int, int> target3(1, 2);
-    std::vector<std::pair<int, int>> targets = {target1, target2, target3};
+    std::vector<std::pair<int, int>> targets = {target1, target2};
     std::cout << env.step(actions, targets) << std::endl;
     env.printMatrix(); 
 
-    actions[2] = 3;
     std::cout << env.step(actions, targets) << std::endl;
     env.printMatrix(); 
     */
-
-    simulate(2);
+    simulate(3);
 
     return 0;
 }
