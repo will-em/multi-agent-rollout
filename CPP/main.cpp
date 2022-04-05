@@ -145,14 +145,13 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
             while(!simEnv.isDone() && iteration < 100){
 
-                for(size_t i = optimizedControls.size(); i < numOfAgents; ++i){
+                for(size_t i = 0; i < numOfAgents; ++i){
                     int n = basePolicies[i].size();
 
-                    if(n == 0)
-                        continue;
-
-                    controls[i] = basePolicies[i][n - 1];
-                    basePolicies[i].pop_back();
+                    if(n > 0){
+                        controls[i] = basePolicies[i][n - 1];
+                        basePolicies[i].pop_back();
+                    }
                 }
 
                 for(auto el : controls)
