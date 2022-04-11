@@ -16,6 +16,11 @@ std::pair<int, int> indexToPair(int i, const int dim){
 }
 
 int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env){
+        /*
+        for(auto cost : costs)
+            std::cout << "Cost " << cost << std::endl;
+        */
+
         // Pick the control with the lowest cost
         int lowestCostIdx = 0;
         for(size_t i = 0; i < 5; ++i){
@@ -29,10 +34,6 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
             if(costs[i] == costs[lowestCostIdx])
                 lowestCostIndices.push_back(i);
         }
-
-        if(lowestCostIndices.size() == 1)
-            return lowestCostIndices[0];
-
 
         int agentMatrixIndex = env.getMatrixIndex(agentIdx);
         auto agentPos = indexToPair(agentMatrixIndex, env.getDim());
@@ -62,8 +63,8 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
             // Calculate Manhattan distance
             int distance;
 
-            // If the new position is a wall or an undesired box, stand still, otherwise move
-            if(newPosEl == 1 || (newPosEl == 2 && newPos != targets[agentIdx])){
+            // If control is standing still or the new position is a wall or an undesired box
+            if(control == 0 || newPosEl == 1 || (newPosEl == 2 && newPos != targets[agentIdx])){
                 distance = abs(agentPos.first - targets[agentIdx].first) + abs(agentPos.second - targets[agentIdx].second);
             }
             else{
@@ -77,22 +78,34 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
         // Pick the control with the lowest distance 
         int lowestDistanceIdx = 0;
         for(size_t i = 0; i < distances.size(); ++i){
+
+            std::cout << "Control: " << lowestCostIndices[i]<< "  Distance " << distances[i] << std::endl;
             if(distances[i] < distances[lowestDistanceIdx])
                 lowestDistanceIdx = i;
         }
 
+        std::cout << '\n';
+
         // Find if there are several controls with the same lowest distance 
         std::vector<int> lowestDistanceIndices;
         for(size_t i = 0; i < distances.size(); ++i){
-            if(distances[i] == distances[lowestDistanceIdx])
-                lowestDistanceIndices.push_back(i);
+            if(distances[i] == distances[lowestDistanceIdx]){
+                if(lowestCostIndices[i] == 0) // Standing still
+                    return 0;
+                lowestDistanceIndices.push_back(lowestCostIndices[i]);
+            }
         }
 
 
         // If there is a tie, i.e lowestCostIndices.size() > 1, just take a random one out of them
-        srand(42);
-        int control = rand() % lowestDistanceIndices.size();
-
+        //srand(42);
+        /*
+        std::cout << "Size " << lowestDistanceIndices.size() << std::endl;
+        for(auto el : lowestDistanceIndices)
+            std::cout << lowestCostIndices[el] << std::endl;
+        */
+        int control = lowestDistanceIndices[rand() % lowestDistanceIndices.size()];
+        std::cout << "CHOICE " << control << std::endl;
         return control;
 }
 
@@ -235,21 +248,11 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                     }
                 }
 
-                for(auto el : controls)
-                    std::cout << el << " ";
-                std::cout << '\n';
-                for(auto el : targets)
-                    std::cout << "(" << el.first << ", " << el.second << ") ";
-                std::cout << '\n';
                 auto agentValuesBefore = simEnv.getAgentValues();
 
                 cost += simEnv.step(controls, simTargets); 
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                simEnv.printMatrix();
                 if(cost > 1000.0){
-                    std::cout << "COLLISSION " << cost << std::endl;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                     break;
                 }
 
@@ -279,10 +282,8 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
             costs[control] = cost;
         }
 
-
         optimizedControls.push_back(costsToControl(costs, agentIdx, targets, env));
     }
-
     return optimizedControls;
 }
 
@@ -298,10 +299,36 @@ void simulate(int numOfAgents){
     std::vector< std::pair<int, int> > targets;
     boxPicker(env, targets, -1); // Initialize targets
 
+    double cost = 0.0;
+
     while(!env.isDone()){
         auto controls = controlPicker(env, targets, dropOff);
-        env.step(controls, targets);
-        //env.printMatrix();
+
+        auto agentValuesBefore = env.getAgentValues();
+
+        cost += env.step(controls, targets); 
+        env.printMatrix();
+
+        if(cost > 1000.0){
+            break;
+        }
+
+        auto agentValuesAfter = env.getAgentValues();
+
+        // Update targets if necessary 
+        for(size_t i = 0; i < numOfAgents; ++i){
+            if(agentValuesAfter[i] > agentValuesBefore[i]){ // Agent i picks up box
+                targets[i] = dropOff; 
+            }
+            else if(agentValuesAfter[i] < agentValuesBefore[i]){ // Agent drops off box
+                boxPicker(env, targets, i);
+            }
+        }
+        for(auto el : targets)
+            std::cout << el.first << " " << el.second << std::endl;
+        std::cout << '\n';
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
@@ -349,7 +376,7 @@ int main(){
     std::cout << env.step(actions, targets) << std::endl;
     env.printMatrix(); 
     */
-    simulate(3);
+    simulate(2);
 
     return 0;
 }
