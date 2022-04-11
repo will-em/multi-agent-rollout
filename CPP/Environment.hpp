@@ -20,6 +20,7 @@ class Environment{
         int getDim();
         int* getMatPtr();
         bool isDone();
+        int getStepCount();
 
         int getMatrixIndex(int agentIdx); 
         std::vector<int> getAgentValues();

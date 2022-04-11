@@ -155,6 +155,11 @@ std::vector< std::vector< int > > Environment::getMatrix(){
 }
 
 */
+
+int Environment::getStepCount(){
+    return m_stepCount;
+}
+
 // Returns the cost of a given set of actions as well as updates the environment
 double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, int>> &targets){
     assert(actions.size() == m_agentPositions.size());
@@ -207,10 +212,14 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
         }
     }
 
+
+    int swapPenalized[m_agentPositions.size()];
+    for(int i = 0; i < tot_dim; ++i)
+        swapPenalized[i] = 0;
     // Check for and penalize swaps 
     for(size_t i = 0; i < m_agentPositions.size(); ++i){
         // Cannot swap if standing still
-        if(newPositions[i] == m_agentPositions[i]) 
+        if(newPositions[i] == m_agentPositions[i] || swapPenalized[i] != 0) 
             continue;
 
         int agent_index = envMat(newPositions[i].first, newPositions[i].second); // Which agent stood here before?
@@ -220,9 +229,10 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
         if(agent_index < firstAgent)
             continue;
 
-        // Is the agent that stood here before now at my previous position?
+        // Is the agent that stood here before, now at my previous position?
         if(newPositions[agent_index - firstAgent] == m_agentPositions[i]){ 
             cost += c_collision * discountFactors.arr[m_stepCount];
+            swapPenalized[agent_index - firstAgent] = 1;
         }
     }
 
