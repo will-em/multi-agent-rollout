@@ -25,9 +25,6 @@ class Environment{
         int getMatrixIndex(int agentIdx); 
         std::vector<int> getAgentValues();
 
-        // Getter for environment matrix
-        //std::vector< std::vector< int > > getMatrix();
-
         // Returns the cost of a given set of actions as well as updates the environment
         double step(std::vector<int> &actions, std::vector< std::pair<int, int> > &targets); 
 
