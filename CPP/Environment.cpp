@@ -148,13 +148,6 @@ std::vector<int> Environment::getAgentValues(){
     return output;
 }
 
-/*
-// Getter for environment matrix
-std::vector< std::vector< int > > Environment::getMatrix(){
-    return m_matrix;
-}
-
-*/
 
 int Environment::getStepCount(){
     return m_stepCount;
