@@ -125,15 +125,26 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
         }
     }
     else{ // Find the first box that is not the target of an other agent
+        bool updatedTarget = false;
         for(size_t i = 0; i < (dim * dim); ++i){
             if(matrix[i] == 2){
+
                 auto boxPos = indexToPair(i, dim);
+
                 // Check that this box is not the target of another agent
+                bool anotherAgentsTarget = false;
                 for(auto target : targets){
-                    if(boxPos == target)
-                        continue;
+                    if(boxPos == target){
+                        anotherAgentsTarget = true;
+                        break;
+                    }
                 }
+
+                if(anotherAgentsTarget)
+                    continue;
+
                 targets[agentIdx] = boxPos;
+                updatedTarget = true;
                 break;
             }
         }        
