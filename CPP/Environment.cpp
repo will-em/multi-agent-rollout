@@ -254,7 +254,7 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
                 envMat(newPositions[agent_index].first, newPositions[agent_index].second) = -envMat(newPositions[agent_index].first, newPositions[agent_index].second);
             }
             else{ // Return to starting position
-                cost += * c_returnToStart * discountFactors.arr[m_stepCount];
+                cost += c_returnToStart * discountFactors.arr[m_stepCount];
             }
         }
 
