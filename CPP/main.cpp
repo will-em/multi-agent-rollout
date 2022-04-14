@@ -15,12 +15,13 @@ std::pair<int, int> indexToPair(int i, const int dim){
     return target;
 }
 
+
 int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env){
         /*
         for(auto cost : costs)
             std::cout << "Cost " << cost << std::endl;
+        std::cout << '\n';
         */
-
         // Pick the control with the lowest cost
         int lowestCostIdx = 0;
         for(size_t i = 0; i < 5; ++i){
@@ -79,12 +80,12 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
         int lowestDistanceIdx = 0;
         for(size_t i = 0; i < distances.size(); ++i){
 
-            std::cout << "Control: " << lowestCostIndices[i]<< "  Distance " << distances[i] << std::endl;
+            //std::cout << "Control: " << lowestCostIndices[i]<< "  Distance " << distances[i] << std::endl;
             if(distances[i] < distances[lowestDistanceIdx])
                 lowestDistanceIdx = i;
         }
 
-        std::cout << '\n';
+        //std::cout << '\n';
 
         // Find if there are several controls with the same lowest distance 
         std::vector<int> lowestDistanceIndices;
@@ -105,7 +106,7 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
             std::cout << lowestCostIndices[el] << std::endl;
         */
         int control = lowestDistanceIndices[rand() % lowestDistanceIndices.size()];
-        std::cout << "CHOICE " << control << std::endl;
+        //std::cout << "CHOICE " << control << std::endl;
         return control;
 }
 
@@ -148,8 +149,12 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
                 break;
             }
         }        
+        if(!updatedTarget){ // No boxes left to pick up
+            targets[agentIdx] = std::pair<int, int>(1, 1 + agentIdx);
+        }
     }
 }
+
 
 std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx){ 
     int dim = env.getDim();
@@ -211,6 +216,34 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
     return controls;
 }
 
+std::vector<bool> updateTargets(Environment &env, std::vector<std::pair<int, int>> &targets, std::vector<int> &beforeValues, std::pair<int, int> dropOff){
+    std::vector<int> afterValues = env.getAgentValues();
+    int numOfAgents = env.getNumOfAgents();
+
+    std::vector<bool> hasUpdatedTarget(numOfAgents, false);
+
+    // Update targets if necessary 
+    for(size_t i = 0; i < numOfAgents; ++i){
+        if(afterValues[i] > beforeValues[i]){ // Agent i picks up box
+            targets[i] = dropOff; 
+            hasUpdatedTarget[i] = true;
+        }
+        else if(afterValues[i] < beforeValues[i]){ // Agent i drops off box
+            boxPicker(env, targets, i);
+            hasUpdatedTarget[i] = true;
+        }
+    }
+
+    return hasUpdatedTarget; // C++11 move
+}
+void updateBasePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, std::vector<bool> &hasUpdatedTarget, std::vector<std::vector<int>> &basePolicies){
+    int numOfAgents = env.getNumOfAgents();
+
+    for(size_t i = 0; i < numOfAgents; ++i){
+        if(hasUpdatedTarget[i])
+            basePolicies[i] = basePolicy(env, targets, i);
+    }    
+}
 std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::pair<int, int> dropOff){
 
     int numOfAgents = env.getNumOfAgents(); 
@@ -259,32 +292,30 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                     }
                 }
 
-                auto agentValuesBefore = simEnv.getAgentValues();
+                auto beforeValues = simEnv.getAgentValues();
 
                 cost += simEnv.step(controls, simTargets); 
-
+                /*
+                if(targets[0] == dropOff && targets[1] == dropOff){
+                    if(iteration == 0){
+                        std::cout << "Agent id " << agentIdx << " control " << control << std::endl;
+                    }
+                    simEnv.printMatrix();
+                    std::cout << "Cost " << cost << " stepCount: " << simEnv.getStepCount() << std::endl;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                }
+                */
                 if(cost > 1000.0){
                     break;
                 }
 
-                auto agentValuesAfter = simEnv.getAgentValues();
-
-                
-                // Update targets if necessary 
-                for(size_t i = 0; i < numOfAgents; ++i){
-                    if(agentValuesAfter[i] > agentValuesBefore[i]){ // Agent i picks up box
-                        simTargets[i] = dropOff; 
-                        basePolicies[i] = basePolicy(simEnv, simTargets, i);
-                    }
-                    else if(agentValuesAfter[i] < agentValuesBefore[i]){ // Agent drops off box
-                        boxPicker(simEnv, simTargets, i);
-                        basePolicies[i] = basePolicy(simEnv, simTargets, i);
-                    }
-                }
+                // Update targets
+                auto hasUpdatedTarget = updateTargets(simEnv, simTargets, beforeValues, dropOff);
+                updateBasePolicy(simEnv, simTargets, hasUpdatedTarget, basePolicies);
 
                 for(size_t i = 0; i < numOfAgents; ++i){
                     if(basePolicies[i].empty())
-                        basePolicies[i] = basePolicy(simEnv, targets, i);
+                        basePolicies[i] = basePolicy(simEnv, targets, i); 
                 }
                 
                 iteration++;
@@ -305,7 +336,7 @@ void simulate(int numOfAgents){
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
 
-    std::pair<int, int> dropOff = {env.getDim() - 2, 1};
+    std::pair<int, int> dropOff = {env.getDim() - 3, 2};
 
     std::vector< std::pair<int, int> > targets;
     boxPicker(env, targets, -1); // Initialize targets
@@ -315,7 +346,7 @@ void simulate(int numOfAgents){
     while(!env.isDone()){
         auto controls = controlPicker(env, targets, dropOff);
 
-        auto agentValuesBefore = env.getAgentValues();
+        auto beforeValues = env.getAgentValues();
 
         cost += env.step(controls, targets); 
         env.printMatrix();
@@ -324,17 +355,8 @@ void simulate(int numOfAgents){
             break;
         }
 
-        auto agentValuesAfter = env.getAgentValues();
+        updateTargets(env, targets, beforeValues, dropOff);
 
-        // Update targets if necessary 
-        for(size_t i = 0; i < numOfAgents; ++i){
-            if(agentValuesAfter[i] > agentValuesBefore[i]){ // Agent i picks up box
-                targets[i] = dropOff; 
-            }
-            else if(agentValuesAfter[i] < agentValuesBefore[i]){ // Agent drops off box
-                boxPicker(env, targets, i);
-            }
-        }
         for(auto el : targets)
             std::cout << el.first << " " << el.second << std::endl;
         std::cout << '\n';
@@ -387,7 +409,9 @@ int main(){
     std::cout << env.step(actions, targets) << std::endl;
     env.printMatrix(); 
     */
-    simulate(2);
+
+
+    simulate(3);
 
     return 0;
 }
