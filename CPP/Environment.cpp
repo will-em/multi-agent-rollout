@@ -5,7 +5,7 @@
 enum object {space, wall, box, dropOff, firstAgent};
 
 // Costs
-static const double c_step = 1.0, c_pickUp = -100.0, c_dropOff = -1000.0, c_collision = 1e20;
+static const double c_step = 1.0, c_pickUp = -100.0, c_dropOff = -1000.0, c_returnToStart = -100.0, c_collision = 1e20;
 
 static constexpr double discountFactor = 0.99;
 
@@ -243,15 +243,21 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
         envMat(newPositions[agent_index].first, newPositions[agent_index].second) = oldEl[agent_index];
 
         // If an agent reaches its target
-        if(targets[agent_index].first != 1 && newPositions[agent_index] == targets[agent_index] && m_agentPositions[agent_index] != newPositions[agent_index]){
-            if(envMat(newPositions[agent_index].first, newPositions[agent_index].second) > 0){ // If the agent has a box
-                cost += c_dropOff;
-                m_boxesLeft--;
-            }else{
-                cost += c_pickUp;
+        if(newPositions[agent_index] == targets[agent_index] && m_agentPositions[agent_index] != newPositions[agent_index]){
+            if(targets[agent_index].first != 1){
+                if(envMat(newPositions[agent_index].first, newPositions[agent_index].second) > 0){ // If the agent has a box
+                    cost += c_dropOff * discountFactors.arr[m_stepCount];
+                    m_boxesLeft--;
+                }else{
+                    cost += c_pickUp * discountFactors.arr[m_stepCount];
+                }
+                envMat(newPositions[agent_index].first, newPositions[agent_index].second) = -envMat(newPositions[agent_index].first, newPositions[agent_index].second);
             }
-            envMat(newPositions[agent_index].first, newPositions[agent_index].second) = -envMat(newPositions[agent_index].first, newPositions[agent_index].second);
+            else{ // Return to starting position
+                cost += * c_returnToStart * discountFactors.arr[m_stepCount];
+            }
         }
+
     }
     m_agentPositions = newPositions;
     m_stepCount += 1;
