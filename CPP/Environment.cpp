@@ -113,7 +113,7 @@ void Environment::printMatrix(){
                 }
             }
         }
-        std::cout << '\n';
+        std::cout << "\n\n";
     }
 }
 
