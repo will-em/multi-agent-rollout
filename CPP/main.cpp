@@ -244,20 +244,21 @@ void updateBasePolicy(Environment &env, std::vector<std::pair<int, int>> &target
             basePolicies[i] = basePolicy(env, targets, i);
     }    
 }
-std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::pair<int, int> dropOff){
+std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::pair<int, int> dropOff, std::vector<int> &agentOrder){
 
     int numOfAgents = env.getNumOfAgents(); 
 
     std::vector< std::vector<int> > preComputedBasePolicies(numOfAgents);
     // Get base policies for numOfAgents 
     for(size_t i = 1; i < numOfAgents; ++i){
-        auto basePolicyControls = basePolicy(env, targets, i);
-        preComputedBasePolicies[i] = basePolicyControls;
+        int agentIdx = agentOrder[i];
+        auto basePolicyControls = basePolicy(env, targets, agentIdx);
+        preComputedBasePolicies[agentIdx] = basePolicyControls;
     } 
 
     std::vector<int> optimizedControls;
-
-    for(size_t agentIdx = 0; agentIdx < numOfAgents; ++agentIdx){
+    
+    for(int agentIdx : agentOrder){
         std::vector<double> costs(5);
         for(size_t control = 0; control < 5; ++control){
 
@@ -326,7 +327,12 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
         optimizedControls.push_back(costsToControl(costs, agentIdx, targets, env));
     }
-    return optimizedControls;
+
+    // Reorder optimizedControls
+    std::vector<int> reorderedOptimizedControls(numOfAgents);
+    for(size_t i = 0; i < numOfAgents; ++i)
+        reorderedOptimizedControls[i] = optimizedControls[agentOrder[i]];
+    return reorderedOptimizedControls;
 }
 
 void simulate(int numOfAgents){ 
@@ -343,8 +349,12 @@ void simulate(int numOfAgents){
 
     double cost = 0.0;
 
+    std::vector<int> agentOrder(numOfAgents);
+    for(size_t i = 0; i < numOfAgents; ++i)
+        agentOrder[i] = i;
+
     while(!env.isDone()){
-        auto controls = controlPicker(env, targets, dropOff);
+        auto controls = controlPicker(env, targets, dropOff, agentOrder);
 
         auto beforeValues = env.getAgentValues();
 
