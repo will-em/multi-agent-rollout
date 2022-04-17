@@ -106,16 +106,14 @@ void Environment::printMatrix(){
                     std::cout << "\033[1;39;42m" << "  " << "\033[0m";
                     break;
                 default:
-                    el = (el >= 0 ) ? (el) : (-el); // Absolute value
-                    el -= 3; // Ensure that agent numbering starts with 1
                     char padding = '\0';
-                    if(el < 10)
+                    if(el < 13 && el > -13)
                         padding = ' ';
                     
                     if(el < 0){
-                        std::cout << padding << -el;
+                        std::cout << padding << -el - 3;
                     }else{
-                       std::cout << "\033[0;39;42m" << padding << el << "\033[0m";
+                       std::cout << "\033[0;39;42m" << padding << el - 3 << "\033[0m";
                     }
                     
                     break;
