@@ -94,23 +94,31 @@ void Environment::printMatrix(){
     for(int i = 0; i < m_dim; i++){
         for(int j = 0; j < m_dim; j++){
             int el = envMat(i, j);
-            if(el < 0){
-                std::cout << " " << el;
-            }
-            else
-            {
-                std::cout << "  ";
-                switch(el){
-                    case 0:
-                        std::cout << " ";
-                        break;
-                    case 1:
-                        std::cout << 'X';
-                        break;
-                    default:
-                        std::cout << el;
-                        break;
-                }
+            std::cout << "  ";
+            switch(el){
+                case 0:
+                    std::cout << "  ";
+                    break;
+                case 1:
+                    std::cout << "\033[1;39;44m" << "  " << "\033[0m";
+                    break;
+                case 2:
+                    std::cout << "\033[1;39;42m" << "  " << "\033[0m";
+                    break;
+                default:
+                    el = (el >= 0 ) ? (el) : (-el); // Absolute value
+                    el -= 3; // Ensure that agent numbering starts with 1
+                    char padding = '\0';
+                    if(el < 10)
+                        padding = ' ';
+                    
+                    if(el < 0){
+                        std::cout << padding << -el;
+                    }else{
+                       std::cout << "\033[0;39;42m" << padding << el << "\033[0m";
+                    }
+                    
+                    break;
             }
         }
         std::cout << "\n\n";
