@@ -185,34 +185,40 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
     std::vector<int> controls;
 
     int index = goalIdx;
-    while(index != startIdx){
-        int prevIndex = path[index];
-        
-        // Calculate control
-        auto curr = indexToPair(index, dim);
-        auto prev = indexToPair(prevIndex, dim);
 
-        int di = curr.first - prev.first;
-        int dj = curr.second - prev.second;
+    if(index == startIdx){
+        controls = std::vector<int>(1, 0);
+    }else{
+        while(index != startIdx){
+            int prevIndex = path[index];
+            
+            // Calculate control
+            auto curr = indexToPair(index, dim);
+            auto prev = indexToPair(prevIndex, dim);
 
-        int control;
-        if(di > 0){      // Move up
-            control = 2;
-        }
-        else if(di < 0){ // Move down
-            control = 1;
-        }
-        else if(dj > 0){ // Move left
-            control = 4;
-        }
-        else{            // Move right
-            control = 3;
-        }
+            int di = curr.first - prev.first;
+            int dj = curr.second - prev.second;
 
-        controls.push_back(control);
+            int control;
+            if(di > 0){      // Move down
+                control = 2;
+            }
+            else if(di < 0){ // Move up
+                control = 1;
+            }
+            else if(dj > 0){ // Move right
+                control = 4;
+            }
+            else{            // Move left
+                control = 3;
+            }
 
-        index = prevIndex;
+            controls.push_back(control);
+
+            index = prevIndex;
+        }
     }
+
 
     delete[] obstacles;
     delete[] path;
