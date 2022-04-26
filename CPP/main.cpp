@@ -339,7 +339,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     // Reorder optimizedControls
     std::vector<int> reorderedOptimizedControls(numOfAgents);
     for(size_t i = 0; i < numOfAgents; ++i)
-        reorderedOptimizedControls[i] = optimizedControls[agentOrder[i]];
+        reorderedOptimizedControls[agentOrder[i]] = optimizedControls[i];
     return reorderedOptimizedControls;
 }
 
