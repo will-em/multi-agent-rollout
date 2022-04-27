@@ -20,11 +20,6 @@ std::pair<int, int> indexToPair(int i, const int dim){
 
 
 int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env){
-        /*
-        for(auto cost : costs)
-            std::cout << "Cost " << cost << std::endl;
-        std::cout << '\n';
-        */
         // Pick the control with the lowest cost
         int lowestCostIdx = 0;
         for(size_t i = 0; i < 5; ++i){
@@ -83,12 +78,9 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
         int lowestDistanceIdx = 0;
         for(size_t i = 0; i < distances.size(); ++i){
 
-            //std::cout << "Control: " << lowestCostIndices[i]<< "  Distance " << distances[i] << std::endl;
             if(distances[i] < distances[lowestDistanceIdx])
                 lowestDistanceIdx = i;
         }
-
-        //std::cout << '\n';
 
         // Find if there are several controls with the same lowest distance 
         std::vector<int> lowestDistanceIndices;
@@ -102,14 +94,8 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
 
 
         // If there is a tie, i.e lowestCostIndices.size() > 1, just take a random one out of them
-        //srand(42);
-        /*
-        std::cout << "Size " << lowestDistanceIndices.size() << std::endl;
-        for(auto el : lowestDistanceIndices)
-            std::cout << lowestCostIndices[el] << std::endl;
-        */
         int control = lowestDistanceIndices[rand() % lowestDistanceIndices.size()];
-        //std::cout << "CHOICE " << control << std::endl;
+
         return control;
 }
 
@@ -305,16 +291,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                 auto beforeValues = simEnv.getAgentValues();
 
                 cost += simEnv.step(controls, simTargets); 
-                /*
-                if(targets[0] == dropOff && targets[1] == dropOff){
-                    if(iteration == 0){
-                        std::cout << "Agent id " << agentIdx << " control " << control << std::endl;
-                    }
-                    simEnv.printMatrix();
-                    std::cout << "Cost " << cost << " stepCount: " << simEnv.getStepCount() << std::endl;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                }
-                */
+
                 if(cost > 1000.0){
                     break;
                 }
@@ -333,12 +310,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
             costs[control] = cost;
         }
-        /*
-        std::cout << agentIdx + 4 << ": " << targets[agentIdx].first << " " << targets[agentIdx].second << " - ";
-        for(auto c : costs)
-            std::cout << c << " ";
-        std::cout << '\n';
-        */
+
         optimizedControls.push_back(costsToControl(costs, agentIdx, targets, env));
     }
 
@@ -350,8 +322,8 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 }
 
 void simulate(int numOfAgents){ 
-    int wallOffset = 5;
-    int boxOffset = 1;
+    int wallOffset = 16;
+    int boxOffset = 4;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
@@ -385,6 +357,8 @@ void simulate(int numOfAgents){
             Environment shuffleEnv = beforeEnv;
             std::vector<int> shuffleControls;
 
+            int shuffleCount = 0;
+
             while(shuffleCost > 10000.0){
                 shuffleEnv = beforeEnv;
 
@@ -392,7 +366,9 @@ void simulate(int numOfAgents){
                 shuffleControls = controlPicker(shuffleEnv, targets, dropOff, shuffledAgentOrder);
 
                 shuffleCost = shuffleEnv.step(shuffleControls, targets); 
+                shuffleCount++; 
             }
+            std::cout << "Number of shuffles " << shuffleCount << std::endl;
             env = shuffleEnv;
             cost = shuffleCost;
             controls = shuffleControls;
@@ -402,21 +378,18 @@ void simulate(int numOfAgents){
         env.printMatrix();
 
         updateTargets(env, targets, beforeValues, dropOff);
-        /*
-        for(size_t t = 0; t < targets.size(); ++t)
-            std::cout << t + 4 << ": " << targets[t].first << " " << targets[t].second << std::endl;
-        */
+        
         std::cout << '\n';
         for(auto el : controls)
             std::cout << el << " ";
         std::cout << '\n';
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 }
 
 int main(){
-    simulate(10);
+    simulate(36);
 
     return 0;
 }
