@@ -159,6 +159,10 @@ int Environment::getStepCount(){
     return m_stepCount;
 }
 
+int Environment::getBoxesLeft(){
+    return m_boxesLeft;
+}
+
 // Returns the cost of a given set of actions as well as updates the environment
 double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, int>> &targets){
     assert(actions.size() == m_agentPositions.size());
