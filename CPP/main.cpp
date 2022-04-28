@@ -405,11 +405,13 @@ void simulate(int numOfAgents){
         std::cout << '\n';
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 }
 
 int main(){
     simulate(36);
+    simulate(20);
 
     return 0;
 }
