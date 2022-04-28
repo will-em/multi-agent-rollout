@@ -349,7 +349,7 @@ bool simulate(int numOfAgents){
 
     std::pair<int, int> dropOff1 = {env.getDim() - 4, 3};
     std::pair<int, int> dropOff2 = {env.getDim() - 4, env.getDim() - 4};
-    std::vector<std::pair<int, int>> dropOffPoints = {dropOff1, dropOff2};
+    std::vector<std::pair<int, int>> dropOffPoints = {dropOff1};
 
     std::vector< std::pair<int, int> > targets;
     boxPicker(env, targets, -1); // Initialize targets
@@ -410,12 +410,64 @@ bool simulate(int numOfAgents){
         for(auto el : controls)
             std::cout << el << " ";
         std::cout << '\n';
+        */
         //std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
+
+    return true;
+}
+
+bool simulateBasePolicy(int numOfAgents){
+    int wallOffset = 5;
+    int boxOffset = 4;
+    int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
+
+    Environment env(wallOffset, boxOffset, n, numOfAgents);
+
+    std::pair<int, int> dropOff1 = {env.getDim() - 4, 3};
+    std::pair<int, int> dropOff2 = {env.getDim() - 4, env.getDim() - 4};
+    std::vector<std::pair<int, int>> dropOffPoints = {dropOff1};
+
+    std::vector< std::pair<int, int> > targets;
+    boxPicker(env, targets, -1); // Initialize targets
+
+    double cost = 0.0;
+    auto rd = std::random_device {}; 
+    auto rng = std::default_random_engine {rd()};
+
+    std::vector< std::vector<int> > basePolicies(numOfAgents);
+
+    for(size_t i = 0; i < numOfAgents; ++i)
+        basePolicies[i] = basePolicy(env, targets, i);
+
+    std::vector<int> controls(numOfAgents);
+
+    while(!env.isDone()){
+
+        for(size_t i = 0; i < numOfAgents; ++i){
+            controls[i] = basePolicies[i][basePolicies[i].size() - 1];
+            basePolicies[i].pop_back();
+        }
+        auto beforeValues = env.getAgentValues();
+
+        Environment beforeEnv = env;
+
+        cost = env.step(controls, targets); 
+        if(cost > 1000)
+            return false;
+
+        env.printMatrix();
+
+        auto hasUpdatedTarget = updateTargets(env, targets, beforeValues, dropOffPoints);
+        updateBasePolicy(env, targets, hasUpdatedTarget, basePolicies);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    return true;
 }
 
 int main(){
-    simulate(20);
     int simulationCount = 0;
     int numOfSuccess = 0;
     while(true){
