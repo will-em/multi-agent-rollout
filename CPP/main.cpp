@@ -340,7 +340,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     return reorderedOptimizedControls;
 }
 
-void simulate(int numOfAgents){ 
+bool simulate(int numOfAgents){ 
     int wallOffset = 5;
     int boxOffset = 4;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
@@ -389,15 +389,20 @@ void simulate(int numOfAgents){
 
                 shuffleCost = shuffleEnv.step(shuffleControls, targets); 
                 shuffleCount++; 
+
+                if(shuffleCount > 100000){
+                    beforeEnv.printMatrix();
+                    return false;
+                }
             }
-            std::cout << "Number of shuffles " << shuffleCount << std::endl;
+            //std::cout << "Number of shuffles " << shuffleCount << std::endl;
             env = shuffleEnv;
             cost = shuffleCost;
             controls = shuffleControls;
         }
 
 
-        env.printMatrix();
+        //env.printMatrix();
 
         updateTargets(env, targets, beforeValues, dropOffPoints);
         /* 
@@ -411,6 +416,17 @@ void simulate(int numOfAgents){
 
 int main(){
     simulate(20);
+    int simulationCount = 0;
+    int numOfSuccess = 0;
+    while(true){
+        bool success = simulateBasePolicy(2);
 
+        if(success)
+            numOfSuccess++;
+
+        simulationCount++;
+
+        std::cout << "Number of simulations: " << simulationCount << ", number of successes: " << numOfSuccess << std::endl;
+    }
     return 0;
 }
