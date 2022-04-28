@@ -177,6 +177,8 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
         }
     }
 
+    obstacles[targets[agentIdx].second * dim + targets[agentIdx].first] = 1.0f;
+
     int startIdx = env.getMatrixIndex(agentIdx);
 
     auto goal = targets[agentIdx];
