@@ -103,41 +103,52 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
     const int dim = env.getDim();
     int* matrix = env.getMatPtr();
 
+    std::vector<int> boxPositions;
+
+    for(size_t i = 0; i < dim*dim; ++i){
+        if(matrix[i] == 2){
+            boxPositions.push_back(i);
+        }
+    }
+
+    //Shuffle the box positions
+    auto rd = std::random_device {}; 
+    auto rng = std::default_random_engine {rd()};
+    std::shuffle(std::begin(boxPositions), std::end(boxPositions), rng);
+    
+
     if(targets.empty()){ // Initialization of targets
-        int targetsAdded = 0;
-        for(size_t i = 0; i < (dim * dim); ++i){
-            if(matrix[i] == 2){ // If it is a box
-                targets.push_back(indexToPair(i, dim));
-                targetsAdded++; 
-                if(targetsAdded == env.getNumOfAgents())
-                    break;
-            }
+        for(size_t i = 0; i < env.getNumOfAgents(); i++){
+            auto boxPos = indexToPair(boxPositions[i], dim);
+            targets.push_back(boxPos);
         }
     }
     else{ // Find the first box that is not the target of an other agent
         bool updatedTarget = false;
-        for(size_t i = 0; i < (dim * dim); ++i){
-            if(matrix[i] == 2){
 
-                auto boxPos = indexToPair(i, dim);
+        bool anotherAgentsTarget = true;
 
-                // Check that this box is not the target of another agent
-                bool anotherAgentsTarget = false;
-                for(auto target : targets){
-                    if(boxPos == target){
-                        anotherAgentsTarget = true;
-                        break;
-                    }
+
+        for(auto boxIndex : boxPositions){
+            auto boxPos = indexToPair(boxIndex, dim);
+
+            // Check that this box is not the target of another agent
+            anotherAgentsTarget = false;
+            for(auto target : targets){
+                if(boxPos == target){
+                    anotherAgentsTarget = true;
+                    break;
                 }
-
-                if(anotherAgentsTarget)
-                    continue;
-
-                targets[agentIdx] = boxPos;
-                updatedTarget = true;
-                break;
             }
-        }        
+
+            if(anotherAgentsTarget)
+                continue;
+
+            targets[agentIdx] = boxPos;
+            updatedTarget = true;
+            break;
+        }
+
         if(!updatedTarget){ // No boxes left to pick up
             targets[agentIdx] = std::pair<int, int>(1, 1 + agentIdx);
         }
@@ -322,19 +333,20 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 }
 
 void simulate(int numOfAgents){ 
-    int wallOffset = 16;
+    int wallOffset = 5;
     int boxOffset = 4;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
 
-    std::pair<int, int> dropOff = {env.getDim() - 3, 2};
+    std::pair<int, int> dropOff = {env.getDim() - 4, 3};
 
     std::vector< std::pair<int, int> > targets;
     boxPicker(env, targets, -1); // Initialize targets
 
     double cost = 0.0;
-    auto rng = std::default_random_engine {};
+    auto rd = std::random_device {}; 
+    auto rng = std::default_random_engine {rd()};
 
     // Initialize agent order
     std::vector<int> agentOrder(numOfAgents);
