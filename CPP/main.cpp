@@ -18,7 +18,7 @@ std::pair<int, int> indexToPair(int i, const int dim){
     return target;
 }
 
-std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx);
+std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx, std::vector<int> agentsAsObstacles = std::vector<int>());
 
 int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env){
         // Pick the control with the lowest cost
@@ -162,7 +162,7 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
 }
 
 
-std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx){ 
+std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx, std::vector<int> agentsAsObstacles){ 
     int dim = env.getDim();
     int* matrix = env.getMatPtr();
 
@@ -177,7 +177,13 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
         }
     }
 
-    obstacles[targets[agentIdx].second * dim + targets[agentIdx].first] = 1.0f;
+    for(auto idx: agentsAsObstacles){
+        std::cout << idx << std::endl;
+        obstacles[env.getMatrixIndex(idx)] = std::numeric_limits<float>::max();
+    }
+        
+
+    //obstacles[targets[agentIdx].second * dim + targets[agentIdx].first] = 1.0f;
 
     int startIdx = env.getMatrixIndex(agentIdx);
 
@@ -446,22 +452,56 @@ bool simulateBasePolicy(int numOfAgents){
 
         for(size_t i = 0; i < numOfAgents; ++i){
             controls[i] = basePolicies[i][basePolicies[i].size() - 1];
-            basePolicies[i].pop_back();
         }
         auto beforeValues = env.getAgentValues();
 
         Environment beforeEnv = env;
 
         cost = env.step(controls, targets); 
-        if(cost > 1000)
-            return false;
+
+        int i = numOfAgents;
+        if(cost > 1000){
+            double tempCost = cost;
+
+            std::vector<int> agentsAsObstacles;
+            std::vector<int> tempControls(controls);
+            Environment tempEnv = beforeEnv;
+
+            while(tempCost > 1000){
+                tempEnv = beforeEnv;
+                --i;
+                if(i == 0)
+                    return false;
+
+                std::cout << "WORKS" << std::endl;
+                tempEnv = beforeEnv;            
+                tempControls[i] = 0;
+                agentsAsObstacles.push_back(i);
+
+                for(int j = i - 1; j >= 0; j--){
+                    basePolicies[j] = basePolicy(tempEnv, targets, j, agentsAsObstacles);
+                    tempControls[j] = basePolicies[j][basePolicies[j].size() - 1];
+                    basePolicies[j].pop_back();
+                }
+
+                tempCost = tempEnv.step(tempControls, targets);
+            }
+
+            env = tempEnv;
+        }
+
+        if(i == numOfAgents){
+            for(size_t agentIdx = 0; agentIdx < numOfAgents; ++agentIdx){
+                basePolicies[agentIdx].pop_back();
+            }
+        }
 
         env.printMatrix();
 
         auto hasUpdatedTarget = updateTargets(env, targets, beforeValues, dropOffPoints);
         updateBasePolicy(env, targets, hasUpdatedTarget, basePolicies);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     return true;
@@ -471,7 +511,7 @@ int main(){
     int simulationCount = 0;
     int numOfSuccess = 0;
     while(true){
-        bool success = simulateBasePolicy(2);
+        bool success = simulateBasePolicy(4);
 
         if(success)
             numOfSuccess++;
