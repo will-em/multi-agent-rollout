@@ -246,7 +246,7 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
     }
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         
-        if(actions[agent_index] != 0)
+        //if(actions[agent_index] != 0)
             cost += c_step;
 
         // Update matrix
