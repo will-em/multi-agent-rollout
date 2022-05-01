@@ -7,7 +7,7 @@ enum object {space, wall, box, dropOff, firstAgent};
 // Costs
 static const double c_step = 1.0, c_pickUp = -10000.0, c_dropOff = -10000.0, c_returnToStart = -1000.0, c_collision = 1e20;
 
-static constexpr double discountFactor = 0.99;
+static constexpr double discountFactor = 0.999;
 
 template<int N>
 struct Discount {

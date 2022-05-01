@@ -194,8 +194,9 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
 
     bool foundPath = astar(obstacles, dim, dim, startIdx, goalIdx, false, path); 
     
-    if(!foundPath)
+    if(!foundPath){
         return std::vector(1, 0);
+    }
 
     std::vector<int> controls;
 
@@ -268,7 +269,7 @@ void updateBasePolicy(Environment &env, std::vector<std::pair<int, int>> &target
             basePolicies[i] = basePolicy(env, targets, i);
     }    
 }
-std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder){
+std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, int horizon){
 
     int numOfAgents = env.getNumOfAgents(); 
 
@@ -313,7 +314,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
             std::vector<int> agentIdxBasePolicy;
 
-            while(!simEnv.isDone() && iteration < 20){
+            while(!simEnv.isDone() && iteration < horizon){
 
                 for(size_t i = 0; i < numOfAgents; ++i){
                     int n = basePolicies[i].size();
@@ -434,10 +435,10 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                     simEnv = tempEnv;
                     simEnvStepCost = tempCost;
                     }
-
+                    /*
                     for(size_t i = 0; i < numOfAgents; ++i)
                         basePolicies[i].clear();
-
+                    */
                 }
 
                 //simEnv.printMatrix();
@@ -491,9 +492,9 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     return reorderedOptimizedControls;
 }
 
-bool simulate(int numOfAgents){ 
-    int wallOffset = 8;
-    int boxOffset = 4;
+bool simulate(int numOfAgents, int horizon){ 
+    int wallOffset = 6;
+    int boxOffset = 3;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
@@ -515,7 +516,7 @@ bool simulate(int numOfAgents){
         agentOrder[i] = i;
 
     while(!env.isDone()){
-        auto controls = controlPicker(env, targets, dropOffPoints, agentOrder);
+        auto controls = controlPicker(env, targets, dropOffPoints, agentOrder, horizon);
 
         auto beforeValues = env.getAgentValues();
 
@@ -524,8 +525,6 @@ bool simulate(int numOfAgents){
         cost = env.step(controls, targets); 
 
         if(cost > 10000.0){
-            env.printMatrix();
-            assert(false);
             double shuffleCost = std::numeric_limits<float>::max();
             std::vector<int> shuffledAgentOrder = agentOrder;
 
@@ -535,10 +534,11 @@ bool simulate(int numOfAgents){
             int shuffleCount = 0;
 
             while(shuffleCost > 10000.0){
+                std::cout << "SHUFFLING" << std::endl;
                 shuffleEnv = beforeEnv;
 
                 std::shuffle(std::begin(shuffledAgentOrder), std::end(shuffledAgentOrder), rng);
-                shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder);
+                shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder, horizon);
 
                 shuffleCost = shuffleEnv.step(shuffleControls, targets); 
                 shuffleCount++; 
@@ -571,8 +571,8 @@ bool simulate(int numOfAgents){
 }
 
 bool simulateBasePolicy(int numOfAgents){
-    int wallOffset = 10;
-    int boxOffset = 4;
+    int wallOffset = 6;
+    int boxOffset = 3;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
@@ -677,17 +677,172 @@ bool simulateBasePolicy(int numOfAgents){
         auto hasUpdatedTarget = updateTargets(env, targets, beforeValues, dropOffPoints);
         updateBasePolicy(env, targets, hasUpdatedTarget, basePolicies);
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
     return true;
 }
+bool simulateMix(int numOfAgents, int horizon){
+    int wallOffset = 8;
+    int boxOffset = 4;
+    int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
+    Environment env(wallOffset, boxOffset, n, numOfAgents);
+
+    std::pair<int, int> dropOff1 = {env.getDim() - 4, 3};
+    std::pair<int, int> dropOff2 = {env.getDim() - 4, env.getDim() - 4};
+    std::vector<std::pair<int, int>> dropOffPoints = {dropOff1};
+
+    std::vector< std::pair<int, int> > targets;
+    boxPicker(env, targets, -1); // Initialize targets
+
+    double cost = 0.0;
+    auto rd = std::random_device {}; 
+    auto rng = std::default_random_engine {rd()};
+
+    std::vector< std::vector<int> > basePolicies(numOfAgents);
+
+    for(size_t i = 0; i < numOfAgents; ++i)
+        basePolicies[i] = basePolicy(env, targets, i);
+
+    // Initialize agent order
+    std::vector<int> agentOrder(numOfAgents);
+    for(size_t i = 0; i < numOfAgents; ++i)
+        agentOrder[i] = i;
+
+    std::vector<int> controls(numOfAgents);
+    int iteration = 0;
+    while(!env.isDone()){
+
+        if(iteration % horizon == 0){
+            controls = controlPicker(env, targets, dropOffPoints, agentOrder, horizon);
+        }else{
+            for(size_t i = 0; i < numOfAgents; ++i){
+                controls[i] = basePolicies[i][basePolicies[i].size() - 1];
+            }
+        }
+        auto beforeValues = env.getAgentValues();
+
+        Environment beforeEnv = env;
+
+        cost = env.step(controls, targets); 
+        
+
+
+        int numOfPasses = 0;
+        double tempCost = cost;
+        if(cost > 1000.0){
+
+            std::vector<int> agentsAsObstacles;
+            std::vector<int> tempControls(controls);
+            Environment tempEnv = beforeEnv;
+
+            // Create agent order
+            std::vector<int> agentOrder(numOfAgents);
+            for(size_t i = 0; i < numOfAgents; i++)
+                agentOrder[i] = i;
+
+            // Check which agents are on drop off points
+            std::vector<int> agentsOnDropOff;
+
+            for(size_t i = 0; i < numOfAgents; i++){
+                auto pos = indexToPair(tempEnv.getMatrixIndex(i), tempEnv.getDim());
+                for(auto point : dropOffPoints){
+                    if(pos == point)
+                        agentsOnDropOff.push_back(i);
+                }
+            }
+
+            // Swap agents on drop off points to be last in line 
+            for(size_t i = 0; i < agentsOnDropOff.size(); i++){
+                size_t index = numOfAgents - i - 1;
+                agentOrder[agentsOnDropOff[i]] = index;
+                agentOrder[index] = agentsOnDropOff[i];
+            }
+
+            for(size_t i = 0; i < numOfAgents; i++){
+                if(i == numOfAgents - 1) // If on last agent
+                    break;
+
+                tempEnv = beforeEnv;
+
+                tempControls[agentOrder[i]] = 0;
+                agentsAsObstacles.push_back(agentOrder[i]);
+
+                for(size_t j = i + 1; j < numOfAgents; j++){
+                    int agentIdx = agentOrder[j];
+                    basePolicies[agentIdx] = basePolicy(tempEnv, targets, agentIdx, agentsAsObstacles);
+                    tempControls[agentIdx] = basePolicies[agentIdx][basePolicies[agentIdx].size() - 1];
+                    basePolicies[agentIdx].pop_back();
+                }
+
+                tempCost = tempEnv.step(tempControls, targets);
+                //tempEnv.printMatrix();
+
+                numOfPasses++;
+
+                if(tempCost < 1000){
+                    break;
+                }
+            }
+            env = tempEnv;
+        }
+
+        if(tempCost > 1000.0){
+            double shuffleCost = std::numeric_limits<float>::max();
+            std::vector<int> shuffledAgentOrder = agentOrder;
+
+            Environment shuffleEnv = beforeEnv;
+            std::vector<int> shuffleControls;
+
+            int shuffleCount = 0;
+
+            while(shuffleCost > 10000.0){
+                std::cout << "SHUFFLING" << std::endl;
+                shuffleEnv = beforeEnv;
+
+                std::shuffle(std::begin(shuffledAgentOrder), std::end(shuffledAgentOrder), rng);
+                shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder, horizon);
+
+                shuffleCost = shuffleEnv.step(shuffleControls, targets); 
+                shuffleCount++; 
+
+                if(shuffleCount > 100000){
+                    beforeEnv.printMatrix();
+                    return false;
+                }
+            }
+            //std::cout << "Number of shuffles " << shuffleCount << std::endl;
+            env = shuffleEnv;
+            cost = shuffleCost;
+            controls = shuffleControls;
+        }
+        if(numOfPasses == 0){
+            for(size_t agentIdx = 0; agentIdx < numOfAgents; ++agentIdx){
+                basePolicies[agentIdx].pop_back();
+            }
+        }
+
+        env.printMatrix();
+
+        for(size_t i = 0; i < numOfAgents; ++i)
+            basePolicies[i] = basePolicy(env, targets, i);
+
+        auto hasUpdatedTarget = updateTargets(env, targets, beforeValues, dropOffPoints);
+        updateBasePolicy(env, targets, hasUpdatedTarget, basePolicies);
+
+        iteration++;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+
+    return true;
+}
 int main(){
     int simulationCount = 0;
     int numOfSuccess = 0;
     while(true){
-        bool success = simulate(20);
+        bool success = simulateMix(20, 20);
 
         if(success)
             numOfSuccess++;
