@@ -371,15 +371,16 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                         auto pos = indexToPair(tempEnv.getMatrixIndex(order[i]), tempEnv.getDim());
                         for(auto point : dropOffPoints){
                             if(pos == point)
-                                agentsOnDropOff.push_back(order[i]);
+                                agentsOnDropOff.push_back(i);
                         }
                     }
 
                     // Swap agents on drop off points to be last in line 
                     for(size_t i = 0; i < agentsOnDropOff.size(); i++){
                         size_t index = numOfAgents - i - 1;
-                        order[agentsOnDropOff[i]] = index;
-                        order[index] = agentsOnDropOff[i];
+                        int temp = order[agentsOnDropOff[i]];
+                        order[agentsOnDropOff[i]] = order[index];
+                        order[index] = temp;
                     }
                     /*
                     std::cout << "ORDER: ";
