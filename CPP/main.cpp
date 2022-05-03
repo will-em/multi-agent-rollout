@@ -572,8 +572,8 @@ bool simulate(int numOfAgents, int horizon){
 }
 
 bool simulateBasePolicy(int numOfAgents){
-    int wallOffset = 6;
-    int boxOffset = 3;
+    int wallOffset = 15;
+    int boxOffset = 5;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
@@ -684,8 +684,8 @@ bool simulateBasePolicy(int numOfAgents){
     return true;
 }
 bool simulateMix(int numOfAgents, int horizon){
-    int wallOffset = 8;
-    int boxOffset = 4;
+    int wallOffset = 15;
+    int boxOffset = 5;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
@@ -717,6 +717,8 @@ bool simulateMix(int numOfAgents, int horizon){
 
         if(iteration % horizon == 0){
             controls = controlPicker(env, targets, dropOffPoints, agentOrder, horizon);
+            for(size_t i = 0; i < numOfAgents; ++i)
+                basePolicies[i].clear();
         }else{
             for(size_t i = 0; i < numOfAgents; ++i){
                 controls[i] = basePolicies[i][basePolicies[i].size() - 1];
@@ -798,17 +800,17 @@ bool simulateMix(int numOfAgents, int horizon){
 
             int shuffleCount = 0;
 
+            shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder, horizon);
             while(shuffleCost > 10000.0){
                 std::cout << "SHUFFLING" << std::endl;
                 shuffleEnv = beforeEnv;
 
-                std::shuffle(std::begin(shuffledAgentOrder), std::end(shuffledAgentOrder), rng);
-                shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder, horizon);
-
+                //std::shuffle(std::begin(shuffledAgentOrder), std::end(shuffledAgentOrder), rng);
+                std::shuffle(std::begin(shuffleControls), std::end(shuffleControls), rng);
                 shuffleCost = shuffleEnv.step(shuffleControls, targets); 
                 shuffleCount++; 
 
-                if(shuffleCount > 100000){
+                if(shuffleCount > 250){
                     beforeEnv.printMatrix();
                     return false;
                 }
@@ -843,7 +845,7 @@ int main(){
     int simulationCount = 0;
     int numOfSuccess = 0;
     while(true){
-        bool success = simulateMix(20, 20);
+        bool success = simulateMix(30, 25);
 
         if(success)
             numOfSuccess++;
