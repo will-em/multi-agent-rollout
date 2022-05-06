@@ -18,7 +18,7 @@ std::pair<int, int> indexToPair(int i, const int dim){
     return target;
 }
 
-std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx, std::vector<int> agentsAsObstacles = std::vector<int>());
+std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx);
 
 int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env){
         // Pick the control with the lowest cost
@@ -162,7 +162,7 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
 }
 
 
-std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx, std::vector<int> agentsAsObstacles){ 
+std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx){ 
     int dim = env.getDim();
     int* matrix = env.getMatPtr();
 
@@ -176,12 +176,6 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
             obstacles[i] = 1.0f;
         }
     }
-
-    for(auto idx: agentsAsObstacles){
-        std::cout << idx << std::endl;
-        obstacles[env.getMatrixIndex(idx)] = std::numeric_limits<float>::max();
-    }
-        
 
     obstacles[targets[agentIdx].second * dim + targets[agentIdx].first] = 1.0f;
 
@@ -350,15 +344,16 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 }
 
 bool simulate(int numOfAgents){ 
-    int wallOffset = 5;
-    int boxOffset = 4;
+    int wallOffset = 15;
+    int boxOffset = 5;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
 
     std::pair<int, int> dropOff1 = {env.getDim() - 4, 3};
-    std::pair<int, int> dropOff2 = {env.getDim() - 4, env.getDim() - 4};
-    std::vector<std::pair<int, int>> dropOffPoints = {dropOff1};
+    std::pair<int, int> dropOff2 = {env.getDim() - 4, env.getDim()/2};
+    std::pair<int, int> dropOff3= {env.getDim() - 4, env.getDim() - 4};
+    std::vector<std::pair<int, int>> dropOffPoints = {dropOff1, dropOff2, dropOff3};
 
     std::vector< std::pair<int, int> > targets;
     boxPicker(env, targets, -1); // Initialize targets
@@ -426,125 +421,11 @@ bool simulate(int numOfAgents){
     return true;
 }
 
-bool simulateBasePolicy(int numOfAgents){
-    int wallOffset = 8;
-    int boxOffset = 2;
-    int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
-
-    Environment env(wallOffset, boxOffset, n, numOfAgents);
-
-    std::pair<int, int> dropOff1 = {env.getDim() - 4, 3};
-    std::pair<int, int> dropOff2 = {env.getDim() - 4, env.getDim() - 4};
-    std::vector<std::pair<int, int>> dropOffPoints = {dropOff1};
-
-    std::vector< std::pair<int, int> > targets;
-    boxPicker(env, targets, -1); // Initialize targets
-
-    double cost = 0.0;
-    auto rd = std::random_device {}; 
-    auto rng = std::default_random_engine {rd()};
-
-    std::vector< std::vector<int> > basePolicies(numOfAgents);
-
-    for(size_t i = 0; i < numOfAgents; ++i)
-        basePolicies[i] = basePolicy(env, targets, i);
-
-    std::vector<int> controls(numOfAgents);
-
-    while(!env.isDone()){
-
-        for(size_t i = 0; i < numOfAgents; ++i){
-            controls[i] = basePolicies[i][basePolicies[i].size() - 1];
-        }
-        auto beforeValues = env.getAgentValues();
-
-        Environment beforeEnv = env;
-
-        cost = env.step(controls, targets); 
-        
-
-
-        int numOfPasses = 0;
-        if(cost > 1000){
-            double tempCost = cost;
-
-            std::vector<int> agentsAsObstacles;
-            std::vector<int> tempControls(controls);
-            Environment tempEnv = beforeEnv;
-
-            // Create agent order
-            std::vector<int> agentOrder(numOfAgents);
-            for(size_t i = 0; i < numOfAgents; i++)
-                agentOrder[i] = i;
-
-            // Check which agents are on drop off points
-            std::vector<int> agentsOnDropOff;
-
-            for(size_t i = 0; i < numOfAgents; i++){
-                auto pos = indexToPair(tempEnv.getMatrixIndex(i), tempEnv.getDim());
-                for(auto point : dropOffPoints){
-                    if(pos == point)
-                        agentsOnDropOff.push_back(i);
-                }
-            }
-
-            // Swap agents on drop off points to be last in line 
-            for(size_t i = 0; i < agentsOnDropOff.size(); i++){
-                size_t index = numOfAgents - i - 1;
-                agentOrder[agentsOnDropOff[i]] = index;
-                agentOrder[index] = agentsOnDropOff[i];
-            }
-
-            for(size_t i = 0; i < numOfAgents; i++){
-                if(i == numOfAgents - 1) // If on last agent
-                    return false;
-
-                tempEnv = beforeEnv;
-
-                tempEnv = beforeEnv;            
-                tempControls[agentOrder[i]] = 0;
-                agentsAsObstacles.push_back(agentOrder[i]);
-
-                for(size_t j = i + 1; j < numOfAgents; j++){
-                    int agentIdx = agentOrder[j];
-                    basePolicies[agentIdx] = basePolicy(tempEnv, targets, agentIdx, agentsAsObstacles);
-                    tempControls[agentIdx] = basePolicies[agentIdx][basePolicies[agentIdx].size() - 1];
-                    basePolicies[agentIdx].pop_back();
-                }
-
-                tempCost = tempEnv.step(tempControls, targets);
-                //tempEnv.printMatrix();
-
-                numOfPasses++;
-
-                if(tempCost < 1000)
-                    break;
-            }
-            env = tempEnv;
-        }
-
-        if(numOfPasses == 0){
-            for(size_t agentIdx = 0; agentIdx < numOfAgents; ++agentIdx){
-                basePolicies[agentIdx].pop_back();
-            }
-        }
-
-        env.printMatrix();
-
-        auto hasUpdatedTarget = updateTargets(env, targets, beforeValues, dropOffPoints);
-        updateBasePolicy(env, targets, hasUpdatedTarget, basePolicies);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
-    }
-
-    return true;
-}
-
 int main(){
     int simulationCount = 0;
     int numOfSuccess = 0;
     while(true){
-        bool success = simulateBasePolicy(20);
+        bool success = simulate(35);
 
         if(success)
             numOfSuccess++;
