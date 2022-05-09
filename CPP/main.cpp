@@ -69,12 +69,17 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
             int distance;
 
             // If control is standing still or the new position is a wall or an undesired box
+            int dx, dy;
             if(control == 0 || newPosEl == 1 || (newPosEl == 2 && newPos != targets[agentIdx])){
-                distance = abs(agentPos.first - targets[agentIdx].first) + abs(agentPos.second - targets[agentIdx].second);
+                dx = agentPos.first - targets[agentIdx].first;
+                dy = agentPos.second - targets[agentIdx].second;
             }
             else{
-                distance = abs(newPos.first - targets[agentIdx].first) + abs(newPos.second - targets[agentIdx].second);
+                dx = newPos.first - targets[agentIdx].first;
+                dy = newPos.second - targets[agentIdx].second;
             }
+
+            distance = abs(dx) + abs(dy);
 
             distances.push_back(distance);
         }
