@@ -296,6 +296,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
 
             controls[agentIdx] = control;
+            basePolicies[agentIdx].clear();
 
             Environment simEnv = env; // Copy environment
             
@@ -304,7 +305,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
             std::vector<int> agentIdxBasePolicy;
 
-            while(!simEnv.isDone() && iteration < 1000){
+            while(!simEnv.isDone() && iteration < 15){
 
                 for(size_t i = 0; i < numOfAgents; ++i){
                     int n = basePolicies[i].size();
@@ -404,7 +405,7 @@ bool simulate(int numOfAgents){
                     return false;
                 }
             }
-            //std::cout << "Number of shuffles " << shuffleCount << std::endl;
+            std::cout << "Number of shuffles " << shuffleCount << std::endl;
             env = shuffleEnv;
             cost = shuffleCost;
             controls = shuffleControls;
