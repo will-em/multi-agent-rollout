@@ -429,11 +429,10 @@ bool simulate(int numOfAgents){
             auto prevControls = std::vector<int>();
 
             while(shuffleCost > 10000.0){
-                std::cout << "SHUFFLING" << std::endl;
                 shuffleEnv = beforeEnv;
 
                 std::shuffle(std::begin(shuffledAgentOrder), std::end(shuffledAgentOrder), rng);
-                shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder, prevControls);
+                shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder);
 
                 shuffleCost = shuffleEnv.step(shuffleControls, targets); 
                 shuffleCount++; 
