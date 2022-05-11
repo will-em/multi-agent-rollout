@@ -340,9 +340,6 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
             costs[control] = cost;
         }
 
-        for(auto el : costs)
-            std::cout << el << " ";
-        std::cout << '\n' << std::flush;
         optimizedControls.push_back(costsToControl(costs, agentIdx, targets, env));
     }
 
