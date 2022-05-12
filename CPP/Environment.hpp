@@ -3,7 +3,8 @@
 class Environment{ 
     private:
         int m_stepCount;
-        int m_dim;
+        int m_height;
+        int m_width;
         int m_boxesLeft;
         int *m_matrix;
         std::vector< std::pair<int, int > > m_agentPositions; 
@@ -17,7 +18,8 @@ class Environment{
         int &envMat(int n, int m);
         void printMatrix();
         int getNumOfAgents();
-        int getDim();
+        int getHeight();
+        int getWidth();
         int* getMatPtr();
         bool isDone();
         int getStepCount();
