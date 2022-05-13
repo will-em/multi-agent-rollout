@@ -110,7 +110,7 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
         return control;
 }
 
-void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int agentIdx, bool rowMajorOrder = false){
+void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int agentIdx){
     int height = env.getHeight();
     int width = env.getWidth();
     int* matrix = env.getMatPtr();
@@ -123,31 +123,25 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
         }
     }
 
-    //Shuffle the box positions
-    if(!rowMajorOrder){
+    if(targets.empty()){ // Initialization of targets
+        // Shuffle the targets
         auto rd = std::random_device {}; 
         auto rng = std::default_random_engine {rd()};
         std::shuffle(std::begin(boxPositions), std::end(boxPositions), rng);
-    }
-    
 
-    if(targets.empty()){ // Initialization of targets
         for(size_t i = 0; i < env.getNumOfAgents(); i++){
             auto boxPos = indexToPair(boxPositions[i], width);
             targets.push_back(boxPos);
         }
     }
     else{ // Find the first box that is not the target of an other agent
-        bool updatedTarget = false;
 
-        bool anotherAgentsTarget = true;
-
-
+        std::vector<std::pair<int, int>> availableBoxPositions;
         for(auto boxIndex : boxPositions){
             auto boxPos = indexToPair(boxIndex, width);
 
             // Check that this box is not the target of another agent
-            anotherAgentsTarget = false;
+            bool anotherAgentsTarget = false;
             for(auto target : targets){
                 if(boxPos == target){
                     anotherAgentsTarget = true;
@@ -158,13 +152,15 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
             if(anotherAgentsTarget)
                 continue;
 
-            targets[agentIdx] = boxPos;
-            updatedTarget = true;
-            break;
+            availableBoxPositions.push_back(boxPos);
         }
 
-        if(!updatedTarget){ // No boxes left to pick up
+
+
+        if(availableBoxPositions.empty()){ // No boxes left to pick up
             targets[agentIdx] = std::pair<int, int>(1, 1 + agentIdx);
+        }else{
+            targets[agentIdx] = availableBoxPositions[rand() % availableBoxPositions.size()];
         }
     }
 }
@@ -239,22 +235,21 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
     return controls;
 }
 
-std::vector<bool> updateTargets(Environment &env, std::vector<std::pair<int, int>> &targets, std::vector<int> &beforeValues, std::vector<std::pair<int, int>> dropOffPoints){
+std::vector<bool> updateTargets(Environment &env, std::vector<std::pair<int, int>> &targets, std::vector<int> &beforeValues, std::vector<std::pair<int, int>> dropOffPoints, int seed){
     std::vector<int> afterValues = env.getAgentValues();
     int numOfAgents = env.getNumOfAgents();
 
     std::vector<bool> hasUpdatedTarget(numOfAgents, false);
 
+    srand(seed);
     // Update targets if necessary 
     for(size_t i = 0; i < numOfAgents; ++i){
         if(afterValues[i] > beforeValues[i]){ // Agent i picks up box
-            //targets[i] = dropOffPoints[rand() % dropOffPoints.size()]; 
-            auto pos = indexToPair(env.getMatrixIndex(i), env.getWidth());
-            targets[i] = (pos.second < env.getWidth() / 2) ? dropOffPoints[0] : dropOffPoints[1];
+            targets[i] = dropOffPoints[rand() % dropOffPoints.size()];
             hasUpdatedTarget[i] = true;
         }
         else if(afterValues[i] < beforeValues[i]){ // Agent i drops off box
-            boxPicker(env, targets, i, true);
+            boxPicker(env, targets, i);
             hasUpdatedTarget[i] = true;
         }
     }
@@ -293,7 +288,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
         std::vector<double> costs(5);
         for(size_t c0 = 0; c0 < 5; ++c0){
             std::vector<double> subTreeCosts;
-            for(size_t c1 = 0; c1 < 5; ++c1){
+            //for(size_t c1 = 0; c1 < 5; ++c1){
                 //for(size_t c2 = 0; c2 < 5; ++c2){
                     std::vector<std::pair<int, int>> simTargets(targets);
                     std::vector<int> controls(numOfAgents);
@@ -307,7 +302,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
                     basePolicies[agentIdx].clear();
                     //basePolicies[agentIdx].push_back(c2);
-                    basePolicies[agentIdx].push_back(c1);
+                    //basePolicies[agentIdx].push_back(c1);
                     basePolicies[agentIdx].push_back(c0);
 
                     Environment simEnv = env; // Copy environment
@@ -339,7 +334,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                         }
 
                         // Update targets
-                        auto hasUpdatedTarget = updateTargets(simEnv, simTargets, beforeValues, dropOffPoints);
+                        auto hasUpdatedTarget = updateTargets(simEnv, simTargets, beforeValues, dropOffPoints, iteration);
 
                         if(iteration < 3)
                             hasUpdatedTarget[agentIdx] = false;
@@ -355,7 +350,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                     }
                     subTreeCosts.push_back(cost);
                 //}
-            }
+            //}
             /*
             double lowestSubTreeCost = subTreeCosts[0];
             for(auto el : subTreeCosts){
@@ -392,10 +387,15 @@ bool simulate(int numOfAgents){
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
 
-    std::pair<int, int> dropOff1 = {env.getHeight() - 4, 3};
-    std::pair<int, int> dropOff2 = {env.getHeight() - 4, env.getWidth()/2};
-    std::pair<int, int> dropOff3= {env.getHeight() - 4, env.getWidth() - 4};
-    std::vector<std::pair<int, int>> dropOffPoints = {dropOff1, dropOff3};
+    std::vector<std::pair<int, int>> dropOffPoints;
+    for(int i = 3; i < env.getHeight() - 2; ++i){
+        if((i - 2) % 3 != 0){
+            std::pair<int, int> dropOff1 = {i, 1};
+            std::pair<int, int> dropOff2 = {i, env.getWidth() - 2};
+            dropOffPoints.push_back(dropOff1);
+            dropOffPoints.push_back(dropOff2);
+        }
+    }
 
     std::vector< std::pair<int, int> > targets;
     boxPicker(env, targets, -1); // Initialize targets
@@ -465,7 +465,7 @@ bool simulate(int numOfAgents){
 
         env.printMatrix();
 
-        updateTargets(env, targets, beforeValues, dropOffPoints);
+        updateTargets(env, targets, beforeValues, dropOffPoints, iteration);
         /* 
         std::cout << '\n';
         for(auto el : controls)

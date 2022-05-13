@@ -24,8 +24,8 @@ static constexpr auto discountFactors = Discount<10000>();
 
 
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
-    m_height = 2 + 2 * wallOffset + (n - 1) * boxOffset + 2 * n;
-    m_width = m_height;
+    m_height = 23;
+    m_width = 41;
     m_matrix = new int[m_height * m_width]();
     m_boxesLeft = 0;
 
@@ -46,15 +46,14 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
     }
 
     // Populate matrix with boxes
-    for(int n_i = 0; n_i < n; ++n_i){
-        for(int n_j = 0; n_j < n; ++n_j){
-            int i = 1 + wallOffset + n_i * (2 + boxOffset);
-            int j = 1 + wallOffset + n_j * (2 + boxOffset);
-            envMat(i, j) = box; 
-            envMat(i + 1, j) = box; 
-            envMat(i, j + 1) = box; 
-            envMat(i + 1, j + 1) = box; 
-            m_boxesLeft += 4;
+    for(int i = 3; i < m_height - 2; ++i){
+        if((i - 2) % 3 != 0){
+            for(int j = 4; j < m_width - 4; ++j){
+                if((j - 4) % 8 != 0){
+                    envMat(i, j) = box; 
+                    m_boxesLeft++;
+                }
+            }
         }
     }
 
