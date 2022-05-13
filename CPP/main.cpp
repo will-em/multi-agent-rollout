@@ -158,7 +158,9 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
 
 
         if(availableBoxPositions.empty()){ // No boxes left to pick up
-            targets[agentIdx] = std::pair<int, int>(1, 1 + agentIdx);
+            int n_i = (agentIdx < env.getNumOfAgents()/2) ? (1) : (height- 2);
+            int n_j = (agentIdx < env.getNumOfAgents()/2) ? (4 + agentIdx) : (4 + agentIdx - env.getNumOfAgents()/2);
+            targets[agentIdx] = std::pair<int, int>(n_i, n_j);
         }else{
             targets[agentIdx] = availableBoxPositions[rand() % availableBoxPositions.size()];
         }
@@ -472,7 +474,7 @@ bool simulate(int numOfAgents){
             std::cout << el << " ";
         std::cout << '\n';
         */
-        //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     return true;
@@ -482,7 +484,7 @@ int main(){
     int simulationCount = 0;
     int numOfSuccess = 0;
     while(true){
-        bool success = simulate(30);
+        bool success = simulate(60);
 
         if(success)
             numOfSuccess++;

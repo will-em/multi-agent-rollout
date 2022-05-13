@@ -41,8 +41,10 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
 
     // Populate matrix with agents
     for(int i = 0; i < agentCount; ++i){ 
-        envMat(1, 1 + i) = -firstAgent - i;
-        m_agentPositions.push_back(std::pair<int, int>(1, 1 + i));
+        int n_i = (i < agentCount/2) ? (1) : (m_height - 2);
+        int n_j = (i < agentCount/2) ? (4 + i) : (4 + i - agentCount/2);
+        envMat(n_i, n_j) = -firstAgent - i;
+        m_agentPositions.push_back(std::pair<int, int>(n_i, n_j));
     }
 
     // Populate matrix with boxes
@@ -259,7 +261,7 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
 
         // If an agent reaches its target
         if(newPositions[agent_index] == targets[agent_index] && m_agentPositions[agent_index] != newPositions[agent_index]){
-            if(targets[agent_index].first != 1){
+            if(targets[agent_index].first != 1 || targets[agent_index].first != m_height - 2){
                 if(envMat(newPositions[agent_index].first, newPositions[agent_index].second) > 0){ // If the agent has a box
                     cost += c_dropOff * discountFactors.arr[m_stepCount];
                     m_boxesLeft--;
