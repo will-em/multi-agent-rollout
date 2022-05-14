@@ -338,7 +338,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                         // Update targets
                         auto hasUpdatedTarget = updateTargets(simEnv, simTargets, beforeValues, dropOffPoints, iteration);
 
-                        if(iteration < 3)
+                        if(iteration < 1)
                             hasUpdatedTarget[agentIdx] = false;
 
                         updateBasePolicy(simEnv, simTargets, hasUpdatedTarget, basePolicies);
