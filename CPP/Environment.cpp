@@ -7,7 +7,7 @@ enum object {space, wall, box, dropOff, firstAgent};
 // Costs
 static const double c_step = 1.0, c_pickUp = -10000.0, c_dropOff = -10000.0, c_returnToStart = 0, c_collision = 1e20;
 
-static constexpr double discountFactor = 0.99;
+static constexpr double discountFactor = 0.999;
 
 template<int N>
 struct Discount {
@@ -24,12 +24,12 @@ static constexpr auto discountFactors = Discount<10000>();
 
 
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
-    m_height = 23;
-    m_width = 41;
+    m_height = 32+(3*3);
+    m_width = 65+(4*8);
     m_matrix = new int[m_height * m_width]();
     m_boxesLeft = 0;
 
-    // Populate matrix with walls and boxes
+    // Populate matrix with walls 
     for(int i = 0; i < m_height; ++i){
         int fill_value = (i == 0 || i == m_height- 1) ? wall : space;
         for(int j = 0; j < m_width; ++j){
@@ -40,11 +40,16 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
     }
 
     // Populate matrix with agents
+    int offset = 0;
     for(int i = 0; i < agentCount; ++i){ 
         int n_i = (i < agentCount/2) ? (1) : (m_height - 2);
         int n_j = (i < agentCount/2) ? (4 + i) : (4 + i - agentCount/2);
-        envMat(n_i, n_j) = -firstAgent - i;
-        m_agentPositions.push_back(std::pair<int, int>(n_i, n_j));
+        envMat(n_i, n_j + offset) = -firstAgent - i;
+        m_agentPositions.push_back(std::pair<int, int>(n_i, n_j + offset));
+
+        offset++;
+        if(i == agentCount / 2)
+            offset = 0;
     }
 
     // Populate matrix with boxes

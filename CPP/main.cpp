@@ -459,6 +459,7 @@ bool simulate(int numOfAgents){
             env = shuffleEnv;
             cost = shuffleCost;
             controls = shuffleControls;
+            agentOrder = shuffledAgentOrder;
 
             iteration++;
 
@@ -484,7 +485,7 @@ int main(){
     int simulationCount = 0;
     int numOfSuccess = 0;
     while(true){
-        bool success = simulate(60);
+        bool success = simulate(50);
 
         if(success)
             numOfSuccess++;
