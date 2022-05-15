@@ -266,21 +266,24 @@ void updateBasePolicy(Environment &env, std::vector<std::pair<int, int>> &target
             basePolicies[i] = basePolicy(env, targets, i);
     }    
 }
-std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, std::vector<int> prevControls = std::vector<int>()){
+std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, bool freeze = false){
 
     int numOfAgents = env.getNumOfAgents(); 
 
     std::vector< std::vector<int> > preComputedBasePolicies(numOfAgents);
 
+    int agentNotToFreeze = rand() % numOfAgents;
+
     // Get base policies for numOfAgents 
     for(size_t i = 1; i < numOfAgents; ++i){
         int agentIdx = agentOrder[i];
-        if(prevControls.empty()){
-            auto basePolicyControls = basePolicy(env, targets, agentIdx);
-            preComputedBasePolicies[agentIdx] = basePolicyControls;
-        }else{
-            std::vector<int> control = {prevControls[agentIdx]};
-            preComputedBasePolicies[agentIdx] = control;
+        auto basePolicyControls = basePolicy(env, targets, agentIdx);
+        preComputedBasePolicies[agentIdx] = basePolicyControls;
+
+        if(freeze){
+            for(size_t j = 0; j < (rand() % 20 + 1); j++){
+                preComputedBasePolicies[agentIdx].push_back(0);
+            }
         }
     } 
 
@@ -298,8 +301,8 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                     std::vector<std::vector<int>> basePolicies(preComputedBasePolicies);
 
                     for(size_t i = 0; i < optimizedControls.size(); ++i){
-                        controls[i] = optimizedControls[i];
-                        basePolicies[i].clear();
+                        controls[agentOrder[i]] = optimizedControls[i];
+                        basePolicies[agentOrder[i]].clear();
                     }
 
                     basePolicies[agentIdx].clear();
@@ -314,7 +317,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
                     std::vector<int> agentIdxBasePolicy;
 
-                    while(!simEnv.isDone() && iteration < 15){
+                    while(!simEnv.isDone() && iteration < 50){
 
                         for(size_t i = 0; i < numOfAgents; ++i){
                             int n = basePolicies[i].size();
@@ -434,9 +437,10 @@ bool simulate(int numOfAgents){
 
             while(shuffleCost > 10000.0){
                 shuffleEnv = beforeEnv;
+                //std::cout << "SHUFFLING" << std::endl;
 
                 std::shuffle(std::begin(shuffledAgentOrder), std::end(shuffledAgentOrder), rng);
-                shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder);
+                shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder, true);
 
                 shuffleCost = shuffleEnv.step(shuffleControls, targets); 
                 shuffleCount++; 
@@ -475,7 +479,7 @@ bool simulate(int numOfAgents){
             std::cout << el << " ";
         std::cout << '\n';
         */
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     return true;

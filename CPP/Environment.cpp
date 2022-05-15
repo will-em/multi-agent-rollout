@@ -25,7 +25,7 @@ static constexpr auto discountFactors = Discount<10000>();
 
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
     m_height = 32+(3*3);
-    m_width = 65+(4*8);
+    m_width = 65+(6*8);
     m_matrix = new int[m_height * m_width]();
     m_boxesLeft = 0;
 
@@ -258,7 +258,7 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
     }
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         
-        //if(actions[agent_index] != 0)
+        if(actions[agent_index] != 0)
             cost += c_step;
 
         // Update matrix
