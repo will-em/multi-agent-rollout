@@ -24,7 +24,7 @@ static constexpr auto discountFactors = Discount<10000>();
 
 
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
-    m_height = 32+(3*3);
+    m_height = 32+(4*3);
     m_width = 65+(6*8);
     m_matrix = new int[m_height * m_width]();
     m_boxesLeft = 0;
@@ -44,12 +44,12 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
     for(int i = 0; i < agentCount; ++i){ 
         int n_i = (i < agentCount/2) ? (1) : (m_height - 2);
         int n_j = (i < agentCount/2) ? (4 + i) : (4 + i - agentCount/2);
+        if(i == agentCount / 2)
+            offset = 0;
         envMat(n_i, n_j + offset) = -firstAgent - i;
         m_agentPositions.push_back(std::pair<int, int>(n_i, n_j + offset));
 
         offset++;
-        if(i == agentCount / 2)
-            offset = 0;
     }
 
     // Populate matrix with boxes
@@ -98,11 +98,27 @@ Environment::~Environment(){
 int &Environment::envMat(int n, int m){
     return m_matrix[m + n * m_width];
 }
-void Environment::printMatrix(){
+void Environment::printMatrix(std::vector<std::pair<int, int>> dropOffPoints){
     for(int i = 0; i < m_height; i++){
         for(int j = 0; j < m_width; j++){
-            int el = envMat(i, j);
             std::cout << "  ";
+            int el = envMat(i, j);
+            if(std::find(dropOffPoints.begin(), dropOffPoints.end(), std::make_pair(i, j)) != dropOffPoints.end()){
+                if(envMat(i, j) != space){
+                    char padding = '\0';
+                    if(el < 13 && el > -13)
+                        padding = ' ';
+                    
+                    if(el < 0){
+                        std::cout << "\033[0;39;100m" << padding << -el - 3 << "\033[0m";
+                    }else{
+                       std::cout << "\033[0;39;42m" << padding << el - 3 << "\033[0m";
+                    }
+                }else{
+                    std::cout << "\033[1;39;100m" << "  " << "\033[0m";
+                }
+                continue;
+            }
             switch(el){
                 case 0:
                     std::cout << "  ";

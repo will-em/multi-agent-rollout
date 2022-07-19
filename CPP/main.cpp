@@ -421,6 +421,7 @@ bool simulate(int numOfAgents){
         auto beforeValues = env.getAgentValues();
 
         Environment beforeEnv = env;
+        //env.printMatrix(dropOffPoints);
 
         cost = env.step(controls, targets); 
 
@@ -446,7 +447,7 @@ bool simulate(int numOfAgents){
                 shuffleCount++; 
 
                 if(shuffleCount > 10000){
-                    beforeEnv.printMatrix();
+                    beforeEnv.printMatrix(dropOffPoints);
                     return false;
                 }
 
@@ -470,7 +471,7 @@ bool simulate(int numOfAgents){
         }
 
 
-        env.printMatrix();
+        env.printMatrix(dropOffPoints);
 
         updateTargets(env, targets, beforeValues, dropOffPoints, iteration);
         /* 
