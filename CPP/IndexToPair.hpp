@@ -1,4 +1,4 @@
-# pragma once
+#pragma once
 #include <iostream>
 /**
     Converts a flattened position index into to a 2D-coordinate
