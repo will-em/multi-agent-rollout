@@ -2,7 +2,7 @@
 #include <vector>
 #include "Environment.hpp"
 /**
-    Converts a flattened position index into to a 2D-coordinate
+    Calculate the optimal control given a set of costs.
 
     @param costs Reference to a vector containing costs
     @param agentIdx Index of the agents
