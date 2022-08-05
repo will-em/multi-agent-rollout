@@ -10,16 +10,9 @@
 #include "CostsToControl.hpp"
 #include "BoxPicker.hpp"
 #include "UpdateTargets.hpp"
+#include "UpdateBasePolicy.hpp"
 #include <random>
 
-void updateBasePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, std::vector<bool> &hasUpdatedTarget, std::vector<std::vector<int>> &basePolicies){
-    int numOfAgents = env.getNumOfAgents();
-
-    for(size_t i = 0; i < numOfAgents; ++i){
-        if(hasUpdatedTarget[i])
-            basePolicies[i] = basePolicy(env, targets, i);
-    }    
-}
 std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, bool freeze = false){
 
     int numOfAgents = env.getNumOfAgents(); 
