@@ -1,6 +1,5 @@
 .vscode
 RL/
-pybind11/
 .DS_Store
 CPP/a.out
-.DS_Store
+CPP/rollout
