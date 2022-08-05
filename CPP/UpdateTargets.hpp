@@ -3,7 +3,7 @@
 #include <vector>
 
 /**
-    Updates the target of agents that have picked up or dropped of a box. 
+    Updates the target of agents that have picked up or dropped of a box 
 
     @param env Reference to an environment 
     @param targets Reference to a vector of agent positions
