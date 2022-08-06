@@ -89,7 +89,7 @@ bool simulate(int numOfAgents){
                 }
                 */
             }
-            std::cout << "Number of shuffles " << shuffleCount << std::endl;
+            //std::cout << "Number of shuffles " << shuffleCount << std::endl;
             env = shuffleEnv;
             cost = shuffleCost;
             controls = shuffleControls;
@@ -100,7 +100,7 @@ bool simulate(int numOfAgents){
         }
 
 
-        env.printMatrix(dropOffPoints);
+        env.printMatrix(dropOffPoints, true);
 
         updateTargets(env, targets, beforeValues, dropOffPoints, iteration);
         /* 

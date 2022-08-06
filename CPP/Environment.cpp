@@ -98,7 +98,8 @@ Environment::~Environment(){
 int &Environment::envMat(int n, int m){
     return m_matrix[m + n * m_width];
 }
-void Environment::printMatrix(std::vector<std::pair<int, int>> dropOffPoints){
+void Environment::printMatrix(std::vector<std::pair<int, int>> dropOffPoints, bool redraw){
+    std::cout << "\033[2J\033[H";
     for(int i = 0; i < m_height; i++){
         for(int j = 0; j < m_width; j++){
             std::cout << "  ";
