@@ -5,7 +5,7 @@ void updateBasePolicy(Environment &env, std::vector<std::pair<int, int>> &target
     int numOfAgents = env.getNumOfAgents();
 
     for(size_t i = 0; i < numOfAgents; ++i){
-        if(hasUpdatedTarget[i])
+        if(basePolicies[i].empty() || hasUpdatedTarget[i])
             basePolicies[i] = basePolicy(env, targets, i);
     }    
 }

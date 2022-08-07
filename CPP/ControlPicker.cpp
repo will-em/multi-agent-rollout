@@ -88,11 +88,6 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
                         updateBasePolicy(simEnv, simTargets, hasUpdatedTarget, basePolicies);
 
-                        for(size_t i = 0; i < numOfAgents; ++i){
-                            if(basePolicies[i].empty())
-                                basePolicies[i] = basePolicy(simEnv, simTargets, i); 
-                        }
-                        
                         iteration++;
                     }
                     subTreeCosts.push_back(cost);
