@@ -17,7 +17,7 @@ class Environment{
         ~Environment(); // Destructor
 
         int &envMat(int n, int m);
-        void printMatrix(std::vector<std::pair<int, int>> dropOffPoints);
+        void printMatrix(std::vector<std::pair<int, int>> dropOffPoints, bool redraw);
         int getNumOfAgents();
         int getHeight();
         int getWidth();

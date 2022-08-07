@@ -76,7 +76,7 @@ bool simulate(int numOfAgents){
                 shuffleCount++; 
 
                 if(shuffleCount > 10000){
-                    beforeEnv.printMatrix(dropOffPoints);
+                    beforeEnv.printMatrix(dropOffPoints, false);
                     return false;
                 }
 
