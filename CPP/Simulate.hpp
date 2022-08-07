@@ -1,4 +1,3 @@
-//#pragma once
 /**
     Simulate the multi-agent warehouse
     @param numOfAgents Number of agents to be simulated
