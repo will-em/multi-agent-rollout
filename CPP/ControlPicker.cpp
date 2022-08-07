@@ -39,8 +39,12 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                     std::vector<std::vector<int>> basePolicies(preComputedBasePolicies);
 
                     for(size_t i = 0; i < optimizedControls.size(); ++i){
-                        controls[agentOrder[i]] = optimizedControls[i];
-                        basePolicies[agentOrder[i]].clear();
+                        auto basePolicy = basePolicies[agentOrder[i]];
+                        int n = basePolicy.size();
+                        if(n == 0 || basePolicy[n - 1] != optimizedControls[i]){
+                            controls[agentOrder[i]] = optimizedControls[i];
+                            basePolicies[agentOrder[i]].clear();
+                        }
                     }
 
                     basePolicies[agentIdx].clear();
