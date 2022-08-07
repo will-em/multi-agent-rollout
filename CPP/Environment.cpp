@@ -122,13 +122,13 @@ void Environment::printMatrix(std::vector<std::pair<int, int>> dropOffPoints, bo
                 continue;
             }
             switch(el){
-                case 0:
+                case space:
                     std::cout << "  ";
                     break;
-                case 1:
+                case wall:
                     std::cout << "\033[1;39;44m" << "  " << "\033[0m";
                     break;
-                case 2:
+                case box:
                     std::cout << "\033[1;39;42m" << "  " << "\033[0m";
                     break;
                 default:
