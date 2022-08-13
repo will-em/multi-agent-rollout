@@ -1,8 +1,0 @@
-
-Maybe save recalculations of base-policies, i.e save the new path when an agent switches targets 
-
-Maybe have heuristc/base policy regard previous agents' new positions as occupied
-
-Maybe have target choice in the control space and base policy closest box
-
-
