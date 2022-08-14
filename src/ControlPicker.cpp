@@ -3,6 +3,7 @@
 #include "UpdateTargets.hpp"
 #include "UpdateBasePolicy.hpp"
 #include "CostsToControl.hpp"
+#include <iostream>
 
 std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, bool freeze){
 
@@ -26,6 +27,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     } 
 
     std::vector<int> optimizedControls;
+    int test_n = 0;
     
     for(int agentIdx : agentOrder){
         std::vector<double> costs(5);
@@ -44,6 +46,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                         if(n == 0 || basePolicy[n - 1] != optimizedControls[i]){
                             controls[agentOrder[i]] = optimizedControls[i];
                             basePolicies[agentOrder[i]].clear();
+                            test_n++;
                         }
                     }
 
@@ -115,6 +118,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
         optimizedControls.push_back(costsToControl(costs, agentIdx, targets, env));
     }
 
+    std::cout << test_n << std::endl;
     // Reorder optimizedControls
     std::vector<int> reorderedOptimizedControls(numOfAgents);
     for(size_t i = 0; i < numOfAgents; ++i)

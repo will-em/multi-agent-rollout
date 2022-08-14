@@ -6,6 +6,11 @@
 #include <random>
 #include <math.h>   
 
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::duration;
+using std::chrono::milliseconds;
+
 bool simulate(int numOfAgents){ 
     int wallOffset = 10;
     int boxOffset = 5;
@@ -37,7 +42,14 @@ bool simulate(int numOfAgents){
 
     int iteration = 0;
     while(!env.isDone()){
+        auto t1 = high_resolution_clock::now();
         auto controls = controlPicker(env, targets, dropOffPoints, agentOrder);
+        auto t2 = high_resolution_clock::now();
+
+        /* Getting number of milliseconds as an integer. */
+        auto ms_int = duration_cast<milliseconds>(t2 - t1);
+
+        std::cout << ms_int.count() << "ms\n";
 
         auto beforeValues = env.getAgentValues();
 
@@ -92,7 +104,7 @@ bool simulate(int numOfAgents){
         }
 
 
-        env.printMatrix(dropOffPoints, true);
+        env.printMatrix(dropOffPoints, false);
 
         updateTargets(env, targets, beforeValues, dropOffPoints, iteration);
         /* 
