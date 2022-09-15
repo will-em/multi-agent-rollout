@@ -49,7 +49,7 @@ bool simulate(int numOfAgents){
         /* Getting number of milliseconds as an integer. */
         auto ms_int = duration_cast<milliseconds>(t2 - t1);
 
-        std::cout << ms_int.count() << "ms\n";
+        //std::cout << ms_int.count() << "ms\n";
 
         auto beforeValues = env.getAgentValues();
 
@@ -85,13 +85,6 @@ bool simulate(int numOfAgents){
                 }
 
                 prevControls = shuffleControls;
-
-                /*
-                if(shuffleCount % 10){
-                    for(size_t i = 0; i < numOfAgents; i++)
-                        prevControls[i] = rand() % 5;
-                }
-                */
             }
             //std::cout << "Number of shuffles " << shuffleCount << std::endl;
             env = shuffleEnv;
@@ -104,9 +97,9 @@ bool simulate(int numOfAgents){
         }
 
 
-        env.printMatrix(dropOffPoints, false);
+        env.printMatrix(dropOffPoints, true);
 
-        updateTargets(env, targets, beforeValues, dropOffPoints, iteration);
+        updateTargets(env, targets, beforeValues, dropOffPoints);
         /* 
         std::cout << '\n';
         for(auto el : controls)

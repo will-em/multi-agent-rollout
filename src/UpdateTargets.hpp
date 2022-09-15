@@ -12,4 +12,4 @@
     @returns A boolean vector that, for each agent, tells you whether or not the agent has updated its target
 
 */
-std::vector<bool> updateTargets(Environment &env, std::vector<std::pair<int, int>> &targets, std::vector<int> &beforeValues, std::vector<std::pair<int, int>> dropOffPoints, int seed);
+std::vector<bool> updateTargets(Environment &env, std::vector<std::pair<int, int>> &targets, std::vector<int> &beforeValues, std::vector<std::pair<int, int>> dropOffPoints);

@@ -62,7 +62,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
                     std::vector<int> agentIdxBasePolicy;
 
-                    while(!simEnv.isDone() && iteration < 50){
+                    while(!simEnv.isDone() && iteration < 1000){
 
                         for(size_t i = 0; i < numOfAgents; ++i){
                             int n = basePolicies[i].size();
@@ -76,18 +76,16 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                         auto beforeValues = simEnv.getAgentValues();
 
                         cost += simEnv.step(controls, simTargets); 
-                        //simEnv.printMatrix();
-                        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
                         if(cost > 1000.0){
                             break;
                         }
 
                         // Update targets
-                        auto hasUpdatedTarget = updateTargets(simEnv, simTargets, beforeValues, dropOffPoints, iteration);
+                        auto hasUpdatedTarget = updateTargets(simEnv, simTargets, beforeValues, dropOffPoints);
 
-                        if(iteration < 1)
-                            hasUpdatedTarget[agentIdx] = false;
+                        //if(iteration == 0)
+                            //hasUpdatedTarget[agentIdx] = false;
 
                         updateBasePolicy(simEnv, simTargets, hasUpdatedTarget, basePolicies);
 
