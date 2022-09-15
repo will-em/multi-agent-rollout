@@ -14,7 +14,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     int agentNotToFreeze = rand() % numOfAgents;
 
     // Get base policies for numOfAgents 
-    for(size_t i = 1; i < numOfAgents; ++i){
+    for(size_t i = 0; i < numOfAgents; ++i){
         int agentIdx = agentOrder[i];
         auto basePolicyControls = basePolicy(env, targets, agentIdx);
         preComputedBasePolicies[agentIdx] = basePolicyControls;
@@ -31,7 +31,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     
     for(int agentIdx : agentOrder){
         std::vector<double> costs(5);
-        for(size_t c0 = 0; c0 < 5; ++c0){
+        for(size_t u0 = 0; u0 < 5; ++u0){
             std::vector<std::pair<int, int>> simTargets(targets);
             std::vector<int> controls(numOfAgents);
 
@@ -40,7 +40,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
             for(size_t i = 0; i < optimizedControls.size(); ++i){
                 auto basePolicy = basePolicies[agentOrder[i]];
 
-                if(basePolicy.size() == 0 || basePolicy.back() != optimizedControls[i]){
+                if(basePolicy.back() != optimizedControls[i]){
                     controls[agentOrder[i]] = optimizedControls[i];
                     basePolicies[agentOrder[i]].clear();
                     test_n++;
@@ -48,16 +48,12 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
             }
 
             basePolicies[agentIdx].clear();
-            //basePolicies[agentIdx].push_back(c2);
-            //basePolicies[agentIdx].push_back(c1);
-            basePolicies[agentIdx].push_back(c0);
+            basePolicies[agentIdx].push_back(u0);
 
             Environment simEnv = env; // Copy environment
             
             double cost = 0.0;
             int iteration = 0; 
-
-            std::vector<int> agentIdxBasePolicy;
 
             while(!simEnv.isDone() && iteration < 100){
 
@@ -79,14 +75,11 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                 // Update targets
                 auto hasUpdatedTarget = updateTargets(simEnv, simTargets, beforeValues, dropOffPoints);
 
-                if(iteration == 0)
-                    hasUpdatedTarget[agentIdx] = false;
-
                 updateBasePolicy(simEnv, simTargets, hasUpdatedTarget, basePolicies);
 
                 iteration++;
             }
-            costs[c0] = cost;
+            costs[u0] = cost;
         }
         optimizedControls.push_back(costsToControl(costs, agentIdx, targets, env));
     }
