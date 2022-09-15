@@ -11,8 +11,6 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
     std::vector< std::vector<int> > preComputedBasePolicies(numOfAgents);
 
-    int agentNotToFreeze = rand() % numOfAgents;
-
     // Get base policies for numOfAgents 
     for(size_t i = 0; i < numOfAgents; ++i){
         int agentIdx = agentOrder[i];
@@ -31,6 +29,8 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     
     for(int agentIdx : agentOrder){
         std::vector<double> costs(5);
+        std::vector<std::vector<int>> candidateBasePolicies(5);
+
         for(size_t u0 = 0; u0 < 5; ++u0){
             std::vector<std::pair<int, int>> simTargets(targets);
             std::vector<int> controls(numOfAgents);
@@ -41,6 +41,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                 auto basePolicy = basePolicies[agentOrder[i]];
 
                 if(basePolicy.back() != optimizedControls[i]){
+                    //std::cout << "josidfjiosijodfjoisdjofjosdjfsijdof" << std::endl;
                     controls[agentOrder[i]] = optimizedControls[i];
                     basePolicies[agentOrder[i]].clear();
                     test_n++;
@@ -76,12 +77,20 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                 auto hasUpdatedTarget = updateTargets(simEnv, simTargets, beforeValues, dropOffPoints);
 
                 updateBasePolicy(simEnv, simTargets, hasUpdatedTarget, basePolicies);
+                if(iteration == 0){
+                    candidateBasePolicies[u0] = basePolicies[agentIdx];
+                }
 
                 iteration++;
             }
             costs[u0] = cost;
         }
-        optimizedControls.push_back(costsToControl(costs, agentIdx, targets, env));
+        int optimalControl = costsToControl(costs, agentIdx, targets, env);
+
+        optimizedControls.push_back(optimalControl);
+        preComputedBasePolicies[agentIdx] = candidateBasePolicies[optimalControl];
+        preComputedBasePolicies[agentIdx].push_back(optimalControl);
+
     }
 
     std::cout << test_n << std::endl;
