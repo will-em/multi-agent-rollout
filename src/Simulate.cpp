@@ -6,6 +6,7 @@
 #include <random>
 #include <math.h>   
 
+#include <chrono>
 using std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
 using std::chrono::duration;

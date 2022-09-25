@@ -4,4 +4,7 @@
     @returns Boolean indicating whether the agents completed the task without collision 
 
 */
+
+#include <algorithm>
+
 bool simulate(int numOfAgents);

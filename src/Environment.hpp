@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
 #include <cstdint>
+#include "assert.h"
+#include <algorithm>
+
 class Environment{ 
     private:
         int m_stepCount;
@@ -31,6 +34,4 @@ class Environment{
 
         // Returns the cost of a given set of actions as well as updates the environment
         double step(std::vector<int> &actions, std::vector< std::pair<int, int> > &targets); 
-
-
 };

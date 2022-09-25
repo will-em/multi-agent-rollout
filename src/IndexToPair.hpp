@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include "math.h"
 /**
     Converts a flattened position index into to a 2D-coordinate
 
