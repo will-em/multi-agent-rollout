@@ -1,0 +1,19 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ "cooperative-a" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-lastest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Compile program
+      run: make
