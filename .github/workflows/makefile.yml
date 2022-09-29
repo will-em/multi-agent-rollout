@@ -17,3 +17,9 @@ jobs:
     
     - name: Compile program
       run: make
+
+    - name: Compile tester
+      run: make test
+
+    - name: Run tester
+      run: ./test

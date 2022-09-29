@@ -71,12 +71,6 @@ class NodeInQueue {
 		NodeInQueue(TimeNode node, int distance_to_target);
 };
 
-bool operator<(const NodeInQueue &n1, const NodeInQueue &n2) {
-  return n1.node.turn + n1.distance_to_target > n2.node.turn + n2.distance_to_target;
-}
-bool operator>(const NodeInQueue &n1, const NodeInQueue &n2) {
-  return n1.node.turn + n1.distance_to_target < n2.node.turn + n2.distance_to_target;
-}
 
 class AStarFinder {
 	public:

@@ -1,6 +1,5 @@
 #include "coop-astar.hpp"
 #include <iostream>
-#include "assert.h"
 
 Node::Node(int x, int y): x(x), y(y) {};
 TimeNode::TimeNode(int turn, Node node): turn(turn), node(node) {};
@@ -17,6 +16,13 @@ ReservationTable::ReservationTable() {
 bool operator==(const TimeNode &n1, const TimeNode &n2) {
 	return n1.turn == n2.turn && n1.node == n2.node;
 };
+
+bool operator<(const NodeInQueue &n1, const NodeInQueue &n2) {
+  return n1.node.turn + n1.distance_to_target > n2.node.turn + n2.distance_to_target;
+}
+bool operator>(const NodeInQueue &n1, const NodeInQueue &n2) {
+  return n1.node.turn + n1.distance_to_target < n2.node.turn + n2.distance_to_target;
+}
 
 
 std::size_t NodeHasher::operator() (const Node &node) const {
@@ -77,6 +83,11 @@ int ReservationTable::reserve_path(std::vector<TimeNode> path) {
 int AStarFinder::expand_next_in_queue() {
 	// Obtain best node in queue
 	TimeNode parent_node = this->queue.top().node;
+
+
+	// Check reference is null, and return -2 in that case
+
+
 	this->queue.pop();
 
 	// Add it to the expanded_nodes
@@ -93,49 +104,23 @@ int AStarFinder::expand_next_in_queue() {
 
 		int heuristic_distance = 0;
 
-		if (new_node == this->target) {
-
-		}
 
 		this->queue.push(
 			NodeInQueue(new_tnode, heuristic_distance)
 		);
 	}
 
+	if (parent_node.node == this->target) {
+		return parent_node.turn;
+	}
+
 
 	// Change stuff
 
-	return 0;
+	return -1;
 }
 
 NodeInQueue::NodeInQueue(TimeNode node, int distance_to_target) :
 	node(node), distance_to_target(distance_to_target) {};
 
 
-int main() {
-	ReservationTable table;
-	std::vector<TimeNode> path = {
-		{0, {0, 0}}, {1, {0,1}}, {2, {0,2}}, {3, {1,2}}
-	};
-
-	table.reserve_path(path);
-
-	
-	// Cell collisions
-	assert(!table.action_is_valid({0, {0,2}}, {1, {0,1}}));
-	assert(!table.action_is_valid({1, {1,2}}, {2, {0,2}}));
-	assert(!table.action_is_valid({2, {0,2}}, {3, {1,2}}));
-
-
-	// Front collisions
-	assert(!table.action_is_valid({0, {0,1}}, {1, {0,0}}));
-	assert(!table.action_is_valid({1, {0,2}}, {2, {0,1}}));
-	assert(!table.action_is_valid({2, {1,2}}, {3, {0,2}}));
-
-
-	// Available actions
-	assert(table.action_is_valid({0, {0,0}}, {1, {1,0}}));
-	assert(table.action_is_valid({0, {0,1}}, {1, {0,2}}));
-
-
-}
