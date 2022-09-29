@@ -3,29 +3,40 @@
 #include <queue>
 #include <vector>
 #include <utility>
+#include "math.h"
 
-typedef std::pair<int, int> Node;
-typedef std::pair<int, Node> TimeNode;
+class Node {
+	public:
+		int x;
+		int y;
+		
+		Node(int x, int y);
+};
+
+class TimeNode {
+	public:
+		int turn;
+		Node node;
+
+		TimeNode(int turn, Node node);
+};
 
 
 // Hash functions for using sets of nodes and time nodes
 
-struct NodeHash {
-	std::size_t operator() (const std::pair<int, int> &pair) const {
-		return std::hash<int>()(pair.first) ^ std::hash<int>()(pair.second);
-	}
+class NodeHasher {
+	public:
+		std::size_t operator() (const Node &node) const;
 };
 
-struct TimeNodeHash {
-	std::size_t operator() (const std::pair<int, Node> &pair) const {
-		return std::hash<int>()(pair.first) ^ NodeHash()(pair.second);
-	}
+class TimeNodeHasher {
+	public:
+		std::size_t operator() (const TimeNode &time_node) const;
 };
 
-struct PairTimeNodeHash {
-	std::size_t operator() (const std::pair<TimeNode, TimeNode> &pair) const {
-		return TimeNodeHash()(pair.first) ^ TimeNodeHash()(pair.second);
-	}
+class PairTimeNodeHasher {
+	public:
+		std::size_t operator() (const std::pair<TimeNode, TimeNode> &pair) const;
 };
 
 
@@ -33,13 +44,12 @@ struct PairTimeNodeHash {
 // Structure for holding all the information of the paths already
 // reserved by other agents
 
-struct ReservationTable {
+class ReservationTable {
 	public:
-		std::unordered_set<TimeNode, TimeNodeHash> cells;
-		std::unordered_set<std::pair<TimeNode,TimeNode>, PairTimeNodeHash> fronts;
+		std::unordered_set<TimeNode, TimeNodeHasher> cells;
+		std::unordered_set<std::pair<TimeNode,TimeNode>, PairTimeNodeHasher> fronts;
 
 		ReservationTable();
-		~ReservationTable();
 
 		// Takes a path a inserts elements in the reservation table so any other path
 		// that avoids the table will not collide with this path
@@ -53,20 +63,25 @@ struct ReservationTable {
 
 // Code for A* with time dimensions
 
-struct NodeInQueue {
+class NodeInQueue {
 	public:
 		TimeNode node;
 		int distance_to_target;
+
+		NodeInQueue(TimeNode node, int distance_to_target);
 };
 
 bool operator<(const NodeInQueue &n1, const NodeInQueue &n2) {
-  return n1.node.first + n1.distance_to_target > n2.node.first + n2.distance_to_target;
+  return n1.node.turn + n1.distance_to_target > n2.node.turn + n2.distance_to_target;
+}
+bool operator>(const NodeInQueue &n1, const NodeInQueue &n2) {
+  return n1.node.turn + n1.distance_to_target < n2.node.turn + n2.distance_to_target;
 }
 
-struct AStarFinder {
+class AStarFinder {
 	public:
   		std::priority_queue<NodeInQueue> queue;
-		std::unordered_map<TimeNode, TimeNode, TimeNodeHash> expanded_nodes;
+		std::unordered_map<TimeNode, TimeNode, TimeNodeHasher> expanded_nodes;
 		Node target;
 
 		int expand_next_in_queue();
