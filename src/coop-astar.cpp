@@ -72,23 +72,80 @@ int ReservationTable::reserve_path(std::vector<TimeNode> path) {
 }
 
 
-
-
 //
 //
 //		A*
 //
 //
 
-int AStarFinder::expand_next_in_queue() {
+int compute_manhattan_distance(Node &node_a, Node &node_b) {
+	return std::abs(node_a.x - node_b.x) + std::abs(node_a.y - node_b.y);
+}
+
+
+
+std::vector<TimeNode> compute_optimal_path(TimeNode initial_node, Node final_node, int max_turns) {
+	AStarFinder a_star(initial_node, final_node);
+
+	bool finished = false;
+	bool failed_search = false;
+	int arrival_turn;
+
+	while (!finished) {
+		IterationStatus last_iter_status = a_star.expand_next_in_queue();
+
+		if (last_iter_status.status == -1) {
+			failed_search = true;
+			finished = true;
+
+		} else if (last_iter_status.status == 1) {
+			finished = true;
+			arrival_turn = last_iter_status.expansion_turn;
+
+		} else if (last_iter_status.expansion_turn >= max_turns) {
+			failed_search = true;
+			finished = true;
+		}
+	}
+
+	if (failed_search) {
+		return std::vector<TimeNode>();
+	} else {
+		return a_star.generate_path(TimeNode(arrival_turn, final_node));
+	}
+
+	return std::vector<TimeNode>();
+}
+
+
+IterationStatus::IterationStatus(int status, int expansion_turn):
+	status(status), expansion_turn(expansion_turn) {};
+
+
+
+AStarFinder::AStarFinder(TimeNode origin, Node new_target) : target(new_target) {
+	queue = std::priority_queue<NodeInQueue>();
+	NodeInQueue q_node = NodeInQueue(origin, 0);
+	queue.push(q_node);
+	queue_length = 1;
+	expanded_nodes = std::unordered_map<TimeNode, TimeNode, TimeNodeHasher>();
+
+	std::pair<TimeNode, TimeNode> first_insertion(origin, origin);
+
+	expanded_nodes.insert(first_insertion);
+}
+
+IterationStatus AStarFinder::expand_next_in_queue() {
 	// Obtain best node in queue
+	if (this->queue_length == 0) {
+		return IterationStatus(-1, 0);
+	};
+
 	TimeNode parent_node = this->queue.top().node;
 
 
-	// Check reference is null, and return -2 in that case
-
-
 	this->queue.pop();
+
 
 	// Add it to the expanded_nodes
 	std::pair<int, int> delta_array[] = {{0,0}, {0,1}, {1,0}, {0,-1}, {-1,0}};
@@ -96,28 +153,58 @@ int AStarFinder::expand_next_in_queue() {
 	for (int i=0; i<5; i++) {
 		std::pair<int,int> delta = delta_array[i];
 
-
 		// TODO: Check that the node is valid. If not, continue loop
 
 		Node new_node(parent_node.node.x + delta.first, parent_node.node.y + delta.second);
 		TimeNode new_tnode(parent_node.turn + 1, new_node);
 
-		int heuristic_distance = 0;
+		int heuristic_distance = compute_manhattan_distance(new_node, this->target);
 
 
 		this->queue.push(
 			NodeInQueue(new_tnode, heuristic_distance)
 		);
-	}
 
-	if (parent_node.node == this->target) {
-		return parent_node.turn;
-	}
 
+		this->expanded_nodes.insert({new_tnode, parent_node});
+
+		if (parent_node.node == this->target) {
+			return IterationStatus(1, parent_node.turn);
+		}
+
+	}
 
 	// Change stuff
 
-	return -1;
+	return IterationStatus(0, parent_node.turn);
+}
+
+std::vector<TimeNode> AStarFinder::generate_path(TimeNode initial_node) {
+	std::vector<TimeNode> reverse_path = std::vector<TimeNode>();
+	reverse_path.push_back(initial_node);
+	while (true) {
+		TimeNode last_path_node = reverse_path[reverse_path.size()-1];
+
+		TimeNode prev_node = this->expanded_nodes.at(last_path_node);
+
+		if (prev_node == reverse_path[reverse_path.size()-1]) {
+			break;
+		}
+
+		reverse_path.push_back(prev_node);
+
+	}
+
+	std::vector<TimeNode> path = std::vector<TimeNode>();
+
+	int path_length = reverse_path.size();
+
+	for (int i = 0; i < path_length ; i++) {
+		path.push_back(reverse_path[reverse_path.size()-1]);
+		reverse_path.pop_back();
+	}
+
+	return path;
 }
 
 NodeInQueue::NodeInQueue(TimeNode node, int distance_to_target) :

@@ -5,6 +5,7 @@
 #include <utility>
 #include "math.h"
 
+
 class Node {
 	public:
 		int x;
@@ -63,6 +64,15 @@ class ReservationTable {
 
 // Code for A* with time dimensions
 
+int compute_manhattan_distance(Node &node_a, Node &node_b);
+
+class IterationStatus {
+	public:
+		int status;
+		int expansion_turn;
+		IterationStatus(int status, int expansion_turn);
+};
+
 class NodeInQueue {
 	public:
 		TimeNode node;
@@ -71,13 +81,16 @@ class NodeInQueue {
 		NodeInQueue(TimeNode node, int distance_to_target);
 };
 
+std::vector<TimeNode> compute_optimal_path(TimeNode initial_node, Node final_node, int max_turns);
 
 class AStarFinder {
 	public:
   		std::priority_queue<NodeInQueue> queue;
+		int queue_length;
 		std::unordered_map<TimeNode, TimeNode, TimeNodeHasher> expanded_nodes;
 		Node target;
 
-		int expand_next_in_queue();
-		int generate_path(Node origin);
+		AStarFinder(TimeNode origin, Node target);
+		IterationStatus expand_next_in_queue();
+		std::vector<TimeNode> generate_path(TimeNode initial_node);
 };
