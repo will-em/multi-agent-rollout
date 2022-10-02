@@ -102,12 +102,11 @@ void corridor_1() {
 
 	assert(optimal_path.size() == expected_path.size());
 
-	std::cout << optimal_path.size() << std::endl;
-	std::cout << expected_path.size() << std::endl;
-
 	for (int i=0; i < optimal_path.size(); i++) {
-		std::cout << i << std::endl;
-		assert(expected_path[i] == optimal_path[i]);
+		TimeNode node_a = expected_path[i];
+		TimeNode node_b = optimal_path[i];
+
+		assert(node_a == node_b);
 	}
 }
 

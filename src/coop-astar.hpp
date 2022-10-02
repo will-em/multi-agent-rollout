@@ -23,6 +23,9 @@ class TimeNode {
 		TimeNode(int turn, Node node);
 };
 
+bool operator==(const Node &n1, const Node &n2);
+bool operator==(const TimeNode &n1, const TimeNode &n2);
+
 
 // Hash functions for using sets of nodes and time nodes. These classes are necessary for creating
 // sets and maps that use nodes, time-nodes and pairs of time-nodes as keys.
@@ -77,6 +80,8 @@ class ReservationTable {
 int compute_manhattan_distance(Node &node_a, Node &node_b);
 
 
+
+
 class NodeInQueue {
 	public:
 		TimeNode node;
@@ -84,6 +89,9 @@ class NodeInQueue {
 
 		NodeInQueue(TimeNode node, int distance_to_target);
 };
+
+bool operator<(const NodeInQueue &n1, const NodeInQueue &n2);
+bool operator>(const NodeInQueue &n1, const NodeInQueue &n2);
 
 std::vector<TimeNode> compute_optimal_path(
 		TimeNode initial_node,
