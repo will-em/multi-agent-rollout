@@ -63,7 +63,6 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
             }
         }
     }
-
 }
 
 Environment::Environment(Environment &other) : m_stepCount(other.m_stepCount), m_height(other.m_height), m_width(other.m_width), m_agentPositions(other.m_agentPositions), m_boxesLeft(other.m_boxesLeft){

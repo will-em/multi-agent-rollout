@@ -8,6 +8,7 @@ bool operator==(const Node &n1, const Node &n2) {
 	return n1.x == n2.x && n1.y == n2.y;
 };
 
+
 ReservationTable::ReservationTable() {
 	cells = std::unordered_set<TimeNode, TimeNodeHasher>();
 	fronts = std::unordered_set<std::pair<TimeNode, TimeNode>, PairTimeNodeHasher>();
@@ -16,6 +17,7 @@ ReservationTable::ReservationTable() {
 bool operator==(const TimeNode &n1, const TimeNode &n2) {
 	return n1.turn == n2.turn && n1.node == n2.node;
 };
+
 
 bool operator<(const NodeInQueue &n1, const NodeInQueue &n2) {
   return n1.node.turn + n1.distance_to_target > n2.node.turn + n2.distance_to_target;
@@ -38,7 +40,7 @@ std::size_t PairTimeNodeHasher::operator() (const std::pair<TimeNode, TimeNode> 
 }
 
 
-bool ReservationTable::action_is_valid(TimeNode node, TimeNode next_node) {
+bool ReservationTable::action_is_valid(TimeNode & node, TimeNode & next_node) {
 	if (cells.find(next_node) != cells.end()) {
 		return false;
 	}
@@ -84,8 +86,13 @@ int compute_manhattan_distance(Node &node_a, Node &node_b) {
 
 
 
-std::vector<TimeNode> compute_optimal_path(TimeNode initial_node, Node final_node, int max_turns) {
-	AStarFinder a_star(initial_node, final_node);
+std::vector<TimeNode> compute_optimal_path(
+		TimeNode initial_node,
+		Node final_node,
+		ReservationTable * reservation_table,
+		int max_turns) {
+
+	AStarFinder a_star(initial_node, final_node, reservation_table);
 
 	bool finished = false;
 	bool failed_search = false;
@@ -123,7 +130,12 @@ IterationStatus::IterationStatus(int status, int expansion_turn):
 
 
 
-AStarFinder::AStarFinder(TimeNode origin, Node new_target) : target(new_target) {
+AStarFinder::AStarFinder(
+		TimeNode origin,
+		Node new_target,
+		ReservationTable * reservation_table
+		) : reservation_table(reservation_table), target(new_target) {
+
 	queue = std::priority_queue<NodeInQueue>();
 	NodeInQueue q_node = NodeInQueue(origin, 0);
 	queue.push(q_node);
@@ -153,10 +165,16 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 	for (int i=0; i<5; i++) {
 		std::pair<int,int> delta = delta_array[i];
 
-		// TODO: Check that the node is valid. If not, continue loop
 
 		Node new_node(parent_node.node.x + delta.first, parent_node.node.y + delta.second);
 		TimeNode new_tnode(parent_node.turn + 1, new_node);
+
+		// TODO: Check that the node is valid. If not, continue loop
+		if (!this->reservation_table->action_is_valid(parent_node, new_tnode)) {
+			continue;
+		}
+		// Still consider static obstacles outside the reservation table
+
 
 		int heuristic_distance = compute_manhattan_distance(new_node, this->target);
 
@@ -171,7 +189,6 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 		if (parent_node.node == this->target) {
 			return IterationStatus(1, parent_node.turn);
 		}
-
 	}
 
 	// Change stuff
@@ -179,9 +196,10 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 	return IterationStatus(0, parent_node.turn);
 }
 
-std::vector<TimeNode> AStarFinder::generate_path(TimeNode initial_node) {
+std::vector<TimeNode> AStarFinder::generate_path(TimeNode final_node) {
 	std::vector<TimeNode> reverse_path = std::vector<TimeNode>();
-	reverse_path.push_back(initial_node);
+	reverse_path.push_back(final_node);
+
 	while (true) {
 		TimeNode last_path_node = reverse_path[reverse_path.size()-1];
 

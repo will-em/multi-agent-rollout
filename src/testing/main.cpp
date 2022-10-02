@@ -10,7 +10,11 @@ void print_path(std::vector<TimeNode> & path) {
 	printf("\n");
 }
 
-int main() {
+bool check_action_is_valid(ReservationTable & table, TimeNode node_a, TimeNode node_b) {
+	return table.action_is_valid(node_a, node_b);
+}
+
+void reservation_table_checks() {
 	ReservationTable table;
 	std::vector<TimeNode> path = {
 		{0, {0, 0}}, {1, {0,1}}, {2, {0,2}}, {3, {1,2}}
@@ -21,31 +25,101 @@ int main() {
 	
 	// Cell collisions
 	std::cout << "Testing cell collisions" << std::endl;
-	assert(!table.action_is_valid({0, {0,2}}, {1, {0,1}}));
-	assert(!table.action_is_valid({1, {1,2}}, {2, {0,2}}));
-	assert(!table.action_is_valid({2, {0,2}}, {3, {1,2}}));
+	assert(!check_action_is_valid(table, {0, {0,2}}, {1, {0,1}}));
+	assert(!check_action_is_valid(table, {1, {1,2}}, {2, {0,2}}));
+	assert(!check_action_is_valid(table, {2, {0,2}}, {3, {1,2}}));
 
 
 	// Front collisions
 	std::cout << "Testing front collisions" << std::endl;
-	assert(!table.action_is_valid({0, {0,1}}, {1, {0,0}}));
-	assert(!table.action_is_valid({1, {0,2}}, {2, {0,1}}));
-	assert(!table.action_is_valid({2, {1,2}}, {3, {0,2}}));
+	assert(!check_action_is_valid(table, {0, {0,1}}, {1, {0,0}}));
+	assert(!check_action_is_valid(table, {1, {0,2}}, {2, {0,1}}));
+	assert(!check_action_is_valid(table, {2, {1,2}}, {3, {0,2}}));
 
 
 	// Available actions
 	std::cout << "Testing accceptable actions" << std::endl;
-	assert(table.action_is_valid({0, {0,0}}, {1, {1,0}}));
-	assert(table.action_is_valid({0, {0,1}}, {1, {0,2}}));
+	assert(check_action_is_valid(table, {0, {0,0}}, {1, {1,0}}));
+	assert(check_action_is_valid(table, {0, {0,1}}, {1, {0,2}}));
+}
 
+void no_collision_pathfinding() {
+	ReservationTable reservation_table;
 
-	// A*
 	TimeNode initial_node(0, Node(3,4));
 	Node final_node(6,6);
-	std::vector<TimeNode> optimal_path = compute_optimal_path(initial_node, final_node, 10);
+	std::vector<TimeNode> optimal_path = compute_optimal_path(
+			initial_node,
+			final_node,
+			&reservation_table,
+			10);
 
-	printf("Here comes the PATH:\n");
+	assert(optimal_path.size() == 6);
+}
+
+void corridor_1() {
+	// 2 . . a .
+	// 1 o . . xb
+	// 0 . . . c
+	//   0 1 2 3
+	//
+
+	ReservationTable reservation_table;
+
+	std::vector<TimeNode> path_1 = {
+		{0, {2, 2} }, {1, {1, 2}}, {2, {0, 2}}, {3, {0, 2}}
+	};
+	std::vector<TimeNode> path_2 = {
+		{0, {2, 2} }, {1, {2, 2}}, {2, {2, 2}}, {3, {1, 2}}, {3, {0, 2}}
+	};
+	std::vector<TimeNode> path_3 = {
+		{0, {3, 1} }, {1, {2, 1}}, {2, {1, 1}}, {3, {0, 1}}
+	};
+	std::vector<TimeNode> path_4 = {
+		{0, {3, 0} }, {1, {2, 0}}, {2, {1, 0}}, {3, {0, 0}}
+	};
+
+	TimeNode initial_node(0, {0,1});
+	Node final_node(3,1);
+
+	reservation_table.reserve_path(path_1);
+	reservation_table.reserve_path(path_2);
+	reservation_table.reserve_path(path_3);
+	reservation_table.reserve_path(path_4);
+
+	std::vector<TimeNode> optimal_path = compute_optimal_path(
+			initial_node,
+			final_node,
+			&reservation_table,
+			10);
+	
+	std::vector<TimeNode> expected_path = {
+		{0, {0,1}}, {1, {1,1}}, {2, {1,2}}, {3, {1,1}}, {4, {2,1}}, {5, {3,1}}
+	};
+
+	print_path(expected_path);
 	print_path(optimal_path);
+
+	assert(optimal_path.size() == expected_path.size());
+
+	std::cout << optimal_path.size() << std::endl;
+	std::cout << expected_path.size() << std::endl;
+
+	for (int i=0; i < optimal_path.size(); i++) {
+		std::cout << i << std::endl;
+		assert(expected_path[i] == optimal_path[i]);
+	}
+}
+
+
+int main() {
+	reservation_table_checks();
+
+	// A*
+
+	no_collision_pathfinding();
+
+	corridor_1();
 
 
 	std::cout << "Tests passed successfully" << std::endl;
