@@ -5,5 +5,5 @@ test:
 	g++ -std=c++17 src/coop-astar.cpp src/testing/main.cpp -o test
 
 clean:
-	rm rollout
-	rm test
+	rm -f rollout
+	rm -f test

@@ -1,22 +1,36 @@
 #include "coop-astar.hpp"
 #include <iostream>
 
-Node::Node(int x, int y): x(x), y(y) {};
-TimeNode::TimeNode(int turn, Node node): turn(turn), node(node) {};
+Node::Node(int x, int y): x(x), y(y) {}
+TimeNode::TimeNode(int turn, Node node): turn(turn), node(node) {}
 
 bool operator==(const Node &n1, const Node &n2) {
 	return n1.x == n2.x && n1.y == n2.y;
-};
+}
+
+bool operator!=(const Node &n1, const Node &n2) {
+	return !(n1 == n2);
+}
 
 
-ReservationTable::ReservationTable() {
+ReservationTable::ReservationTable(std::pair<int,int> table_size, std::vector<Node> obstacles) {
 	cells = std::unordered_set<TimeNode, TimeNodeHasher>();
 	fronts = std::unordered_set<std::pair<TimeNode, TimeNode>, PairTimeNodeHasher>();
+	static_cells = std::unordered_set<Node, NodeHasher>();
+	size = table_size;
+
+	for (int i=0; i<obstacles.size(); i++) {
+		static_cells.insert(obstacles[i]);
+	}
 }
 
 bool operator==(const TimeNode &n1, const TimeNode &n2) {
 	return n1.turn == n2.turn && n1.node == n2.node;
-};
+}
+
+bool operator!=(const TimeNode &n1, const TimeNode &n2) {
+	return !(n1 == n2);
+}
 
 
 bool operator<(const NodeInQueue &n1, const NodeInQueue &n2) {
@@ -29,7 +43,7 @@ bool operator>(const NodeInQueue &n1, const NodeInQueue &n2) {
 
 std::size_t NodeHasher::operator() (const Node &node) const {
 	return std::hash<int>()(node.x) ^ std::hash<int>()(node.y);
-};
+}
 
 std::size_t TimeNodeHasher::operator() (const TimeNode &time_node) const {
 	return std::hash<int>()(time_node.turn) ^ NodeHasher()(time_node.node);
@@ -40,7 +54,22 @@ std::size_t PairTimeNodeHasher::operator() (const std::pair<TimeNode, TimeNode> 
 }
 
 
-bool ReservationTable::action_is_valid(TimeNode & node, TimeNode & next_node) {
+bool ReservationTable::action_is_valid(TimeNode & node, TimeNode & next_node, Node & clearance_node) {
+
+
+	if (next_node.node.x < 0
+		|| next_node.node.x >= size.first
+		|| next_node.node.y < 0
+		|| next_node.node.y >= size.second) {
+
+		return false;
+	}
+
+	if (static_cells.find(next_node.node) != static_cells.end()
+			&& next_node.node != clearance_node) {
+		return false;
+	}
+
 	if (cells.find(next_node) != cells.end()) {
 		return false;
 	}
@@ -58,7 +87,7 @@ int ReservationTable::reserve_path(std::vector<TimeNode> path) {
 	TimeNode last_node = path[0];
 	this->cells.insert(path[0]);
 
-	for (int i = 1; i< path.size(); i++) {
+	for (int i = 1; i < path.size(); i++) {
 		this->cells.insert(path[i]);
 		this->fronts.insert(
 			{
@@ -131,7 +160,7 @@ std::vector<TimeNode> compute_optimal_path(
 
 
 IterationStatus::IterationStatus(int status, int expansion_turn):
-	status(status), expansion_turn(expansion_turn) {};
+	status(status), expansion_turn(expansion_turn) {}
 
 
 
@@ -175,7 +204,7 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 		TimeNode new_tnode(parent_node.turn + 1, new_node);
 
 		// TODO: Check that the node is valid. If not, continue loop
-		if (!this->reservation_table->action_is_valid(parent_node, new_tnode)) {
+		if (!this->reservation_table->action_is_valid(parent_node, new_tnode, this->target)) {
 			continue;
 		}
 		// Still consider static obstacles outside the reservation table
@@ -231,8 +260,7 @@ std::vector<TimeNode> AStarFinder::generate_path(TimeNode final_node) {
 }
 
 NodeInQueue::NodeInQueue(TimeNode node, int distance_to_target) :
-	node(node), distance_to_target(distance_to_target) {};
-
+	node(node), distance_to_target(distance_to_target) {}
 
 
 
@@ -244,6 +272,6 @@ std::vector<std::vector<int>> compute_controls(
 		std::vector<Node> target_positions) {
 
 	return std::vector<std::vector<int>>();
-};
+}
 
 

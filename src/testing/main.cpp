@@ -10,12 +10,33 @@ void print_path(std::vector<TimeNode> & path) {
 	printf("\n");
 }
 
+bool paths_are_equal(std::vector<TimeNode> & path_a, std::vector<TimeNode> & path_b) {
+	if (path_a.size() != path_b.size()) {
+		return false;
+	}
+
+	for (int i=0; i < path_a.size(); i++) {
+		TimeNode node_a = path_a[i];
+		TimeNode node_b = path_b[i];
+
+		if (node_a != node_b){
+			return false;
+		}
+	}
+
+	return true;
+};
+
 bool check_action_is_valid(ReservationTable & table, TimeNode node_a, TimeNode node_b) {
-	return table.action_is_valid(node_a, node_b);
+	Node clearance_node(-1,-1);
+	return table.action_is_valid(node_a, node_b, clearance_node);
 }
 
 void reservation_table_checks() {
-	ReservationTable table;
+	std::pair<int, int> size = {10, 10};
+
+	ReservationTable table(size, std::vector<Node>());
+
 	std::vector<TimeNode> path = {
 		{0, {0, 0}}, {1, {0,1}}, {2, {0,2}}, {3, {1,2}}
 	};
@@ -44,7 +65,7 @@ void reservation_table_checks() {
 }
 
 void no_collision_pathfinding() {
-	ReservationTable reservation_table;
+	ReservationTable reservation_table({10,10}, std::vector<Node>());
 
 	TimeNode initial_node(0, Node(3,4));
 	Node final_node(6,6);
@@ -64,7 +85,7 @@ void corridor_1() {
 	//   0 1 2 3
 	//
 
-	ReservationTable reservation_table;
+	ReservationTable reservation_table({10,10}, std::vector<Node>());
 
 	std::vector<TimeNode> path_1 = {
 		{0, {2, 2} }, {1, {1, 2}}, {2, {0, 2}}, {3, {0, 2}}
@@ -97,17 +118,57 @@ void corridor_1() {
 		{0, {0,1}}, {1, {1,1}}, {2, {1,2}}, {3, {1,1}}, {4, {2,1}}, {5, {3,1}}
 	};
 
-	print_path(expected_path);
-	print_path(optimal_path);
+	assert(
+		paths_are_equal(
+			expected_path,
+			optimal_path
+		)
+	);
 
-	assert(optimal_path.size() == expected_path.size());
 
-	for (int i=0; i < optimal_path.size(); i++) {
-		TimeNode node_a = expected_path[i];
-		TimeNode node_b = optimal_path[i];
 
-		assert(node_a == node_b);
-	}
+}
+
+void corridor_2() {
+	//
+	// 1 # . # #
+	// 0 o . . x 
+	//   0 1 2 3
+
+	std::vector<Node> static_obstacles = {
+		{0,1}, {2,1}, {3,1}, {3,0}
+	};
+
+	ReservationTable reservation_table({4,2}, static_obstacles);
+
+	std::vector<TimeNode> path_1 = {
+		{0, {3,0}}, {1, {2,0}}, {2, {1,0}}, {3, {0,0}}
+	};
+
+	reservation_table.reserve_path(path_1);
+
+	TimeNode initial_node(0, Node(0,0));
+	Node final_node(3,0);
+
+	std::vector<TimeNode> optimal_path = compute_optimal_path(
+		initial_node,
+		final_node,
+		&reservation_table,
+		10
+	);
+
+	std::vector<TimeNode> expected_path = {
+		{0, {0,0}}, {1, {1,0}}, {2, {1,1}}, {3, {1,0}}, {4, {2,0}}, {5, {3,0}}
+	};
+
+	// print_path(optimal_path);
+
+	assert(
+		paths_are_equal(
+			expected_path,
+			optimal_path
+		)
+	);
 }
 
 
@@ -119,6 +180,7 @@ int main() {
 	no_collision_pathfinding();
 
 	corridor_1();
+	corridor_2();
 
 
 	std::cout << "Tests passed successfully" << std::endl;

@@ -26,6 +26,8 @@ class TimeNode {
 bool operator==(const Node &n1, const Node &n2);
 bool operator==(const TimeNode &n1, const TimeNode &n2);
 
+bool operator!=(const Node &n1, const Node &n2);
+bool operator!=(const TimeNode &n1, const TimeNode &n2);
 
 
 // Hash functions for using sets of nodes and time nodes. These classes are necessary for creating
@@ -58,8 +60,9 @@ class ReservationTable {
 		std::unordered_set<Node, NodeHasher> static_cells;
 
 	public:
+		std::pair<int, int> size;
 		// A reservation table is generated completely empty by default
-		ReservationTable();
+		ReservationTable(std::pair<int,int> size, std::vector<Node> obstacles);
 
 		// Takes a path a inserts elements in the reservation table so any other path
 		// that avoids the table will not collide with this path
@@ -68,7 +71,7 @@ class ReservationTable {
 		// Check whther a movement from a node in time to another does not conflict in
 		// the reservation table. Returns true if the actions does not conflict with
 		// the reservation table
-		bool action_is_valid(TimeNode & node, TimeNode & next_node);
+		bool action_is_valid(TimeNode & node, TimeNode & next_node, Node & clearance_node);
 };
 
 
