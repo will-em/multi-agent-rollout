@@ -1,7 +1,7 @@
 #include "coop-astar.hpp"
 #include <iostream>
 
-Node::Node(int x, int y): x(x), y(y) {}
+Node::Node(int y, int x): y(y), x(x) {}
 TimeNode::TimeNode(int turn, Node node): turn(turn), node(node) {}
 
 bool operator==(const Node &n1, const Node &n2) {
@@ -58,9 +58,9 @@ bool ReservationTable::action_is_valid(TimeNode & node, TimeNode & next_node, No
 
 
 	if (next_node.node.x < 0
-		|| next_node.node.x >= size.first
+		|| next_node.node.x >= size.second
 		|| next_node.node.y < 0
-		|| next_node.node.y >= size.second) {
+		|| next_node.node.y >= size.first) {
 
 		return false;
 	}
@@ -200,10 +200,10 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 		std::pair<int,int> delta = delta_array[i];
 
 
-		Node new_node(parent_node.node.x + delta.first, parent_node.node.y + delta.second);
+		Node new_node(parent_node.node.y + delta.first, parent_node.node.x + delta.second);
 		TimeNode new_tnode(parent_node.turn + 1, new_node);
 
-		// TODO: Check that the node is valid. If not, continue loop
+
 		if (!this->reservation_table->action_is_valid(parent_node, new_tnode, this->target)) {
 			continue;
 		}
@@ -264,6 +264,7 @@ NodeInQueue::NodeInQueue(TimeNode node, int distance_to_target) :
 
 
 
+
 std::vector<std::vector<int>> compute_controls(
 		int height,
 		int width,
@@ -271,7 +272,71 @@ std::vector<std::vector<int>> compute_controls(
 		std::vector<Node> initial_positions,
 		std::vector<Node> target_positions) {
 
-	return std::vector<std::vector<int>>();
+	std::vector<std::vector<int>> optimal_actions;
+
+	int max_turns = (height + width)*2;
+
+	ReservationTable reservation_table({height, width}, obstacles);
+
+
+	for (int i=0; i<initial_positions.size(); i++) {
+		TimeNode initial_node = {0, initial_positions[i]};
+		Node target_node = target_positions[i];
+
+		std::vector<TimeNode> optimal_path = compute_optimal_path(
+			initial_node,
+			target_node,
+			&reservation_table,
+			max_turns
+		);
+
+		std::vector<int> agent_actions = path_to_actions(optimal_path);
+
+		optimal_actions.push_back(agent_actions);
+
+		reservation_table.reserve_path(optimal_path);
+
+	}
+
+	return optimal_actions;
 }
 
 
+std::vector<int> path_to_actions(std::vector<TimeNode> & path) {
+	std::vector<int> actions;
+
+	for (int i=0; i < path.size()-1; i++) {
+
+		// 0: stand still
+		// 1: up
+		// 2: down
+		// 3: left
+		// 4: right
+
+		int turn_action;
+
+		Node current_node = path[i].node;
+		Node next_node = path[i+1].node;
+
+		if (current_node == next_node) {
+			turn_action = 0;
+
+		} else if (next_node.y == current_node.y && next_node.x == current_node.x + 1) {
+			turn_action = 4;
+
+		} else if (next_node.y == current_node.y && next_node.x == current_node.x - 1) {
+			turn_action = 3;
+
+		} else if (next_node.y == current_node.y + 1 && next_node.x == current_node.x) {
+			turn_action = 2;
+
+		} else if (next_node.y == current_node.y - 1 && next_node.x == current_node.x) {
+			turn_action = 1;
+
+		}
+
+		actions.push_back(turn_action);
+	}
+
+	return actions;
+}

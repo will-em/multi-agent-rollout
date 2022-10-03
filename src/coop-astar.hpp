@@ -8,10 +8,10 @@
 // A node represents a position in 2 dimensions:x and y
 class Node {
 	public:
-		int x;
 		int y;
+		int x;
 		
-		Node(int x, int y);
+		Node(int y, int x);
 };
 
 // A time-node is a node with an additional coordinate: time. The time is given in turns
@@ -102,7 +102,7 @@ bool operator>(const NodeInQueue &n1, const NodeInQueue &n2);
 
 
 
-// Obtains the optimal path between two nodes
+// Obtains the optimal path between two nodes, respecting the reservation table
 std::vector<TimeNode> compute_optimal_path(
 		TimeNode initial_node,
 		Node final_node,
@@ -165,10 +165,17 @@ class AStarFinder {
 };
 
 
+// Takes a sequence of time-nodes and converts it to a sequence of actions,
+// such that a robot executing them would occupy the nodes given by the input
+// at each turn
+std::vector<int> path_to_actions(std::vector<TimeNode> & path);
 
+// Take an environment size, a vector of obstacles and the initial and final positions
+// for several agents and compuate their optimal paths using Cooperative A*
 std::vector<std::vector<int>> compute_controls(
 		int height,
 		int width,
 		std::vector<Node> obstacles, 
 		std::vector<Node> initial_positions,
 		std::vector<Node> target_positions);
+

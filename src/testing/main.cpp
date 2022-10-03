@@ -10,14 +10,15 @@ void print_path(std::vector<TimeNode> & path) {
 	printf("\n");
 }
 
-bool paths_are_equal(std::vector<TimeNode> & path_a, std::vector<TimeNode> & path_b) {
+template <typename T>
+bool paths_are_equal(std::vector<T> & path_a, std::vector<T> & path_b) {
 	if (path_a.size() != path_b.size()) {
 		return false;
 	}
 
 	for (int i=0; i < path_a.size(); i++) {
-		TimeNode node_a = path_a[i];
-		TimeNode node_b = path_b[i];
+		T node_a = path_a[i];
+		T node_b = path_b[i];
 
 		if (node_a != node_b){
 			return false;
@@ -33,7 +34,7 @@ bool check_action_is_valid(ReservationTable & table, TimeNode node_a, TimeNode n
 }
 
 void reservation_table_checks() {
-	std::pair<int, int> size = {10, 10};
+	std::pair<int, int> size = {3, 3};
 
 	ReservationTable table(size, std::vector<Node>());
 
@@ -43,23 +44,31 @@ void reservation_table_checks() {
 
 	table.reserve_path(path);
 
+	std::cout << "\nTesting reservation table" << std::endl;
+
+	// Out of bounds
+	std::cout << "\tTesting out of bounds" << std::endl;
+	assert(!check_action_is_valid(table, {0, {0,0}}, {1, {0,-1}}));
+	assert(!check_action_is_valid(table, {0, {0,0}}, {1, {-1,0}}));
+	assert(!check_action_is_valid(table, {0, {1,2}}, {1, {1,3}}));
+	assert(!check_action_is_valid(table, {0, {2,2}}, {1, {3,2}}));
 	
 	// Cell collisions
-	std::cout << "Testing cell collisions" << std::endl;
+	std::cout << "\tTesting cell collisions" << std::endl;
 	assert(!check_action_is_valid(table, {0, {0,2}}, {1, {0,1}}));
 	assert(!check_action_is_valid(table, {1, {1,2}}, {2, {0,2}}));
 	assert(!check_action_is_valid(table, {2, {0,2}}, {3, {1,2}}));
 
 
 	// Front collisions
-	std::cout << "Testing front collisions" << std::endl;
+	std::cout << "\tTesting front collisions" << std::endl;
 	assert(!check_action_is_valid(table, {0, {0,1}}, {1, {0,0}}));
 	assert(!check_action_is_valid(table, {1, {0,2}}, {2, {0,1}}));
 	assert(!check_action_is_valid(table, {2, {1,2}}, {3, {0,2}}));
 
 
 	// Available actions
-	std::cout << "Testing accceptable actions" << std::endl;
+	std::cout << "\tTesting accceptable actions" << std::endl;
 	assert(check_action_is_valid(table, {0, {0,0}}, {1, {1,0}}));
 	assert(check_action_is_valid(table, {0, {0,1}}, {1, {0,2}}));
 }
@@ -79,13 +88,14 @@ void no_collision_pathfinding() {
 }
 
 void corridor_1() {
-	// 2 . . a .
-	// 1 o . . xb
-	// 0 . . . c
-	//   0 1 2 3
-	//
+	// 0 . . .
+	// 1 . . .
+	// 2 . . .
+	// 3 . . .
+	//   0 1 2
 
-	ReservationTable reservation_table({10,10}, std::vector<Node>());
+
+	ReservationTable reservation_table({4,3}, std::vector<Node>());
 
 	std::vector<TimeNode> path_1 = {
 		{0, {2, 2} }, {1, {1, 2}}, {2, {0, 2}}, {3, {0, 2}}
@@ -99,6 +109,7 @@ void corridor_1() {
 	std::vector<TimeNode> path_4 = {
 		{0, {3, 0} }, {1, {2, 0}}, {2, {1, 0}}, {3, {0, 0}}
 	};
+
 
 	TimeNode initial_node(0, {0,1});
 	Node final_node(3,1);
@@ -118,22 +129,22 @@ void corridor_1() {
 		{0, {0,1}}, {1, {1,1}}, {2, {1,2}}, {3, {1,1}}, {4, {2,1}}, {5, {3,1}}
 	};
 
+	// print_path(optimal_path);
+
 	assert(
 		paths_are_equal(
 			expected_path,
 			optimal_path
 		)
 	);
-
-
-
 }
 
 void corridor_2() {
-	//
-	// 1 # . # #
-	// 0 o . . x 
-	//   0 1 2 3
+	// 0 o #
+	// 1 . #
+	// 2 . .
+	// 3 x #
+	//   0 1
 
 	std::vector<Node> static_obstacles = {
 		{0,1}, {2,1}, {3,1}, {3,0}
@@ -172,16 +183,107 @@ void corridor_2() {
 }
 
 
+void pathfinder_checks() {
+	std::cout << "\nPathfinder checks" << std::endl;
+
+	std::cout << "\tEmpty environment" << std::endl;
+	no_collision_pathfinding();
+
+	std::cout << "\tCrowded wide corridor" << std::endl;
+	corridor_1();
+
+	std::cout << "\tSmall corridor with hole" << std::endl;
+	corridor_2();
+}
+
+
+void complete_simple_corridor() {
+
+	// 0 # # . #
+	// 1 a . . b
+	//   0 1 2 3
+
+	std::vector<Node> obstacles = {
+		{0,0}, {0,1}, {0,3}
+	};
+	std::vector<Node> initial_positions = {
+		{1,0}, {1,3}
+
+	};
+	std::vector<Node> final_positions = {
+		{1,3}, {1,0}
+	};
+
+	std::vector<std::vector<int>> optimal_controls = compute_controls(
+		2,
+		4,
+		obstacles,
+		initial_positions,
+		final_positions
+	);
+
+	std::vector<int> expected_path_a = {4, 4, 4};
+	std::vector<int> expected_path_b = {3, 1, 2, 3, 3};
+
+	assert(
+		paths_are_equal(expected_path_a, optimal_controls[0])
+	);
+
+	assert(
+		paths_are_equal(expected_path_b, optimal_controls[1])
+	);
+
+}
+
+
+void check_complate_function() {
+	std::cout << "\nComplete Cooperative A* tests:" << std::endl;
+
+	std::cout << "\tSimple corridor problem:" << std::endl;
+	complete_simple_corridor();
+}
+
+
+
+void path_to_action_check() {
+	std::cout << "\nPath-to-action check" << std::endl;
+
+	std::vector<TimeNode> path = {
+		{0, {1,1}}, // Down  (2)
+		{1, {2,1}}, // Right (4)
+		{1, {2,2}}, // Up	 (1)
+		{1, {1,2}},	// Left  (3)
+		{1, {1,1}}, // Stay  (0)
+		{1, {1,1}},
+	};
+
+
+	std::vector<int> actions = path_to_actions(path);
+
+	std::vector<int> expected = {
+		2, 4, 1, 3, 0
+	};
+
+	assert(paths_are_equal(expected, actions));
+}
+
+
 int main() {
+
 	reservation_table_checks();
 
 	// A*
+	
+	pathfinder_checks();
 
 	no_collision_pathfinding();
 
 	corridor_1();
 	corridor_2();
 
+	path_to_action_check();
+
+	// TODO: Test complete function
 
 	std::cout << "Tests passed successfully" << std::endl;
 }
