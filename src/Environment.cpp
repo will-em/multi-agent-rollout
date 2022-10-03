@@ -93,7 +93,7 @@ Environment::Environment(int testCase) : m_stepCount(0) {
     m_agentPositions.push_back(std::pair<int, int>(6, 4));
 }
 
-Environment::Environment(Environment &other) : m_stepCount(other.m_stepCount), m_height(other.m_height), m_width(other.m_width), m_agentPositions(other.m_agentPositions), m_boxesLeft(other.m_boxesLeft){
+Environment::Environment(Environment &other) : m_stepCount(0), m_height(other.m_height), m_width(other.m_width), m_agentPositions(other.m_agentPositions), m_boxesLeft(other.m_boxesLeft){
     m_matrix = new int[m_height * m_width]();
     for (size_t i = 0; i < m_height* m_width; ++i)
         m_matrix[i] = other.m_matrix[i];
@@ -105,7 +105,7 @@ Environment& Environment::operator=(const Environment &other){
         for (size_t i = 0; i < (other.m_height* other.m_width); ++i)
             new_m_matrix[i] = other.m_matrix[i];
 
-        m_stepCount = other.m_stepCount;
+        m_stepCount = 0;
         m_height = other.m_height;
         m_width = other.m_width;
         m_boxesLeft = other.m_boxesLeft;
