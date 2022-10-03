@@ -55,6 +55,7 @@ class ReservationTable {
 	private:
 		std::unordered_set<TimeNode, TimeNodeHasher> cells;
 		std::unordered_set<std::pair<TimeNode,TimeNode>, PairTimeNodeHasher> fronts;
+		std::unordered_set<Node, NodeHasher> static_cells;
 
 	public:
 		// A reservation table is generated completely empty by default
@@ -159,3 +160,12 @@ class AStarFinder {
 		// Generates a path that goes from the initial node to the final one.
 		std::vector<TimeNode> generate_path(TimeNode final_node);
 };
+
+
+
+std::vector<std::vector<int>> compute_controls(
+		int height,
+		int width,
+		std::vector<Node> obstacles, 
+		std::vector<Node> initial_positions,
+		std::vector<Node> target_positions);

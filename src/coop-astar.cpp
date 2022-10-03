@@ -234,3 +234,16 @@ NodeInQueue::NodeInQueue(TimeNode node, int distance_to_target) :
 	node(node), distance_to_target(distance_to_target) {};
 
 
+
+
+std::vector<std::vector<int>> compute_controls(
+		int height,
+		int width,
+		std::vector<Node> obstacles, 
+		std::vector<Node> initial_positions,
+		std::vector<Node> target_positions) {
+
+	return std::vector<std::vector<int>>();
+};
+
+
