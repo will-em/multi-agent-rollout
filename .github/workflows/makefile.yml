@@ -22,4 +22,5 @@ jobs:
       run: make test
 
     - name: Run tester
+      run: chmod 777 ./test
       run: ./test
