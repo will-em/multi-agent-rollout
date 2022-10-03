@@ -66,6 +66,33 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
 
 }
 
+Environment::Environment(int testCase) : m_stepCount(0) {
+    m_height = 9;
+    m_width = 9;
+    m_matrix = new int[m_height * m_width]();
+    m_boxesLeft = 0;
+
+    for(size_t i = 0; i < m_height * m_width; ++i)
+        m_matrix[i] = wall;
+
+    for(size_t i = 1; i < 8; ++i)
+        envMat(i, 4) = space;
+
+    envMat(2, 3) = space;
+    envMat(3, 3) = space;
+    envMat(4, 3) = space;
+    envMat(5, 3) = space;
+
+    envMat(1, 4) = box;
+    envMat(7, 4) = box;
+    m_boxesLeft += 2;
+
+    envMat(2, 4) = -firstAgent;
+    m_agentPositions.push_back(std::pair<int, int>(2, 4));
+    envMat(6, 4) = -firstAgent - 1;
+    m_agentPositions.push_back(std::pair<int, int>(6, 4));
+}
+
 Environment::Environment(Environment &other) : m_stepCount(other.m_stepCount), m_height(other.m_height), m_width(other.m_width), m_agentPositions(other.m_agentPositions), m_boxesLeft(other.m_boxesLeft){
     m_matrix = new int[m_height * m_width]();
     for (size_t i = 0; i < m_height* m_width; ++i)
