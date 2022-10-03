@@ -27,6 +27,7 @@ bool operator==(const Node &n1, const Node &n2);
 bool operator==(const TimeNode &n1, const TimeNode &n2);
 
 
+
 // Hash functions for using sets of nodes and time nodes. These classes are necessary for creating
 // sets and maps that use nodes, time-nodes and pairs of time-nodes as keys.
 
@@ -72,7 +73,7 @@ class ReservationTable {
 
 // Code for A* with time dimensions
 
-/// The Manhattan distance is a simple heuristic that provides a very fast lower bound
+// The Manhattan distance is a simple heuristic that provides a very fast lower bound
 // of the distance between two cells in a 2D space.
 //
 // Its result is the minimum distance between two nodes if there were neither static nor
@@ -82,6 +83,7 @@ int compute_manhattan_distance(Node &node_a, Node &node_b);
 
 
 
+// Nodes are stored in the priority queue with their heuristic distance to the target node.
 class NodeInQueue {
 	public:
 		TimeNode node;
@@ -90,9 +92,13 @@ class NodeInQueue {
 		NodeInQueue(TimeNode node, int distance_to_target);
 };
 
+// Nodes in the queue must be comparable, so a priority can exist.
 bool operator<(const NodeInQueue &n1, const NodeInQueue &n2);
 bool operator>(const NodeInQueue &n1, const NodeInQueue &n2);
 
+
+
+// Obtains the optimal path between two nodes
 std::vector<TimeNode> compute_optimal_path(
 		TimeNode initial_node,
 		Node final_node,

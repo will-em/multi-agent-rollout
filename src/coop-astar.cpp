@@ -92,6 +92,7 @@ std::vector<TimeNode> compute_optimal_path(
 		ReservationTable * reservation_table,
 		int max_turns) {
 
+	// Creates an A* pathfinder
 	AStarFinder a_star(initial_node, final_node, reservation_table);
 
 	bool finished = false;
@@ -102,14 +103,18 @@ std::vector<TimeNode> compute_optimal_path(
 		IterationStatus last_iter_status = a_star.expand_next_in_queue();
 
 		if (last_iter_status.status == -1) {
+			// The queue is empty, so the search finishes with no results
 			failed_search = true;
 			finished = true;
 
 		} else if (last_iter_status.status == 1) {
+			// The target node was reached
 			finished = true;
 			arrival_turn = last_iter_status.expansion_turn;
 
 		} else if (last_iter_status.expansion_turn >= max_turns) {
+			// A node was expanded, but its turn is over the maximum one so the search
+			// finishes unsuccesfully
 			failed_search = true;
 			finished = true;
 		}
