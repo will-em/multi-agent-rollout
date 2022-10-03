@@ -220,10 +220,8 @@ int Environment::getBoxesLeft(){
     return m_boxesLeft;
 }
 
-// Returns the cost of a given set of actions as well as updates the environment
-double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, int>> &targets){
-    assert(actions.size() == m_agentPositions.size());
-    assert(targets.size() == m_agentPositions.size());
+// Returns the cost of a given set of controls as well as updates the environment
+double Environment::step(std::vector<int> &controls, std::vector<std::pair<int, int>> &targets){
 
     std::vector< std::pair<int, int> > newPositions(m_agentPositions.size());
 
@@ -237,11 +235,11 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         std::pair agentPos = m_agentPositions[agent_index];
         std::pair target = targets[agent_index];
-        uint8_t action = actions[agent_index];
+        uint8_t control = controls[agent_index];
 
         std::pair<int, int> newPos(agentPos.first, agentPos.second); // Stand still
 
-        switch(action){
+        switch(control){
             case 1: // Move up
                 newPos.first = agentPos.first - 1;
                 break;
@@ -303,7 +301,7 @@ double Environment::step(std::vector<int> &actions, std::vector<std::pair<int, i
     }
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         
-        if(actions[agent_index] != 0)
+        if(controls[agent_index] != 0)
             cost += c_step;
 
         // Update matrix
