@@ -21,6 +21,8 @@ jobs:
     - name: Compile tester
       run: make test
 
-    - name: Run tester
+    - name: Change file mode
       run: chmod 777 ./test
+
+    - name: Run tester
       run: ./test
