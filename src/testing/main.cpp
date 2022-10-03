@@ -198,7 +198,6 @@ void pathfinder_checks() {
 
 
 void complete_simple_corridor() {
-
 	// 0 # # . #
 	// 1 a . . b
 	//   0 1 2 3
@@ -232,7 +231,45 @@ void complete_simple_corridor() {
 	assert(
 		paths_are_equal(expected_path_b, optimal_controls[1])
 	);
+}
 
+void complete_corridor_back_and_forth() {
+	// 0 a # . .
+	// 1 b # # .
+	// 2 . . . .
+	//   0 1 2 3
+	//
+	//   This test will fail if the agents do not disappear after reaching their targets
+
+	std::vector<Node> obstacles = {
+		{0,1}, {1,1}, {1,2}
+	};
+	std::vector<Node> initial_positions = {
+		{0,0}, {1,0}
+
+	};
+	std::vector<Node> final_positions = {
+		{0,3}, {0,0}
+	};
+
+	std::vector<std::vector<int>> optimal_controls = compute_controls(
+		3,
+		4,
+		obstacles,
+		initial_positions,
+		final_positions
+	);
+
+	std::vector<int> expected_path_a = {2, 2, 4, 4, 4, 1, 1};
+	std::vector<int> expected_path_b = {2, 4, 4, 4, 1, 1, 3, 4, 2, 2, 3, 3, 3, 1, 1};
+
+	assert(
+		paths_are_equal(expected_path_a, optimal_controls[0])
+	);
+
+	assert(
+		paths_are_equal(expected_path_b, optimal_controls[1])
+	);
 }
 
 
@@ -241,6 +278,10 @@ void check_complate_function() {
 
 	std::cout << "\tSimple corridor problem:" << std::endl;
 	complete_simple_corridor();
+
+
+	std::cout << "\tSlighlty more cumbersome corridor problem:" << std::endl;
+ 	complete_corridor_back_and_forth();
 }
 
 

@@ -274,7 +274,7 @@ std::vector<std::vector<int>> compute_controls(
 
 	std::vector<std::vector<int>> optimal_actions;
 
-	int max_turns = (height + width)*2;
+	int max_turns = (height + width)*3;
 
 	ReservationTable reservation_table({height, width}, obstacles);
 
