@@ -13,7 +13,7 @@ int main(){
     int simulationCount = 0;
     int numOfSuccess = 0;
     while(true){
-        bool success = simulate(100);
+        bool success = simulate(10);
 
         if(success)
             numOfSuccess++;

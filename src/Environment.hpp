@@ -12,7 +12,6 @@ class Environment{
 
     public:
         Environment(int wallOffset, int boxOffset, int n, int agentCount);
-        Environment(int testCase); // Test environment constructor
         Environment(Environment &other); // Copy constructor
         Environment &operator=(const Environment &other);
         ~Environment(); // Destructor
