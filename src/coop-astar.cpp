@@ -203,6 +203,7 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 		Node new_node(parent_node.node.y + delta.first, parent_node.node.x + delta.second);
 		TimeNode new_tnode(parent_node.turn + 1, new_node);
 
+		if (this->expanded_nodes.count(new_tnode) != 0) { continue; }
 
 		if (!this->reservation_table->action_is_valid(parent_node, new_tnode, this->target)) {
 			continue;
