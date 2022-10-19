@@ -2,6 +2,7 @@
 #include "Environment.hpp"
 #include <vector>
 #include "IndexToPair.hpp"
+#include <algorithm>
 
 /**
     Set target of an agent to a box. If the target vector is empty all of the agents are assigned a box.  

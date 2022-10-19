@@ -1,3 +1,4 @@
+#pragma once
 /**
     Simulate the multi-agent warehouse
     @param numOfAgents Number of agents to be simulated
@@ -5,6 +6,4 @@
 
 */
 
-#include <algorithm>
-
-bool simulate(int numOfAgents);
+bool simulateCoop(int numOfAgents);
