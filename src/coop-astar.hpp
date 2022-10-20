@@ -30,6 +30,7 @@ bool operator!=(const Node &n1, const Node &n2);
 bool operator!=(const TimeNode &n1, const TimeNode &n2);
 
 
+
 // Hash functions for using sets of nodes and time nodes. These classes are necessary for creating
 // sets and maps that use nodes, time-nodes and pairs of time-nodes as keys.
 
@@ -63,6 +64,7 @@ class ReservationTable {
 		std::pair<int, int> size;
 		// A reservation table is generated completely empty by default
 		ReservationTable(std::pair<int,int> size, std::vector<Node> obstacles);
+		ReservationTable();
 
 		// Takes a path a inserts elements in the reservation table so any other path
 		// that avoids the table will not collide with this path
@@ -73,7 +75,6 @@ class ReservationTable {
 		// the reservation table
 		bool action_is_valid(TimeNode & node, TimeNode & next_node, Node & clearance_node);
 };
-
 
 // Code for A* with time dimensions
 
@@ -178,4 +179,12 @@ std::vector<std::vector<int>> compute_controls(
 		std::vector<Node> obstacles, 
 		std::vector<Node> initial_positions,
 		std::vector<Node> target_positions);
+
+std::vector<int> compute_controls_for_single_agent(
+		Node initial_position,
+		std::vector<Node> &target_positions,
+		int curr_time,
+		int agent_idx);
+
+void init_reservation_table(int height, int width, std::vector<Node> obstacles);
 

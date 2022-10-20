@@ -6,7 +6,7 @@ int main(){
     int numOfSuccess = 0;
     while(true){
         //bool success = simulate(10);
-        bool success = simulateCoop(24);
+        bool success = simulateCoop(100);
 
         if(success)
             numOfSuccess++;

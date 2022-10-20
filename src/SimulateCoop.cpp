@@ -57,27 +57,50 @@ bool simulateCoop(int numOfAgents){
         }
     }
 
-    for(auto el : targets)
-        target_positions.push_back(Node(el.first, el.second));
 
-    auto controlsVec = compute_controls(env.getHeight(), env.getWidth(), obstacles, initial_positions, target_positions);
+
+    init_reservation_table(height, width, obstacles);
+
+
+    //auto controlsVec = compute_controls(env.getHeight(), env.getWidth(), obstacles, initial_positions, target_positions);
+
+    std::vector<std::vector<int>> controlsVec(numOfAgents, std::vector<int>());
 
     int iteration = 0;
     while(!env.isDone()){
-        std::this_thread::sleep_for(milliseconds(100));
+        target_positions.clear();
+        for(auto el : targets)
+            target_positions.push_back(Node(el.first, el.second));
+        std::vector<Node> positions;
+        for(int agent_idx = 0; agent_idx < numOfAgents; agent_idx++){
+            if(controlsVec[agent_idx].size() == 0){
+                std::pair<int,int> position = indexToPair(env.getMatrixIndex(agent_idx), width);
+
+                Node node_pos(position.first, position.second);
+                controlsVec[agent_idx] = compute_controls_for_single_agent(node_pos, target_positions, iteration, agent_idx);
+            }
+        }
+        std::this_thread::sleep_for(milliseconds(1));
         auto beforeValues = env.getAgentValues();
 
         Environment beforeEnv = env;
 
         std::vector<int> controls;
-        for(int i = 0; i < numOfAgents; i++)
-            controls.push_back(controlsVec[i][iteration]);
+        for(int i = 0; i < numOfAgents; i++){
+            int N = controlsVec[i].size();
+            controls.push_back(controlsVec[i][N - 1]);
+        }
 
         cost = env.step(controls, targets); 
         env.printMatrix(dropOffPoints, true);
 
         updateTargets(env, targets, beforeValues, dropOffPoints);
         iteration++;
+        
+
+        for(int agent_idx = 0; agent_idx < numOfAgents; agent_idx++){
+            controlsVec[agent_idx].pop_back();
+        }
     }
 
     return true;

@@ -24,6 +24,14 @@ ReservationTable::ReservationTable(std::pair<int,int> table_size, std::vector<No
 	}
 }
 
+ReservationTable::ReservationTable(){
+	cells = std::unordered_set<TimeNode, TimeNodeHasher>();
+	fronts = std::unordered_set<std::pair<TimeNode, TimeNode>, PairTimeNodeHasher>();
+	static_cells = std::unordered_set<Node, NodeHasher>();
+}
+
+ReservationTable global_reservation_table;
+int max_turns;
 bool operator==(const TimeNode &n1, const TimeNode &n2) {
 	return n1.turn == n2.turn && n1.node == n2.node;
 }
@@ -256,7 +264,6 @@ std::vector<TimeNode> AStarFinder::generate_path(TimeNode final_node) {
 		path.push_back(reverse_path[reverse_path.size()-1]);
 		reverse_path.pop_back();
 	}
-
 	return path;
 }
 
@@ -302,6 +309,36 @@ std::vector<std::vector<int>> compute_controls(
 	return optimal_actions;
 }
 
+std::vector<int> compute_controls_for_single_agent(
+		Node initial_position,
+		std::vector<Node> &target_positions,
+		int curr_time,
+		int agent_idx) {
+
+	std::vector<std::vector<int>> optimal_actions;
+
+	TimeNode initial_node = {curr_time, initial_position};
+	Node target_node = target_positions[agent_idx];
+
+	std::vector<TimeNode> optimal_path = compute_optimal_path(
+		initial_node,
+		target_node,
+		&global_reservation_table,
+		max_turns
+	);
+
+	global_reservation_table.reserve_path(optimal_path);
+	std::vector<int> agent_actions = path_to_actions(optimal_path);
+
+	std::reverse(agent_actions.begin(), agent_actions.end());
+
+	return agent_actions;
+}
+
+void init_reservation_table(int height, int width, std::vector<Node> obstacles){
+	global_reservation_table = ReservationTable({height, width}, obstacles);
+	max_turns = (height + width)*3;
+}
 
 std::vector<int> path_to_actions(std::vector<TimeNode> & path) {
 	std::vector<int> actions;
