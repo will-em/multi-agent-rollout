@@ -73,10 +73,12 @@ bool simulateCoop(int numOfAgents){
             target_positions.push_back(Node(el.first, el.second));
         std::vector<Node> positions;
         for(int agent_idx = 0; agent_idx < numOfAgents; agent_idx++){
+
             if(controlsVec[agent_idx].size() == 0){
                 std::pair<int,int> position = indexToPair(env.getMatrixIndex(agent_idx), width);
 
                 Node node_pos(position.first, position.second);
+                remove_from_obstacles(node_pos); 
                 controlsVec[agent_idx] = compute_controls_for_single_agent(node_pos, target_positions, iteration, agent_idx);
             }
         }
@@ -84,7 +86,6 @@ bool simulateCoop(int numOfAgents){
         auto beforeValues = env.getAgentValues();
 
         Environment beforeEnv = env;
-
         std::vector<int> controls;
         for(int i = 0; i < numOfAgents; i++){
             int N = controlsVec[i].size();
@@ -95,6 +96,11 @@ bool simulateCoop(int numOfAgents){
         env.printMatrix(dropOffPoints, true);
 
         updateTargets(env, targets, beforeValues, dropOffPoints);
+
+        for(int agent_idx = 0; agent_idx < numOfAgents; agent_idx++){
+            
+        }
+
         iteration++;
         
 

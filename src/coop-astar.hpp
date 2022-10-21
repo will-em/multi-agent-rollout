@@ -75,7 +75,12 @@ class ReservationTable {
 		// the reservation table. Returns true if the actions does not conflict with
 		// the reservation table
 		bool action_is_valid(TimeNode & node, TimeNode & next_node, Node & clearance_node);
+
+	    std::unordered_set<Node, NodeHasher> &static_cells_ref();	
 };
+
+
+void remove_from_obstacles(Node to_be_removed);
 
 // Code for A* with time dimensions
 

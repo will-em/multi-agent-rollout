@@ -50,11 +50,15 @@ bool operator>(const NodeInQueue &n1, const NodeInQueue &n2) {
 
 
 std::size_t NodeHasher::operator() (const Node &node) const {
-	return std::hash<int>()(node.x) ^ std::hash<int>()(node.y);
+	//std::cout << (10032 * node.x + 20079 * node.y) << '\n'; 
+	//return std::hash<int>()(node.x) ^ std::hash<int>()(node.y);
+	return 10032 * node.x + 20079 * node.y;
 }
 
 std::size_t TimeNodeHasher::operator() (const TimeNode &time_node) const {
-	return std::hash<int>()(time_node.turn) ^ NodeHasher()(time_node.node);
+	//std::cout << (NodeHasher()(time_node.node) ^ (time_node.turn * 30080)) << '\n';
+	return (NodeHasher()(time_node.node) ^ (time_node.turn * 30080));
+	//return std::hash<int>()(time_node.turn) ^ NodeHasher()(time_node.node);
 }
 
 std::size_t PairTimeNodeHasher::operator() (const std::pair<TimeNode, TimeNode> &pair) const {
@@ -71,9 +75,11 @@ bool ReservationTable::action_is_valid(TimeNode & node, TimeNode & next_node, No
 		return false;
 	}
 
-	if (static_cells.find(next_node.node) != static_cells.end()
-			&& next_node.node != clearance_node) {
-		return false;
+	if(node.node.x != next_node.node.x || node.node.y != next_node.node.y){
+		if (static_cells.find(next_node.node) != static_cells.end()
+				&& next_node.node != clearance_node) {
+			return false;
+		}
 	}
 
 	if (cells.find(next_node) != cells.end()) {
@@ -136,6 +142,7 @@ std::vector<TimeNode> compute_optimal_path(
 	int arrival_turn;
 
 	while (!finished) {
+
 		IterationStatus last_iter_status = a_star.expand_next_in_queue();
 
 		if (last_iter_status.status == -1) {
@@ -206,10 +213,8 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 	for (int i=0; i<5; i++) {
 		std::pair<int,int> delta = delta_array[i];
 
-
 		Node new_node(parent_node.node.y + delta.first, parent_node.node.x + delta.second);
 		TimeNode new_tnode(parent_node.turn + 1, new_node);
-
 		if (this->expanded_nodes.count(new_tnode) != 0) { continue; }
 
 		if (!this->reservation_table->action_is_valid(parent_node, new_tnode, this->target)) {
@@ -217,14 +222,11 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 		}
 		// Still consider static obstacles outside the reservation table
 
-
 		int heuristic_distance = compute_manhattan_distance(new_node, this->target);
-
 
 		this->queue.push(
 			NodeInQueue(new_tnode, heuristic_distance)
 		);
-
 
 		this->expanded_nodes.insert({new_tnode, parent_node});
 
@@ -336,7 +338,19 @@ std::vector<int> compute_controls_for_single_agent(
 
 void init_reservation_table(int height, int width, std::vector<Node> obstacles){
 	global_reservation_table = ReservationTable({height, width}, obstacles);
-	max_turns = (height + width)*3;
+
+	max_turns = (height + width);
+}
+
+
+std::unordered_set<Node, NodeHasher> & ReservationTable::static_cells_ref(){
+	return static_cells;
+}
+
+void remove_from_obstacles(Node to_be_removed){
+	auto static_cells = global_reservation_table.static_cells_ref();
+	static_cells.erase(to_be_removed);
+
 }
 
 std::vector<int> path_to_actions(std::vector<TimeNode> & path) {
