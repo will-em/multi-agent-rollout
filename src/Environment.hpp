@@ -34,4 +34,7 @@ class Environment{
 
         // Returns the cost of a given set of actions as well as updates the environment
         double step(std::vector<int> &actions, std::vector< std::pair<int, int> > &targets); 
+
+
+		void forceFinish();
 };

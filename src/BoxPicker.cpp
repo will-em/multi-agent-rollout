@@ -49,9 +49,7 @@ void boxPicker(Environment &env, std::vector< std::pair<int,int> > &targets, int
 
 
         if(availableBoxPositions.empty()){ // No boxes left to pick up
-            int n_i = (agentIdx < env.getNumOfAgents()/2) ? (1) : (height- 2);
-            int n_j = (agentIdx < env.getNumOfAgents()/2) ? (4 + agentIdx) : (4 + agentIdx - env.getNumOfAgents()/2);
-            targets[agentIdx] = std::pair<int, int>(n_i, n_j);
+			env.forceFinish();
         }else{
             targets[agentIdx] = availableBoxPositions[rand() % availableBoxPositions.size()];
         }

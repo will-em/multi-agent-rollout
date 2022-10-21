@@ -54,7 +54,7 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
 
     // Populate matrix with boxes
     for(int i = 3; i < m_height - 2; ++i){
-        if((i - 2) % 3 != 0){
+        if((i - 2) % 3 == 0){
             for(int j = 4; j < m_width - 4; ++j){
                 if((j - 4) % 8 != 0){
                     envMat(i, j) = box; 
@@ -299,4 +299,8 @@ double Environment::step(std::vector<int> &controls, std::vector<std::pair<int, 
     m_stepCount += 1;
 
     return cost;
+}
+
+void Environment::forceFinish() {
+	m_boxesLeft = 0;
 }
