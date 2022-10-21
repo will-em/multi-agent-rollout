@@ -3,6 +3,7 @@
 #include <queue>
 #include <vector>
 #include <utility>
+#include <algorithm>
 #include "math.h"
 
 // A node represents a position in 2 dimensions:x and y

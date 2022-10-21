@@ -63,8 +63,6 @@ std::size_t PairTimeNodeHasher::operator() (const std::pair<TimeNode, TimeNode> 
 
 
 bool ReservationTable::action_is_valid(TimeNode & node, TimeNode & next_node, Node & clearance_node) {
-
-
 	if (next_node.node.x < 0
 		|| next_node.node.x >= size.second
 		|| next_node.node.y < 0
@@ -106,7 +104,6 @@ int ReservationTable::reserve_path(std::vector<TimeNode> path) {
 
 		last_node = path[i];
 	}
-
 	return 1;
 }
 
@@ -128,6 +125,8 @@ std::vector<TimeNode> compute_optimal_path(
 		Node final_node,
 		ReservationTable * reservation_table,
 		int max_turns) {
+
+	max_turns = max_turns + initial_node.turn;
 
 	// Creates an A* pathfinder
 	AStarFinder a_star(initial_node, final_node, reservation_table);

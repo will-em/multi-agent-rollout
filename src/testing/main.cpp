@@ -87,6 +87,20 @@ void no_collision_pathfinding() {
 	assert(optimal_path.size() == 6);
 }
 
+void no_collision_pathfinding_many_turns() {
+	ReservationTable reservation_table({100,100}, std::vector<Node>());
+
+	TimeNode initial_node(000, Node(3,4));
+	Node final_node(68,39);
+	std::vector<TimeNode> optimal_path = compute_optimal_path(
+			initial_node,
+			final_node,
+			&reservation_table,
+			100);
+
+	std::cout << optimal_path.size() << std::endl;
+}
+
 void corridor_1() {
 	// 0 . . .
 	// 1 . . .
@@ -273,7 +287,7 @@ void complete_corridor_back_and_forth() {
 }
 
 
-void check_complate_function() {
+void check_complete_function() {
 	std::cout << "\nComplete Cooperative A* tests:" << std::endl;
 
 	std::cout << "\tSimple corridor problem:" << std::endl;
@@ -321,6 +335,8 @@ int main() {
 
 	corridor_1();
 	corridor_2();
+ 	
+	no_collision_pathfinding_many_turns();
 
 	path_to_action_check();
 
