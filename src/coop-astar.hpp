@@ -76,7 +76,7 @@ class ReservationTable {
 		// the reservation table
 		bool action_is_valid(TimeNode & node, TimeNode & next_node, Node & clearance_node);
 
-	    std::unordered_set<Node, NodeHasher> &static_cells_ref();	
+	    std::unordered_set<Node, NodeHasher> * static_cells_ref();	
 };
 
 

@@ -75,11 +75,9 @@ bool ReservationTable::action_is_valid(TimeNode & node, TimeNode & next_node, No
 		return false;
 	}
 
-	if(node.node.x != next_node.node.x || node.node.y != next_node.node.y){
-		if (static_cells.find(next_node.node) != static_cells.end()
-				&& next_node.node != clearance_node) {
-			return false;
-		}
+	if (static_cells.find(next_node.node) != static_cells.end()
+			&& next_node.node != clearance_node) {
+		return false;
 	}
 
 	if (cells.find(next_node) != cells.end()) {
@@ -343,13 +341,13 @@ void init_reservation_table(int height, int width, std::vector<Node> obstacles){
 }
 
 
-std::unordered_set<Node, NodeHasher> & ReservationTable::static_cells_ref(){
-	return static_cells;
+std::unordered_set<Node, NodeHasher> * ReservationTable::static_cells_ref(){
+	return &static_cells;
 }
 
 void remove_from_obstacles(Node to_be_removed){
 	auto static_cells = global_reservation_table.static_cells_ref();
-	static_cells.erase(to_be_removed);
+	static_cells->erase(to_be_removed);
 
 }
 
