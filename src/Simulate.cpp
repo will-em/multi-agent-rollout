@@ -7,6 +7,7 @@
 #include <math.h>   
 
 #include <chrono>
+#include<thread>
 using std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
 using std::chrono::duration;
@@ -107,7 +108,7 @@ bool simulate(int numOfAgents){
             std::cout << el << " ";
         std::cout << '\n';
         */
-        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
     return true;

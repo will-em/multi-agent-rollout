@@ -337,12 +337,18 @@ std::vector<int> compute_controls_for_single_agent(
 void init_reservation_table(int height, int width, std::vector<Node> obstacles){
 	global_reservation_table = ReservationTable({height, width}, obstacles);
 
-	max_turns = (height + width);
+	max_turns = (height + width) * 3;
 }
 
 
 std::unordered_set<Node, NodeHasher> * ReservationTable::static_cells_ref(){
 	return &static_cells;
+}
+std::unordered_set<TimeNode, TimeNodeHasher> * ReservationTable::cells_ref(){
+	return &cells;
+}
+std::unordered_set<std::pair<TimeNode,TimeNode>, PairTimeNodeHasher> * ReservationTable::fronts_ref(){
+	return &fronts;
 }
 
 void remove_from_obstacles(Node to_be_removed){
@@ -388,4 +394,60 @@ std::vector<int> path_to_actions(std::vector<TimeNode> & path) {
 	}
 
 	return actions;
+}
+
+void remove_agent_path(std::pair<int, int> position, std::vector<int> controls, int iteration){
+	Node pos = {position.first, position.second};
+	TimeNode last_node = {iteration, pos};
+	//std::cout << "Control size: " << controls.size() << std::endl;
+	//std::cout << "Before: " << global_reservation_table.cells_ref()->size() << std::endl;
+	int before = global_reservation_table.cells_ref()->size();
+	global_reservation_table.cells_ref()->erase(last_node);
+	std::pair<int, int> delta_array[] = {{0,0}, {-1,0}, {1,0}, {0,-1}, {0,1}};
+	for(int i = controls.size() - 1; i >= 0; i--){
+		iteration++;
+		int control = controls[i];
+
+		pos = {pos.y + delta_array[control].first, pos.x + delta_array[control].second};
+		TimeNode newTimeNode = {iteration, pos};
+		global_reservation_table.cells_ref()->erase(newTimeNode);
+
+
+		global_reservation_table.fronts_ref()->erase({
+			TimeNode(iteration - 1, newTimeNode.node),
+			TimeNode(iteration, last_node.node),
+		});
+
+		last_node = newTimeNode;
+	}
+	
+	std::cout << "Control size: " << controls.size() << std::endl;
+	std::cout << "Diff: " << before - global_reservation_table.cells_ref()->size()<< std::endl;
+}
+
+void add_agent_path(std::pair<int, int> position, std::vector<int> controls, int iteration){
+	Node pos = {position.first, position.second};
+	TimeNode last_node = {iteration, pos};
+	int before = global_reservation_table.cells_ref()->size();
+	global_reservation_table.cells_ref()->insert(last_node);
+	std::pair<int, int> delta_array[] = {{0,0}, {-1,0}, {1,0}, {0,-1}, {0,1}};
+	for(int i = controls.size() - 1; i >= 0; i--){
+		iteration++;
+		int control = controls[i];
+
+		pos = {pos.y + delta_array[control].first, pos.x + delta_array[control].second};
+		TimeNode newTimeNode = {iteration, pos};
+		global_reservation_table.cells_ref()->insert(newTimeNode);
+
+
+		global_reservation_table.fronts_ref()->insert({
+			TimeNode(iteration - 1, newTimeNode.node),
+			TimeNode(iteration, last_node.node),
+		});
+
+		last_node = newTimeNode;
+	}
+	//std::cout << "Control size: " << controls.size() << std::endl;
+	//std::cout << "Diff: " << before - global_reservation_table.cells_ref()->size()<< std::endl;
+	
 }

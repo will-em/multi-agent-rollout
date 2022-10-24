@@ -77,6 +77,8 @@ class ReservationTable {
 		bool action_is_valid(TimeNode & node, TimeNode & next_node, Node & clearance_node);
 
 	    std::unordered_set<Node, NodeHasher> * static_cells_ref();	
+		std::unordered_set<TimeNode, TimeNodeHasher> * cells_ref();
+		std::unordered_set<std::pair<TimeNode,TimeNode>, PairTimeNodeHasher> * fronts_ref();
 };
 
 
@@ -193,4 +195,5 @@ std::vector<int> compute_controls_for_single_agent(
 		int agent_idx);
 
 void init_reservation_table(int height, int width, std::vector<Node> obstacles);
-
+void remove_agent_path(std::pair<int,int> position, std::vector<int> controls, int iteration);
+void add_agent_path(std::pair<int,int> position, std::vector<int> controls, int iteration);

@@ -11,4 +11,4 @@
     @return A vector containing the resulting sequence of controls 
 */
 
-std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx);
+std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx, int iteration);

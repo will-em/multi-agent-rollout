@@ -10,14 +10,10 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
                 lowestCostIdx = i;
         }
 
-        auto heuristic = basePolicy(env, targets, agentIdx);
-
         // Find if there are several controls with the same lowest cost
         std::vector<int> lowestCostIndices;
         for(size_t i = 0; i < 5; ++i){
             if(costs[i] == costs[lowestCostIdx]){
-                if(i == heuristic[heuristic.size() - 1])
-                    return i;
                 lowestCostIndices.push_back(i);
             }
         }
