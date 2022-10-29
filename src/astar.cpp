@@ -68,7 +68,7 @@ extern "C" bool astar(
     // .top() doesn't actually remove the node
     Node cur = nodes_to_visit.top();
 
-	int cur_turn = cur.turn;
+	  int cur_turn = cur.turn;
 
     if (cur == goal_node) {
       solution_found = true;
@@ -87,8 +87,8 @@ extern "C" bool astar(
     nbrs[4] = (row + 1 < h)                            ? cur.idx + w       : -1;
 
     float heuristic_cost;
-    for (int i = 0; i < 5; ++i) {
-      if (nbrs[i] >= 0) {
+    for (int i = 1; i < 5; ++i) {
+      if (nbrs[i] >= 0 && weights[nbrs[i]] < INF) {
         // the sum of the cost so far and the cost of this move
         float new_cost = costs[cur.idx] + weights[nbrs[i]];
         if (new_cost < costs[nbrs[i]]) {
