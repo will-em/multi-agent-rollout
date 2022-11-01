@@ -93,7 +93,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
     }
 
-    std::cout << test_n << std::endl;
+    //std::cout << test_n << std::endl;
     // Reorder optimizedControls
     std::vector<int> reorderedOptimizedControls(numOfAgents);
     for(size_t i = 0; i < numOfAgents; ++i)
