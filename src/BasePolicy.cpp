@@ -102,6 +102,8 @@ std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &
 
             controls.push_back(control);
 
+            paths[prev.second + width * prev.first + height * width * targetIdx] = control;
+
             index = prevIndex;
         }
     }
