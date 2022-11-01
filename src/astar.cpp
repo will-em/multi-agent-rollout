@@ -4,16 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_set>
-
-// represents a single pixel
-class Node {
-  public:
-	int turn;	 // turn associated with the node
-    int idx;     // index in the flattened grid
-    float cost;  // cost of traversing this pixel
-
-    Node(int t, int i, float c) : turn(t),idx(i),cost(c) {}
-};
+#include "Astar.hpp"
 
 // the top of the priority queue is the greatest element by default,
 // but we want the smallest, so flip the sign
@@ -112,14 +103,3 @@ extern "C" bool astar(
 
   return solution_found;
 }
-/*
-int main(){
-    const int N = 9;
-    const float weights[N] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
-    int paths[N];
-    astar(weights, 3, 3, 0, 8, false, paths);
-    for(int i=0; i<N; i++)
-      std::cout << paths[i] << std::endl;
-    return 0;
-}
-*/

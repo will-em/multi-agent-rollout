@@ -1,6 +1,6 @@
 #include "BasePolicy.hpp"
 #include "IndexToPair.hpp"
-#include "astar.cpp"
+#include "Astar.hpp"
 
 std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx){ 
     int height = env.getHeight();

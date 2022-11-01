@@ -3,6 +3,7 @@
 #include "BoxPicker.hpp"
 #include "ControlPicker.hpp"
 #include "UpdateTargets.hpp"
+#include "InitAstar.hpp"
 #include <random>
 #include <math.h>   
 
@@ -29,8 +30,26 @@ bool simulate(int numOfAgents){
         }
     }
 
+
+    int height = env.getHeight();
+    int width = env.getWidth();
+    int* matrix = env.getMatPtr();
+
+    std::vector<std::pair<int, int>> boxPositions;
+
+    for(size_t i = 0; i < height * width; ++i){
+        if(matrix[i] == 2){
+            boxPositions.push_back(indexToPair(i, env.getWidth()));
+        }
+    }
     std::vector< std::pair<int, int> > targets;
     boxPicker(env, targets, -1); // Initialize targets
+
+
+    char* paths = new char[env.getWidth() * env.getHeight() * (env.getBoxesLeft() * dropOffPoints.size())];
+    initAstar(paths, env, boxPositions, dropOffPoints);
+
+
 
     double cost = 0.0;
     auto rd = std::random_device {}; 
@@ -110,5 +129,6 @@ bool simulate(int numOfAgents){
         //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
+    delete[] paths;
     return true;
 }
