@@ -1,6 +1,7 @@
 #pragma once
 #include "Environment.hpp"
 #include <vector>
+#include <unordered_map>
 /**
     Updates the base policy of an agent 
 
@@ -10,4 +11,4 @@
     @param basePolicies Reference to the current set of base policies
 
 */
-void updateBasePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, std::vector<bool> &hasUpdatedTarget, std::vector<std::vector<int>> &basePolicies);
+void updateBasePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, std::vector<bool> &hasUpdatedTarget, std::vector<std::vector<int>> &basePolicies, char* paths, std::unordered_map<int,int> &posToTargetIdx);

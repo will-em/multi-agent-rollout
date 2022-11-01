@@ -1,6 +1,7 @@
 #pragma once
 #include "Environment.hpp"
 #include <vector>
+#include <unordered_map>
 /**
     Approximates the optimal set of controls for a given environment
 
@@ -12,4 +13,4 @@
     @return A set of controls
 
 */
-std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, bool freeze = false);
+std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, bool freeze, char* paths, std::unordered_map<int, int> &posToTargetIdx);

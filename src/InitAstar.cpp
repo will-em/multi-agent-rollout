@@ -9,8 +9,6 @@ void reservePath(char* paths, float* obstacles, int height, int width, int start
     int* path = new int[height * width]();    
     bool foundPath = astar(obstacles, height, width, startIdx, goalIdx, false, path); 
 
-    std::vector<int> controls;
-
     int index = goalIdx;
 
     while(index != startIdx){
@@ -37,7 +35,7 @@ void reservePath(char* paths, float* obstacles, int height, int width, int start
             control = 3;
         }
 
-        paths[curr.second + width * curr.first + height * width * targetIdx] = control;
+        paths[prev.second + width * prev.first + height * width * targetIdx] = control;
 
         index = prevIndex;
     }

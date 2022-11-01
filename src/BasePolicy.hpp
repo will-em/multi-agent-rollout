@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "Environment.hpp"
+#include <unordered_map>
 
 /**
     Calculates the heuristic policy for a given agent
@@ -11,4 +12,4 @@
     @return A vector containing the resulting sequence of controls 
 */
 
-std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx);
+std::vector<int> basePolicy(Environment &env, std::vector<std::pair<int, int>> &targets, int agentIdx, char* paths, std::unordered_map<int,int> &posToTargetIdx);

@@ -5,7 +5,7 @@
 #include "CostsToControl.hpp"
 #include <iostream>
 
-std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, bool freeze){
+std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, bool freeze, char* paths, std::unordered_map<int, int> &posToTargetIdx){
 
     int numOfAgents = env.getNumOfAgents(); 
 
@@ -14,7 +14,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
     // Get base policies for numOfAgents 
     for(size_t i = 0; i < numOfAgents; ++i){
         int agentIdx = agentOrder[i];
-        auto basePolicyControls = basePolicy(env, targets, agentIdx);
+        auto basePolicyControls = basePolicy(env, targets, agentIdx, paths, posToTargetIdx);
         preComputedBasePolicies[agentIdx] = basePolicyControls;
 
         if(freeze){
@@ -76,7 +76,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
                 // Update targets
                 auto hasUpdatedTarget = updateTargets(simEnv, simTargets, beforeValues, dropOffPoints);
 
-                updateBasePolicy(simEnv, simTargets, hasUpdatedTarget, basePolicies);
+                updateBasePolicy(simEnv, simTargets, hasUpdatedTarget, basePolicies, paths, posToTargetIdx);
                 if(iteration == 0){
                     candidateBasePolicies[u0] = basePolicies[agentIdx];
                 }
@@ -85,7 +85,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
             }
             costs[u0] = cost;
         }
-        int optimalControl = costsToControl(costs, agentIdx, targets, env);
+        int optimalControl = costsToControl(costs, agentIdx, targets, env, paths, posToTargetIdx);
 
         optimizedControls.push_back(optimalControl);
         preComputedBasePolicies[agentIdx] = candidateBasePolicies[optimalControl];

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "Environment.hpp"
+#include <unordered_map>
 /**
     Calculate the optimal control given a set of costs.
 
@@ -10,4 +11,4 @@
     @param env Reference to an environment 
     @return The resulting control
 */
-int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env);
+int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env, char* paths, std::unordered_map<int,int> &posToTargetIdx);
