@@ -9,9 +9,10 @@ std::vector<bool> updateTargets(Environment &env, std::vector<std::pair<int, int
 
     // Update targets if necessary 
     for(size_t i = 0; i < numOfAgents; ++i){
-        srand(i + 1); // AgentIdx + 1
+        //srand(i + 1); // AgentIdx + 1
         if(afterValues[i] > beforeValues[i]){ // Agent i picks up box
-            targets[i] = dropOffPoints[rand() % dropOffPoints.size()];
+            //targets[i] = dropOffPoints[rand() % dropOffPoints.size()];
+            targets[i] = dropOffPoints[i % dropOffPoints.size()];
             hasUpdatedTarget[i] = true;
         }
         else if(afterValues[i] < beforeValues[i]){ // Agent i drops off box

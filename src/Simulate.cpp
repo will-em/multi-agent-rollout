@@ -88,6 +88,13 @@ bool simulate(int numOfAgents){
         cost = env.step(controls, targets); 
 
         if(cost > 10000.0){
+            /*
+            std::unordered_map<int, int> posIndexToAgent;
+            for(int agentIdx = 0; agentIdx < numOfAgents; agentIdx++){
+                int posIndex = env.getMatrixIndex(agentIdx);
+                
+            }
+            */
             double shuffleCost = std::numeric_limits<float>::max();
             std::vector<int> shuffledAgentOrder = agentOrder;
 
