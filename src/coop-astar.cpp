@@ -31,7 +31,7 @@ ReservationTable::ReservationTable(){
 }
 
 ReservationTable global_reservation_table;
-int max_turns;
+float max_turn_factor;
 bool operator==(const TimeNode &n1, const TimeNode &n2) {
 	return n1.turn == n2.turn && n1.node == n2.node;
 }
@@ -130,7 +130,7 @@ std::vector<TimeNode> compute_optimal_path(
 		ReservationTable * reservation_table,
 		int max_turns) {
 
-	max_turns = max_turns + initial_node.turn;
+	max_turns += initial_node.turn;
 
 	// Creates an A* pathfinder
 	AStarFinder a_star(initial_node, final_node, reservation_table);
@@ -140,7 +140,6 @@ std::vector<TimeNode> compute_optimal_path(
 	int arrival_turn;
 
 	while (!finished) {
-
 		IterationStatus last_iter_status = a_star.expand_next_in_queue();
 
 		if (last_iter_status.status == -1) {
@@ -151,9 +150,9 @@ std::vector<TimeNode> compute_optimal_path(
 		} else if (last_iter_status.status == 1) {
 			// The target node was reached
 			finished = true;
-			arrival_turn = last_iter_status.expansion_turn;
+			arrival_turn = last_iter_status.heuristic_arrival_turn;
 
-		} else if (last_iter_status.expansion_turn >= max_turns) {
+		} else if (last_iter_status.heuristic_arrival_turn > max_turns) {
 			// A node was expanded, but its turn is over the maximum one so the search
 			// finishes unsuccesfully
 			failed_search = true;
@@ -166,13 +165,11 @@ std::vector<TimeNode> compute_optimal_path(
 	} else {
 		return a_star.generate_path(TimeNode(arrival_turn, final_node));
 	}
-
-	return std::vector<TimeNode>();
 }
 
 
-IterationStatus::IterationStatus(int status, int expansion_turn):
-	status(status), expansion_turn(expansion_turn) {}
+IterationStatus::IterationStatus(int status, int heuristic_arrival_turn):
+	status(status), heuristic_arrival_turn(heuristic_arrival_turn) {}
 
 
 
@@ -183,7 +180,7 @@ AStarFinder::AStarFinder(
 		) : reservation_table(reservation_table), target(new_target) {
 
 	queue = std::priority_queue<NodeInQueue>();
-	NodeInQueue q_node = NodeInQueue(origin, 0);
+	NodeInQueue q_node = NodeInQueue(origin, compute_manhattan_distance(origin.node, new_target));
 	queue.push(q_node);
 	queue_length = 1;
 	expanded_nodes = std::unordered_map<TimeNode, TimeNode, TimeNodeHasher>();
@@ -195,15 +192,15 @@ AStarFinder::AStarFinder(
 
 IterationStatus AStarFinder::expand_next_in_queue() {
 	// Obtain best node in queue
-	if (this->queue_length == 0) {
+	if (this->queue.size() == 0) {
 		return IterationStatus(-1, 0);
 	};
 
-	TimeNode parent_node = this->queue.top().node;
-
+	NodeInQueue node_in_queue = this->queue.top();
+	TimeNode parent_node = node_in_queue.node;
+	int parent_node_heuristic = node_in_queue.distance_to_target;
 
 	this->queue.pop();
-
 
 	// Add it to the expanded_nodes
 	std::pair<int, int> delta_array[] = {{0,0}, {0,1}, {1,0}, {0,-1}, {-1,0}};
@@ -235,7 +232,7 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 
 	// Change stuff
 
-	return IterationStatus(0, parent_node.turn);
+	return IterationStatus(0, parent_node.turn + parent_node_heuristic);
 }
 
 std::vector<TimeNode> AStarFinder::generate_path(TimeNode final_node) {
@@ -281,14 +278,14 @@ std::vector<std::vector<int>> compute_controls(
 
 	std::vector<std::vector<int>> optimal_actions;
 
-	int max_turns = (height + width)*3;
-
 	ReservationTable reservation_table({height, width}, obstacles);
 
 
 	for (int i=0; i<initial_positions.size(); i++) {
 		TimeNode initial_node = {0, initial_positions[i]};
 		Node target_node = target_positions[i];
+
+		int max_turns = int(compute_manhattan_distance(initial_node.node, target_node) * max_turn_factor);
 
 		std::vector<TimeNode> optimal_path = compute_optimal_path(
 			initial_node,
@@ -302,7 +299,6 @@ std::vector<std::vector<int>> compute_controls(
 		optimal_actions.push_back(agent_actions);
 
 		reservation_table.reserve_path(optimal_path);
-
 	}
 
 	return optimal_actions;
@@ -319,12 +315,18 @@ std::vector<int> compute_controls_for_single_agent(
 	TimeNode initial_node = {curr_time, initial_position};
 	Node target_node = target_positions[agent_idx];
 
+	int max_turns = int(compute_manhattan_distance(initial_node.node, target_node) * max_turn_factor);
+
 	std::vector<TimeNode> optimal_path = compute_optimal_path(
 		initial_node,
 		target_node,
 		&global_reservation_table,
 		max_turns
 	);
+
+	if (optimal_path.size() == 0) {
+		return std::vector<int>();
+	}
 
 	global_reservation_table.reserve_path(optimal_path);
 	std::vector<int> agent_actions = path_to_actions(optimal_path);
@@ -337,7 +339,7 @@ std::vector<int> compute_controls_for_single_agent(
 void init_reservation_table(int height, int width, std::vector<Node> obstacles){
 	global_reservation_table = ReservationTable({height, width}, obstacles);
 
-	max_turns = (height + width);
+	max_turn_factor = 2.0;
 }
 
 
