@@ -40,15 +40,13 @@ bool simulate(int numOfAgents){
     boxPicker(env, targets, -1); // Initialize targets
 
     std::vector<std::pair<int, int>> dropOffPoints;
-    for(int i = 3; i < env.getHeight() - 2; ++i){
-        if((i - 2) % 3 != 0){
-            std::pair<int, int> dropOff1 = {i, 1};
-            std::pair<int, int> dropOff2 = {i, width - 2};
-            dropOffPoints.push_back(dropOff1);
-            dropOffPoints.push_back(dropOff2);
-            posToTargetIdx[1 + i * width] = boxPositions.size() + dropOffPoints.size() - 2;
-            posToTargetIdx[width - 2 + i * width] = boxPositions.size() + dropOffPoints.size() - 1;
-        }
+    for(int i = 4; i < env.getHeight() - 4; ++i){
+        std::pair<int, int> dropOff1 = {i, 1};
+        std::pair<int, int> dropOff2 = {i, width - 2};
+        dropOffPoints.push_back(dropOff1);
+        dropOffPoints.push_back(dropOff2);
+        posToTargetIdx[1 + i * width] = boxPositions.size() + dropOffPoints.size() - 2;
+        posToTargetIdx[width - 2 + i * width] = boxPositions.size() + dropOffPoints.size() - 1;
     }
 
     int pathsSize = env.getWidth() * env.getHeight() * (env.getBoxesLeft() * dropOffPoints.size());

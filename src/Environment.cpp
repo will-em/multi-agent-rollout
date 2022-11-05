@@ -24,8 +24,8 @@ static constexpr auto discountFactors = Discount<10000>();
 
 
 Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) : m_stepCount(0) {
-    m_height = 32+(4*3);
-    m_width = 65+(6*8);
+    m_height = 35+(4*3);
+    m_width = 67+(6*8);
     m_matrix = new int[m_height * m_width]();
     m_boxesLeft = 0;
 
@@ -39,27 +39,54 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
         envMat(i, m_width - 1) = wall;
     }
 
+    /*
     // Populate matrix with agents
     int offset = 0;
-    for(int i = 0; i < agentCount; ++i){ 
-        int n_i = (i < agentCount/2) ? (1) : (m_height - 2);
-        int n_j = (i < agentCount/2) ? (4 + i) : (4 + i - agentCount/2);
-        if(i == agentCount / 2)
+    for(int i = 0; i < agentCount/2; i+=2){ 
+        int n_i = (i < agentCount/2) ? (1) : (m_height - 3);
+        int n_j = (i < agentCount/2) ? (4 + i) : (4 + i - agentCount/4);
+        if(i == agentCount / 4)
             offset = 0;
         envMat(n_i, n_j + offset) = -firstAgent - i;
-        m_agentPositions.push_back(std::pair<int, int>(n_i, n_j + offset));
+        m_agentPositions.push_back(std::pair<int, int>(n_i, n_j));
+
+        envMat(n_i + 1, n_j + offset) = -firstAgent - i - 1;
+        m_agentPositions.push_back(std::pair<int, int>(n_i + 1, n_j ));
 
         offset++;
     }
+    */
+
+    int placedAgents = 0;
+    int i = 2;
+    while(placedAgents < agentCount){
+        envMat(1, i) = -firstAgent - placedAgents;
+        m_agentPositions.push_back(std::pair<int, int>(1, i));
+        placedAgents++;
+
+        envMat(3, i) = -firstAgent - placedAgents;
+        m_agentPositions.push_back(std::pair<int, int>(3, i));
+        placedAgents++;
+
+        envMat(m_height - 4, i) = -firstAgent - placedAgents;
+        m_agentPositions.push_back(std::pair<int, int>(m_height - 4, i));
+        placedAgents++;
+
+        envMat(m_height - 2, i) = -firstAgent - placedAgents;
+        m_agentPositions.push_back(std::pair<int, int>(m_height - 2, i));
+        placedAgents++;
+
+        i+=2;
+    }
 
     // Populate matrix with boxes
-    for(int i = 3; i < m_height - 2; ++i){
-        if((i - 2) % 3 == 0){
-            for(int j = 4; j < m_width - 4; ++j){
+    for(int i = 6; i < m_height - 2; ++i){
+        if((i - 3) % 3 == 0){
+            for(int j = 4; j < m_width - 6; ++j){
                 if((j - 4) % 8 != 0){
-                    envMat(i, j) = box; 
+                    envMat(i - 1, j + 1) = box; 
                     m_boxesLeft++;
-                    m_availableBoxes.push_back(std::pair(i, j));
+                    m_availableBoxes.push_back(std::pair(i - 1, j + 1));
                 }
             }
         }
