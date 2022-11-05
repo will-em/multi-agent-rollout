@@ -140,10 +140,10 @@ class IterationStatus {
 		// Only for status 0 or 1 (that is, the queue is not empty and nodes were expanded), returns
 		// the turn of the expanded nodes. This is necessary to know at which turn the target was reached
 		// (for status 1) or to stop the search if the nodes being expanded have a very large value of time.
-		int expansion_turn;
+		int heuristic_arrival_turn;
 
 		// Simple constructor
-		IterationStatus(int status, int expansion_turn);
+		IterationStatus(int status, int heuristic_arrival_turn);
 };
 
 // An structure for obtaining an optimal path in a 2D warehouse, with static and dynamic obstacles.

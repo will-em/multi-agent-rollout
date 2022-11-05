@@ -59,13 +59,14 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
                 if((j - 4) % 8 != 0){
                     envMat(i, j) = box; 
                     m_boxesLeft++;
+                    m_availableBoxes.push_back(std::pair(i, j));
                 }
             }
         }
     }
 }
 
-Environment::Environment(Environment &other) : m_stepCount(0), m_height(other.m_height), m_width(other.m_width), m_agentPositions(other.m_agentPositions), m_boxesLeft(other.m_boxesLeft){
+Environment::Environment(Environment &other) : m_stepCount(0), m_height(other.m_height), m_width(other.m_width), m_agentPositions(other.m_agentPositions), m_boxesLeft(other.m_boxesLeft), m_availableBoxes(other.m_availableBoxes){
     m_matrix = new int[m_height * m_width]();
     for (size_t i = 0; i < m_height* m_width; ++i)
         m_matrix[i] = other.m_matrix[i];
@@ -82,6 +83,7 @@ Environment& Environment::operator=(const Environment &other){
         m_width = other.m_width;
         m_boxesLeft = other.m_boxesLeft;
         m_agentPositions = other.m_agentPositions;
+        m_availableBoxes = other.m_availableBoxes;
 
         delete[] m_matrix;
         m_matrix = new_m_matrix; // Point to new place in memory 
@@ -181,6 +183,11 @@ std::vector<int> Environment::getAgentValues(){
         output[i] = m_matrix[m_width * m_agentPositions[i].first + m_agentPositions[i].second];
 
     return output;
+}
+
+
+std::vector<std::pair<int,int>> &Environment::getAvailableBoxes(){
+    return m_availableBoxes;
 }
 
 int Environment::getStepCount(){

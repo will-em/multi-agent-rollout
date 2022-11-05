@@ -10,8 +10,7 @@ void print_path(std::vector<TimeNode> & path) {
 	printf("\n");
 }
 
-template <typename T>
-bool paths_are_equal(std::vector<T> & path_a, std::vector<T> & path_b) {
+template <typename T> bool paths_are_equal(std::vector<T> & path_a, std::vector<T> & path_b) {
 	if (path_a.size() != path_b.size()) {
 		return false;
 	}
@@ -298,7 +297,47 @@ void check_complete_function() {
  	complete_corridor_back_and_forth();
 }
 
+void empty_warehouse_turn_limit() {
+	std::vector<Node> obstacles;
+	ReservationTable reservation_table({10, 10}, obstacles);
 
+	std::vector<TimeNode> optimal_path_0 = compute_optimal_path(
+		{0, {3,2}},
+		{8, 8},
+		&reservation_table,
+		5
+	);
+	assert(optimal_path_0.size() == 0);
+
+	std::vector<TimeNode> optimal_path_1 = compute_optimal_path(
+		{0, {3,2}},
+		{8, 8},
+		&reservation_table,
+		10
+	);
+	assert(optimal_path_1.size() == 0);
+
+	std::vector<TimeNode> optimal_path_2 = compute_optimal_path(
+		{0, {3,2}},
+		{8, 8},
+		&reservation_table,
+		11
+	);
+	assert(optimal_path_2.size() == 12);
+
+	std::vector<TimeNode> optimal_path_3 = compute_optimal_path(
+		{0, {3,2}},
+		{8, 8},
+		&reservation_table,
+		20
+	);
+	assert(optimal_path_3.size() == 12);
+}
+
+void limit_turn_checks() {
+	std::cout << "\nChecking turn limit:" << std::endl;
+	empty_warehouse_turn_limit();
+}
 
 void path_to_action_check() {
 	std::cout << "\nPath-to-action check" << std::endl;
@@ -324,7 +363,6 @@ void path_to_action_check() {
 
 
 int main() {
-
 	reservation_table_checks();
 
 	// A*
@@ -341,6 +379,7 @@ int main() {
 	path_to_action_check();
 
 	// TODO: Test complete function
+	limit_turn_checks();
 
 	std::cout << "Tests passed successfully" << std::endl;
 }

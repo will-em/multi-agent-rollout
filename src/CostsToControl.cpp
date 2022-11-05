@@ -2,7 +2,7 @@
 #include "BasePolicy.hpp"
 #include "IndexToPair.hpp"
 
-int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env){
+int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pair<int,int>> &targets, Environment &env, char* paths, std::unordered_map<int,int> &posToTargetIdx){
         // Pick the control with the lowest cost
         int lowestCostIdx = 0;
         for(size_t i = 0; i < 5; ++i){
@@ -10,7 +10,7 @@ int costsToControl(std::vector<double> &costs, int agentIdx, std::vector<std::pa
                 lowestCostIdx = i;
         }
 
-        auto heuristic = basePolicy(env, targets, agentIdx);
+        auto heuristic = basePolicy(env, targets, agentIdx, paths, posToTargetIdx);
 
         // Find if there are several controls with the same lowest cost
         std::vector<int> lowestCostIndices;

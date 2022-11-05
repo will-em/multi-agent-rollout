@@ -12,6 +12,7 @@ class Environment{
         int m_boxesLeft;
         int *m_matrix;
         std::vector< std::pair<int, int > > m_agentPositions; 
+        std::vector<std::pair<int, int>> m_availableBoxes;
 
     public:
         Environment(int wallOffset, int boxOffset, int n, int agentCount);
@@ -31,6 +32,7 @@ class Environment{
 
         int getMatrixIndex(int agentIdx); 
         std::vector<int> getAgentValues();
+        std::vector<std::pair<int,int>> &getAvailableBoxes();
 
         // Returns the cost of a given set of actions as well as updates the environment
         double step(std::vector<int> &actions, std::vector< std::pair<int, int> > &targets); 

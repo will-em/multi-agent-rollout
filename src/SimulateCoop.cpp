@@ -80,6 +80,10 @@ bool simulateCoop(int numOfAgents){
                 Node node_pos(position.first, position.second);
                 remove_from_obstacles(node_pos); 
                 controlsVec[agent_idx] = compute_controls_for_single_agent(node_pos, target_positions, iteration, agent_idx);
+
+				if (controlsVec[agent_idx].size() == 0) {
+					return false;
+				}
             }
         }
         std::this_thread::sleep_for(milliseconds(1));
@@ -97,9 +101,11 @@ bool simulateCoop(int numOfAgents){
 
         updateTargets(env, targets, beforeValues, dropOffPoints);
 
+		/*
         for(int agent_idx = 0; agent_idx < numOfAgents; agent_idx++){
             
         }
+		*/
 
         iteration++;
         
