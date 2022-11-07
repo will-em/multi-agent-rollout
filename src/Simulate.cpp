@@ -14,6 +14,13 @@ using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::milliseconds;
 
+int min = 1000;
+int max = -1000;
+double avg = 0;
+int numOfElements = 0;
+double avgCost = 0;
+int numOfCosts = 0;
+
 bool simulate(int numOfAgents){ 
     int wallOffset = 10;
     int boxOffset = 5;
@@ -68,13 +75,14 @@ bool simulate(int numOfAgents){
         agentOrder[i] = i;
 
     int iteration = 0;
+    std::vector<int> times;
+
+
+    int cumCost = 0;
+
     while(!env.isDone()){
         auto t1 = high_resolution_clock::now();
         auto controls = controlPicker(env, targets, dropOffPoints, agentOrder, false, paths, posToTargetIdx);
-        auto t2 = high_resolution_clock::now();
-
-        /* Getting number of milliseconds as an integer. */
-        auto ms_int = duration_cast<milliseconds>(t2 - t1);
 
         //std::cout << ms_int.count() << "ms\n";
 
@@ -126,12 +134,19 @@ bool simulate(int numOfAgents){
             controls = shuffleControls;
             agentOrder = shuffledAgentOrder;
 
-            iteration++;
 
         }
 
+        iteration++;
 
-        env.printMatrix(dropOffPoints, true);
+        auto t2 = high_resolution_clock::now();
+
+        /* Getting number of milliseconds as an integer. */
+        auto ms_int = duration_cast<milliseconds>(t2 - t1);
+        times.push_back(ms_int.count());
+        cumCost += cost;
+
+        //env.printMatrix(dropOffPoints, true);
 
         updateTargets(env, targets, beforeValues, dropOffPoints);
         /* 
@@ -142,6 +157,27 @@ bool simulate(int numOfAgents){
         */
         //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+
+    for(auto el : times){
+        numOfElements++;
+        avg += (el - avg) / numOfElements;
+    }
+    numOfCosts++;
+    avgCost += (cumCost - avgCost) / numOfCosts;
+
+    int newMin = *std::min_element(times.begin(), times.end());
+    int newMax = *std::max_element(times.begin(), times.end());
+
+    if(newMin < min)
+        min = newMin;
+
+    if(newMax > max)
+        max = newMax;
+
+    std::cout << "Average: " << avg << std::endl;
+    std::cout << "Min: " << min << std::endl;
+    std::cout << "Max: " << max << std::endl;
+    std::cout << "Average cumulative cost: " << avgCost << std::endl;
 
     delete[] paths;
     return true;

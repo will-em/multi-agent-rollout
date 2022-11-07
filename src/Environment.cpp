@@ -63,18 +63,22 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
         envMat(1, i) = -firstAgent - placedAgents;
         m_agentPositions.push_back(std::pair<int, int>(1, i));
         placedAgents++;
+        if(placedAgents == agentCount) break;
 
         envMat(3, i) = -firstAgent - placedAgents;
         m_agentPositions.push_back(std::pair<int, int>(3, i));
         placedAgents++;
+        if(placedAgents == agentCount) break;
 
         envMat(m_height - 4, i) = -firstAgent - placedAgents;
         m_agentPositions.push_back(std::pair<int, int>(m_height - 4, i));
         placedAgents++;
+        if(placedAgents == agentCount) break;
 
         envMat(m_height - 2, i) = -firstAgent - placedAgents;
         m_agentPositions.push_back(std::pair<int, int>(m_height - 2, i));
         placedAgents++;
+        if(placedAgents == agentCount) break;
 
         i+=2;
     }

@@ -9,11 +9,11 @@
 #include "ControlPicker.hpp"
 #include "Simulate.hpp"
 
+int numOfSuccess = 0;
+int simulationCount = 0;
 int main(){
-    int simulationCount = 0;
-    int numOfSuccess = 0;
     while(true){
-        bool success = simulate(100);
+        bool success = simulate(110);
 
         if(success)
             numOfSuccess++;
