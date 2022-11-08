@@ -72,10 +72,8 @@ bool simulate(int numOfAgents){
     int iteration = 0;
     while(!env.isDone()){
 
-		if (iteration == 20) {
-			for (int i = 10; i < 20; i++) {
-				env.breakRobot(i, targets);
-			}
+		if (iteration % 3 == 0 && iteration > 0 && iteration <= 60) {
+			env.breakRobot(5*(iteration/3 - 1), targets);
 		}
 
         auto t1 = high_resolution_clock::now();
