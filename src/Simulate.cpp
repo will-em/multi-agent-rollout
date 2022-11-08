@@ -71,6 +71,13 @@ bool simulate(int numOfAgents){
 
     int iteration = 0;
     while(!env.isDone()){
+
+		if (iteration == 20) {
+			for (int i = 10; i < 20; i++) {
+				env.breakRobot(i, targets);
+			}
+		}
+
         auto t1 = high_resolution_clock::now();
         auto controls = controlPicker(env, targets, dropOffPoints, agentOrder, false, paths, posToTargetIdx);
         auto t2 = high_resolution_clock::now();

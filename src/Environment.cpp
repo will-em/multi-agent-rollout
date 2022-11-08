@@ -66,7 +66,16 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
     }
 }
 
-Environment::Environment(Environment &other) : m_stepCount(0), m_height(other.m_height), m_width(other.m_width), m_agentPositions(other.m_agentPositions), m_boxesLeft(other.m_boxesLeft), m_availableBoxes(other.m_availableBoxes){
+Environment::Environment(Environment &other) :
+	m_stepCount(0),
+	m_height(other.m_height),
+	m_width(other.m_width),
+	m_agentPositions(other.m_agentPositions),
+	m_boxesLeft(other.m_boxesLeft),
+	m_availableBoxes(other.m_availableBoxes),
+	m_brokenRobots(other.m_brokenRobots)
+
+{
     m_matrix = new int[m_height * m_width]();
     for (size_t i = 0; i < m_height* m_width; ++i)
         m_matrix[i] = other.m_matrix[i];
@@ -200,7 +209,6 @@ int Environment::getBoxesLeft(){
 
 // Returns the cost of a given set of controls as well as updates the environment
 double Environment::step(std::vector<int> &controls, std::vector<std::pair<int, int>> &targets){
-
     std::vector< std::pair<int, int> > newPositions(m_agentPositions.size());
 
     double cost = 0;
@@ -217,20 +225,22 @@ double Environment::step(std::vector<int> &controls, std::vector<std::pair<int, 
 
         std::pair<int, int> newPos(agentPos.first, agentPos.second); // Stand still
 
-        switch(control){
-            case 1: // Move up
-                newPos.first = agentPos.first - 1;
-                break;
-            case 2: // Move down
-                newPos.first = agentPos.first + 1;
-                break;
-            case 3: // Move left
-                newPos.second = agentPos.second - 1;
-                break;
-            case 4: // Move right
-                newPos.second = agentPos.second + 1;
-                break;
-        }
+		if (m_brokenRobots.find(agent_index) == m_brokenRobots.end()) {
+        	switch(control){
+        	    case 1: // Move up
+        	        newPos.first = agentPos.first - 1;
+        	        break;
+        	    case 2: // Move down
+        	        newPos.first = agentPos.first + 1;
+        	        break;
+        	    case 3: // Move left
+        	        newPos.second = agentPos.second - 1;
+        	        break;
+        	    case 4: // Move right
+        	        newPos.second = agentPos.second + 1;
+        	        break;
+        	}
+		}
         int newPosEl = envMat(newPos.first, newPos.second);
 
         // If the new position is a wall or an undesired box, stand still, otherwise move
@@ -306,6 +316,14 @@ double Environment::step(std::vector<int> &controls, std::vector<std::pair<int, 
     m_stepCount += 1;
 
     return cost;
+}
+
+void Environment::breakRobot(int robotIndex, std::vector<std::pair<int,int>> &targets) {
+	m_brokenRobots.insert(robotIndex);
+	auto pos = m_agentPositions[robotIndex];
+	if (envMat(pos.first, pos.second) < 0) {
+		m_availableBoxes.push_back(targets[robotIndex]);
+	}
 }
 
 void Environment::forceFinish() {

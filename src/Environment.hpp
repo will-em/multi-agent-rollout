@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "assert.h"
 #include <algorithm>
+#include <unordered_set>
 
 class Environment{ 
     private:
@@ -13,6 +14,7 @@ class Environment{
         int *m_matrix;
         std::vector< std::pair<int, int > > m_agentPositions; 
         std::vector<std::pair<int, int>> m_availableBoxes;
+		std::unordered_set<int> m_brokenRobots;
 
     public:
         Environment(int wallOffset, int boxOffset, int n, int agentCount);
@@ -37,6 +39,7 @@ class Environment{
         // Returns the cost of a given set of actions as well as updates the environment
         double step(std::vector<int> &actions, std::vector< std::pair<int, int> > &targets); 
 
+		void breakRobot(int robotIndex, std::vector<std::pair<int,int>> &targets);
 
 		void forceFinish();
 };
