@@ -11,6 +11,7 @@
         - sleed_duration    - Integer, number of miliseconds of sleep between the simulation of succesive turns
 
 */
+
 int main(int argc, char* argv[]){
     // Argument processing
     int numOfAgents;
