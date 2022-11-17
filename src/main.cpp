@@ -13,7 +13,7 @@ int numOfSuccess = 0;
 int simulationCount = 0;
 int main(){
     while(true){
-        bool success = simulate(110);
+        bool success = simulate(200);
 
         if(success)
             numOfSuccess++;

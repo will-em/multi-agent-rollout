@@ -29,6 +29,7 @@ class Environment{
         bool isDone();
         int getStepCount();
         int getBoxesLeft();
+        void setStepCount(int stepCount);
 
         int getMatrixIndex(int agentIdx); 
         std::vector<int> getAgentValues();

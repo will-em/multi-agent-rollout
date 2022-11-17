@@ -20,6 +20,9 @@ double avg = 0;
 int numOfElements = 0;
 double avgCost = 0;
 int numOfCosts = 0;
+double shuffleAvg = 0;
+int numOfShuffleEl = 0;
+
 
 bool simulate(int numOfAgents){ 
     int wallOffset = 10;
@@ -56,8 +59,10 @@ bool simulate(int numOfAgents){
         posToTargetIdx[width - 2 + i * width] = boxPositions.size() + dropOffPoints.size() - 1;
     }
 
+    std::cout << dropOffPoints.size() << std::endl;
     int pathsSize = env.getWidth() * env.getHeight() * (env.getBoxesLeft() * dropOffPoints.size());
     char* paths = new char[pathsSize];
+    char* path = nullptr;
     for(int i = 0; i < pathsSize; i++)
         paths[i] = -1;
 
@@ -79,6 +84,7 @@ bool simulate(int numOfAgents){
 
 
     int cumCost = 0;
+    std::vector<int> shuffles;
 
     while(!env.isDone()){
         auto t1 = high_resolution_clock::now();
@@ -113,6 +119,7 @@ bool simulate(int numOfAgents){
 
             while(shuffleCost > 10000.0){
                 shuffleEnv = beforeEnv;
+                shuffleEnv.setStepCount(iteration);
                 //std::cout << "SHUFFLING" << std::endl;
 
                 std::shuffle(std::begin(shuffledAgentOrder), std::end(shuffledAgentOrder), rng);
@@ -128,6 +135,8 @@ bool simulate(int numOfAgents){
 
                 prevControls = shuffleControls;
             }
+
+            shuffles.push_back(shuffleCount);
             //std::cout << "Number of shuffles " << shuffleCount << std::endl;
             env = shuffleEnv;
             cost = shuffleCost;
@@ -138,6 +147,8 @@ bool simulate(int numOfAgents){
         }
 
         iteration++;
+
+        env.setStepCount(iteration);
 
         auto t2 = high_resolution_clock::now();
 
@@ -162,6 +173,11 @@ bool simulate(int numOfAgents){
         numOfElements++;
         avg += (el - avg) / numOfElements;
     }
+    for(auto el : shuffles){
+        numOfShuffleEl++;
+        shuffleAvg += (el - shuffleAvg) / numOfShuffleEl;
+    }
+
     numOfCosts++;
     avgCost += (cumCost - avgCost) / numOfCosts;
 
@@ -174,10 +190,12 @@ bool simulate(int numOfAgents){
     if(newMax > max)
         max = newMax;
 
+    std::cout << "Steps: " << times.size() << std::endl;
     std::cout << "Average: " << avg << std::endl;
     std::cout << "Min: " << min << std::endl;
     std::cout << "Max: " << max << std::endl;
     std::cout << "Average cumulative cost: " << avgCost << std::endl;
+    std::cout << "Average number of shuffles: " << shuffleAvg << std::endl;
 
     delete[] paths;
     return true;

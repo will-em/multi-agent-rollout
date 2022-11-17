@@ -14,6 +14,11 @@ using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::milliseconds;
 
+int numOfElements = 0;
+double avg = 0;
+int numOfCosts = 0;
+double avgCost = 0;
+
 bool simulateCoop(int numOfAgents){ 
     int wallOffset = 10;
     int boxOffset = 5;
@@ -67,11 +72,15 @@ bool simulateCoop(int numOfAgents){
     std::vector<std::vector<int>> controlsVec(numOfAgents, std::vector<int>());
 
     int iteration = 0;
+    int cumCost = 0;
     while(!env.isDone()){
         target_positions.clear();
         for(auto el : targets)
             target_positions.push_back(Node(el.first, el.second));
         std::vector<Node> positions;
+        
+        //auto t1 = high_resolution_clock::now();
+
         for(int agent_idx = 0; agent_idx < numOfAgents; agent_idx++){
 
             if(controlsVec[agent_idx].size() == 0){
@@ -82,11 +91,20 @@ bool simulateCoop(int numOfAgents){
                 controlsVec[agent_idx] = compute_controls_for_single_agent(node_pos, target_positions, iteration, agent_idx);
 
 				if (controlsVec[agent_idx].size() == 0) {
+                    std::cout << "---------------------------------------------------------" << std::endl;
 					return false;
 				}
             }
         }
-        std::this_thread::sleep_for(milliseconds(1));
+        //auto t2 = high_resolution_clock::now();
+
+        ///* Getting number of milliseconds as an integer. */
+        //auto ms_int = duration_cast<milliseconds>(t2 - t1);
+        //numOfElements++;
+        //avg += (ms_int.count() - avg) / numOfElements;
+        //std::cout << "Time: " << avg << std::endl;
+
+        std::this_thread::sleep_for(milliseconds(10));
         auto beforeValues = env.getAgentValues();
 
         Environment beforeEnv = env;
@@ -97,7 +115,8 @@ bool simulateCoop(int numOfAgents){
         }
 
         cost = env.step(controls, targets); 
-        env.printMatrix(dropOffPoints, true);
+        cumCost += cost;
+        //env.printMatrix(dropOffPoints, true);
 
         updateTargets(env, targets, beforeValues, dropOffPoints);
 
@@ -114,6 +133,10 @@ bool simulateCoop(int numOfAgents){
             controlsVec[agent_idx].pop_back();
         }
     }
+    std::cout << iteration << std::endl;
+    numOfCosts++;
+    avgCost += (cumCost - avgCost) / numOfCosts;
+    std::cout << "Cost: " << avgCost << std::endl;
 
     return true;
 }

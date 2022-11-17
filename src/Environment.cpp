@@ -229,6 +229,10 @@ int Environment::getBoxesLeft(){
     return m_boxesLeft;
 }
 
+void Environment::setStepCount(int stepCount){
+    m_stepCount = stepCount;
+}
+
 // Returns the cost of a given set of controls as well as updates the environment
 double Environment::step(std::vector<int> &controls, std::vector<std::pair<int, int>> &targets){
 

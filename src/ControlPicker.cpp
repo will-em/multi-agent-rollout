@@ -5,6 +5,9 @@
 #include "CostsToControl.hpp"
 #include <iostream>
 
+int numOfJTilde = 0;
+double avgJTilde = 0;
+
 std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>> targets, std::vector<std::pair<int, int>> dropOffPoints, std::vector<int> &agentOrder, bool freeze, char* paths, std::unordered_map<int, int> &posToTargetIdx){
 
     int numOfAgents = env.getNumOfAgents(); 
@@ -83,6 +86,7 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
 
                 iteration++;
             }
+            //std::cout << iteration << std::endl;
             costs[u0] = cost;
         }
         int optimalControl = costsToControl(costs, agentIdx, targets, env, paths, posToTargetIdx);
@@ -90,6 +94,14 @@ std::vector<int> controlPicker(Environment &env, std::vector<std::pair<int, int>
         optimizedControls.push_back(optimalControl);
         preComputedBasePolicies[agentIdx] = candidateBasePolicies[optimalControl];
         preComputedBasePolicies[agentIdx].push_back(optimalControl);
+        
+
+        if(agentIdx == agentOrder[agentOrder.size() -1 ] && !freeze){
+            double cost = *std::min_element(costs.begin(), costs.end());
+            numOfJTilde++;
+            avgJTilde += (cost - avgJTilde) / numOfJTilde;
+            std::cout << "J tilde " << avgJTilde << std::endl;
+        }
 
     }
 

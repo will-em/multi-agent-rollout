@@ -4,9 +4,9 @@
 int main(){
     int simulationCount = 0;
     int numOfSuccess = 0;
-    while(true){
+    while(simulationCount < 200){
         //bool success = simulate(10);
-        bool success = simulateCoop(100);
+        bool success = simulateCoop(150);
 
         if(success)
             numOfSuccess++;
