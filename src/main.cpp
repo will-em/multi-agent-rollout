@@ -8,9 +8,10 @@
     
         - number_of_agents  - Integer specifying the number of agents in the simulation
         - print_environment - (1|0), whether the environment is printed in the matrix at every turn
-        - sleed_duration    - Integer, number of miliseconds of sleep between the simulation of succesive turns
+        - sleep_duration    - Integer, number of miliseconds of sleep between the simulation of succesive turns
 
 */
+
 int main(int argc, char* argv[]){
     // Argument processing
     int numOfAgents;
