@@ -1,4 +1,4 @@
-#include "../coop-astar.hpp"
+#include "../CoopAstar.hpp"
 #include "assert.h"
 #include <iostream>
 

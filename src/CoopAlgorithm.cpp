@@ -1,11 +1,11 @@
-#include "coop-astar.hpp"
+#include "CoopAlgorithm.hpp"
 #include <iostream>
 
-Node::Node(int y, int x): y(y), x(x) {}
+Node::Node(int i, int j): i(i), j(j) {}
 TimeNode::TimeNode(int turn, Node node): turn(turn), node(node) {}
 
 bool operator==(const Node &n1, const Node &n2) {
-	return n1.x == n2.x && n1.y == n2.y;
+	return n1.i == n2.i && n1.j == n2.j;
 }
 
 bool operator!=(const Node &n1, const Node &n2) {
@@ -50,9 +50,9 @@ bool operator>(const NodeInQueue &n1, const NodeInQueue &n2) {
 
 
 std::size_t NodeHasher::operator() (const Node &node) const {
-	//std::cout << (10032 * node.x + 20079 * node.y) << '\n'; 
-	//return std::hash<int>()(node.x) ^ std::hash<int>()(node.y);
-	return 10032 * node.x + 20079 * node.y;
+	//std::cout << (10032 * node.j + 20079 * node.i) << '\n'; 
+	//return std::hash<int>()(node.j) ^ std::hash<int>()(node.i);
+	return 10032 * node.j + 20079 * node.i;
 }
 
 std::size_t TimeNodeHasher::operator() (const TimeNode &time_node) const {
@@ -67,10 +67,10 @@ std::size_t PairTimeNodeHasher::operator() (const std::pair<TimeNode, TimeNode> 
 
 
 bool ReservationTable::action_is_valid(TimeNode & node, TimeNode & next_node, Node & clearance_node) {
-	if (next_node.node.x < 0
-		|| next_node.node.x >= size.second
-		|| next_node.node.y < 0
-		|| next_node.node.y >= size.first) {
+	if (next_node.node.j < 0
+		|| next_node.node.j >= size.second
+		|| next_node.node.i < 0
+		|| next_node.node.i >= size.first) {
 
 		return false;
 	}
@@ -119,7 +119,7 @@ int ReservationTable::reserve_path(std::vector<TimeNode> path) {
 //
 
 int compute_manhattan_distance(Node &node_a, Node &node_b) {
-	return std::abs(node_a.x - node_b.x) + std::abs(node_a.y - node_b.y);
+	return std::abs(node_a.j - node_b.j) + std::abs(node_a.i - node_b.i);
 }
 
 
@@ -208,7 +208,7 @@ IterationStatus AStarFinder::expand_next_in_queue() {
 	for (int i=0; i<5; i++) {
 		std::pair<int,int> delta = delta_array[i];
 
-		Node new_node(parent_node.node.y + delta.first, parent_node.node.x + delta.second);
+		Node new_node(parent_node.node.i + delta.first, parent_node.node.j + delta.second);
 		TimeNode new_tnode(parent_node.turn + 1, new_node);
 		if (this->expanded_nodes.count(new_tnode) != 0) { continue; }
 
@@ -372,16 +372,16 @@ std::vector<int> path_to_actions(std::vector<TimeNode> & path) {
 		if (current_node == next_node) {
 			turn_action = 0;
 
-		} else if (next_node.y == current_node.y && next_node.x == current_node.x + 1) {
+		} else if (next_node.i == current_node.i && next_node.j == current_node.j + 1) {
 			turn_action = 4;
 
-		} else if (next_node.y == current_node.y && next_node.x == current_node.x - 1) {
+		} else if (next_node.i == current_node.i && next_node.j == current_node.j - 1) {
 			turn_action = 3;
 
-		} else if (next_node.y == current_node.y + 1 && next_node.x == current_node.x) {
+		} else if (next_node.i == current_node.i + 1 && next_node.j == current_node.j) {
 			turn_action = 2;
 
-		} else if (next_node.y == current_node.y - 1 && next_node.x == current_node.x) {
+		} else if (next_node.i == current_node.i - 1 && next_node.j == current_node.j) {
 			turn_action = 1;
 
 		}

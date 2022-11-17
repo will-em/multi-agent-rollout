@@ -5,16 +5,10 @@
 #include "UpdateTargets.hpp"
 #include <random>
 #include <math.h>   
-#include "coop-astar.hpp"
-
-#include <chrono>
+#include "CoopAlgorithm.hpp"
 #include<thread>
-using std::chrono::high_resolution_clock;
-using std::chrono::duration_cast;
-using std::chrono::duration;
-using std::chrono::milliseconds;
 
-bool simulateCoop(int numOfAgents){ 
+bool simulateCoop(int numOfAgents, bool displayEnvironment, int msSleepDuration){
     int wallOffset = 10;
     int boxOffset = 5;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
@@ -57,12 +51,7 @@ bool simulateCoop(int numOfAgents){
         }
     }
 
-
-
     init_reservation_table(height, width, obstacles);
-
-
-    //auto controlsVec = compute_controls(env.getHeight(), env.getWidth(), obstacles, initial_positions, target_positions);
 
     std::vector<std::vector<int>> controlsVec(numOfAgents, std::vector<int>());
 
@@ -86,7 +75,7 @@ bool simulateCoop(int numOfAgents){
 				}
             }
         }
-        std::this_thread::sleep_for(milliseconds(1));
+
         auto beforeValues = env.getAgentValues();
 
         Environment beforeEnv = env;
@@ -97,21 +86,20 @@ bool simulateCoop(int numOfAgents){
         }
 
         cost = env.step(controls, targets); 
-        env.printMatrix(dropOffPoints, true);
 
         updateTargets(env, targets, beforeValues, dropOffPoints);
-
-		/*
-        for(int agent_idx = 0; agent_idx < numOfAgents; agent_idx++){
-            
-        }
-		*/
 
         iteration++;
         
 
         for(int agent_idx = 0; agent_idx < numOfAgents; agent_idx++){
             controlsVec[agent_idx].pop_back();
+        }
+        if (displayEnvironment) {
+            env.printMatrix(dropOffPoints, true);
+        }
+        if (msSleepDuration != 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(msSleepDuration));
         }
     }
 
