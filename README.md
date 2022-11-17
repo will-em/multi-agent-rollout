@@ -26,7 +26,7 @@ make coop && ./coop
 <!--Explain the output of the program-->
 # How to edit the scenario
 
-If you want to modify the layout or the cost function of the environment, please see [Environment.cpp](src/Environment.cpp). If you want to modify the delivery points, they are defined in [Simulate.cpp](src/Simulate.cpp) and [SimulateCoop.cpp](src/SimulateCoop.cpp) for each method respectivly. Likewise, to specify the number of agents, go to file [main.cpp](src/main.cpp) or [mainCoop.cpp](src/mainCoop.cpp).
+If you want to modify the layout or the cost function of the environment, please see [Environment.cpp](src/Environment.cpp). If you want to modify the delivery points, they are defined in [Simulate.cpp](src/Simulate.cpp) and [SimulateCoop.cpp](src/SimulateCoop.cpp) for each method respectivly. Likewise, to specify the number of agents, go to file [Rollout.cpp](src/Rollout.cpp) or [Coop.cpp](src/Coop.cpp).
 
 ## Changing the layout
 
