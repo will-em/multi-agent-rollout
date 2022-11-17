@@ -7,21 +7,17 @@
 #include <random>
 #include <math.h>   
 #include <unordered_map>
+#include <thread>
 
-#include <chrono>
-using std::chrono::high_resolution_clock;
-using std::chrono::duration_cast;
-using std::chrono::duration;
-using std::chrono::milliseconds;
+#define MAX_NUMBER_OF_SHUFFLES 10000
+#define RESHUFFLING_THRESHOLD 10000.0
 
-bool simulate(int numOfAgents){ 
+bool simulate(int numOfAgents, bool displayEnvironment, int msSleepDuration){ 
     int wallOffset = 10;
     int boxOffset = 5;
     int n = (int)ceil(sqrt((double)numOfAgents) / 2.0);
 
     Environment env(wallOffset, boxOffset, n, numOfAgents);
-
-
 
     int height = env.getHeight();
     int width = env.getWidth();
@@ -45,8 +41,8 @@ bool simulate(int numOfAgents){
         std::pair<int, int> dropOff2 = {i, width - 2};
         dropOffPoints.push_back(dropOff1);
         dropOffPoints.push_back(dropOff2);
-        posToTargetIdx[1 + i * width] = boxPositions.size() + dropOffPoints.size() - 2;
-        posToTargetIdx[width - 2 + i * width] = boxPositions.size() + dropOffPoints.size() - 1;
+        posToTargetIdx[dropOff1.second + dropOff2.first * width] = boxPositions.size() + dropOffPoints.size() - 2;
+        posToTargetIdx[dropOff2.second + dropOff2.first * width] = boxPositions.size() + dropOffPoints.size() - 1;
     }
 
     int pathsSize = env.getWidth() * env.getHeight() * (env.getBoxesLeft() * dropOffPoints.size());
@@ -55,8 +51,6 @@ bool simulate(int numOfAgents){
         paths[i] = -1;
 
     initAstar(paths, env, boxPositions, dropOffPoints);
-
-
 
     double cost = 0.0;
     auto rd = std::random_device {}; 
@@ -69,30 +63,15 @@ bool simulate(int numOfAgents){
 
     int iteration = 0;
     while(!env.isDone()){
-        auto t1 = high_resolution_clock::now();
         auto controls = controlPicker(env, targets, dropOffPoints, agentOrder, false, paths, posToTargetIdx);
-        auto t2 = high_resolution_clock::now();
-
-        /* Getting number of milliseconds as an integer. */
-        auto ms_int = duration_cast<milliseconds>(t2 - t1);
-
-        //std::cout << ms_int.count() << "ms\n";
 
         auto beforeValues = env.getAgentValues();
 
         Environment beforeEnv = env;
-        //env.printMatrix(dropOffPoints);
 
         cost = env.step(controls, targets); 
 
-        if(cost > 10000.0){
-            /*
-            std::unordered_map<int, int> posIndexToAgent;
-            for(int agentIdx = 0; agentIdx < numOfAgents; agentIdx++){
-                int posIndex = env.getMatrixIndex(agentIdx);
-                
-            }
-            */
+        if(cost > RESHUFFLING_THRESHOLD){
             double shuffleCost = std::numeric_limits<float>::max();
             std::vector<int> shuffledAgentOrder = agentOrder;
 
@@ -103,9 +82,8 @@ bool simulate(int numOfAgents){
 
             auto prevControls = std::vector<int>();
 
-            while(shuffleCost > 10000.0){
+            while(shuffleCost > RESHUFFLING_THRESHOLD){
                 shuffleEnv = beforeEnv;
-                //std::cout << "SHUFFLING" << std::endl;
 
                 std::shuffle(std::begin(shuffledAgentOrder), std::end(shuffledAgentOrder), rng);
                 shuffleControls = controlPicker(shuffleEnv, targets, dropOffPoints, shuffledAgentOrder, true, paths, posToTargetIdx);
@@ -113,14 +91,16 @@ bool simulate(int numOfAgents){
                 shuffleCost = shuffleEnv.step(shuffleControls, targets); 
                 shuffleCount++; 
 
-                if(shuffleCount > 10000){
-                    beforeEnv.printMatrix(dropOffPoints, false);
+                if(shuffleCount > MAX_NUMBER_OF_SHUFFLES){
+                    if (displayEnvironment) {
+                        beforeEnv.printMatrix(dropOffPoints, false);
+                    }
                     return false;
                 }
 
                 prevControls = shuffleControls;
             }
-            //std::cout << "Number of shuffles " << shuffleCount << std::endl;
+
             env = shuffleEnv;
             cost = shuffleCost;
             controls = shuffleControls;
@@ -130,17 +110,14 @@ bool simulate(int numOfAgents){
 
         }
 
-
-        env.printMatrix(dropOffPoints, true);
-
         updateTargets(env, targets, beforeValues, dropOffPoints);
-        /* 
-        std::cout << '\n';
-        for(auto el : controls)
-            std::cout << el << " ";
-        std::cout << '\n';
-        */
-        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        if (displayEnvironment) {
+            env.printMatrix(dropOffPoints, true);
+        }
+        if (msSleepDuration != 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(msSleepDuration));
+        }
     }
 
     delete[] paths;
