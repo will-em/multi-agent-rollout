@@ -7,6 +7,4 @@
 
 */
 
-#include <algorithm>
-
-bool simulate(int numOfAgents, bool displayEnviroment, int msSleepDuration);
+bool simulate(int numOfAgents, bool displayEnvironment, int msSleepDuration);
