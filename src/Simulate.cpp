@@ -8,9 +8,13 @@
 #include <math.h>   
 #include <unordered_map>
 #include <thread>
+#include "drawer.h"
 
 #define MAX_NUMBER_OF_SHUFFLES 10000
 #define RESHUFFLING_THRESHOLD 10000.0
+
+#define GENERATE_TURN_IMAGES true 
+#define GENERATE_SMOOTH_IMAGES false 
 
 bool simulate(int numOfAgents, bool displayEnvironment, int msSleepDuration){ 
     int wallOffset = 10;
@@ -106,10 +110,24 @@ bool simulate(int numOfAgents, bool displayEnvironment, int msSleepDuration){
             controls = shuffleControls;
             agentOrder = shuffledAgentOrder;
 
-            iteration++;
 
         }
 
+
+		if (GENERATE_TURN_IMAGES) {
+			std::pair<int,int> size(env.getWidth(), env.getHeight());
+            std::cout << "Draw frame" << std::endl;
+			generate_image("video/frames/", iteration, env.getMatPtr(), &size);
+		}
+
+		if (GENERATE_SMOOTH_IMAGES) {
+			std::pair<int,int> size(env.getWidth(), env.getHeight());
+			for (int i=0; i<12; i++) {
+				float alpha = ((float) i)/12.0;
+				generate_interpolated_image("video/frames/", iteration, beforeEnv.getMatPtr(), env.getMatPtr(), alpha, &size, numOfAgents);
+			}
+			
+		}
         updateTargets(env, targets, beforeValues, dropOffPoints);
 
         if (displayEnvironment) {
@@ -118,6 +136,7 @@ bool simulate(int numOfAgents, bool displayEnvironment, int msSleepDuration){
         if (msSleepDuration != 0) {
             std::this_thread::sleep_for(std::chrono::milliseconds(msSleepDuration));
         }
+        iteration++;
     }
 
     delete[] paths;
