@@ -4,8 +4,7 @@
 - [Installation](#Installation)
 - [How to edit the scenario](#How-to-edit-the-scenario)
 
-![demo](https://drive.google.com/file/d/1EZqgfNPTczF6M6czArqzirt6KuHrFbYL/view?usp=sharing)
-![demo](https://giphy.com/embed/sr2ksjKHq1DnrWBwKE)
+![demo](https://media.giphy.com/media/sr2ksjKHq1DnrWBwKE/giphy.gif)
 
 
 # About
