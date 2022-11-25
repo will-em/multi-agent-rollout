@@ -1,9 +1,5 @@
 # Multiagent Rollout with Reshuffling for Warehouse Robots Path Planning
 
-- [About](#About)
-- [Installation](#Installation)
-- [How to edit the scenario](#How-to-edit-the-scenario)
-
 <img src="https://media.giphy.com/media/sr2ksjKHq1DnrWBwKE/giphy.gif" width="100%">
 
 # About
