@@ -4,8 +4,7 @@
 - [Installation](#Installation)
 - [How to edit the scenario](#How-to-edit-the-scenario)
 
-![demo](https://media.giphy.com/media/sr2ksjKHq1DnrWBwKE/giphy.gif)
-
+<img src="https://media.giphy.com/media/sr2ksjKHq1DnrWBwKE/giphy.gif" width="100%">
 
 # About
 This code is part of the paper [*Multiagent Rollout with Reshuffling for Warehouse Robots Path Planning*](https://arxiv.org/abs/2211.08201).
