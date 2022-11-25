@@ -8,6 +8,7 @@
 #include <math.h>   
 #include <unordered_map>
 #include <thread>
+#include <fstream>
 
 #define MAX_NUMBER_OF_SHUFFLES 10000
 #define RESHUFFLING_THRESHOLD 10000.0
@@ -60,6 +61,16 @@ bool simulate(int numOfAgents, bool displayEnvironment, int msSleepDuration){
     std::vector<int> agentOrder(numOfAgents);
     for(size_t i = 0; i < numOfAgents; ++i)
         agentOrder[i] = i;
+
+
+    std::ofstream file("states.txt");
+    if (file.is_open()){
+        for(auto el : dropOffPoints){
+            file << el.first << "," << el.second << " ";
+        }
+        file << "\n";
+    }
+
 
     int iteration = 0;
     while(!env.isDone()){
@@ -114,11 +125,21 @@ bool simulate(int numOfAgents, bool displayEnvironment, int msSleepDuration){
 
         if (displayEnvironment) {
             env.printMatrix(dropOffPoints, true);
+            if (file.is_open()){
+                int* matPtr = env.getMatPtr();
+                for(int i = 0; i < height*width; i++){
+                    file << matPtr[i] << " ";
+                }
+                file << "\n";
+            }
         }
         if (msSleepDuration != 0) {
             std::this_thread::sleep_for(std::chrono::milliseconds(msSleepDuration));
         }
     }
+
+    if(file.is_open()) file.close();
+    assert(false);
 
     delete[] paths;
     return true;
