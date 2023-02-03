@@ -22,9 +22,9 @@ For benchmarking purposes, the **[Cooperative A*](https://www.semanticscholar.or
 make coop && ./coop
 ```
 <!--Explain the output of the program-->
-# How to edit the scenario
+# How to customize scenario
 
-If you want to modify the layout or the cost function of the environment, please see [Environment.cpp](src/Environment.cpp). If you want to modify the delivery points, they are defined in [Simulate.cpp](src/Simulate.cpp) and [SimulateCoop.cpp](src/SimulateCoop.cpp) for each method respectivly. Likewise, to specify the number of agents, go to file [Rollout.cpp](src/Rollout.cpp) or [Coop.cpp](src/Coop.cpp).
+If you want to modify the layout or the cost function of the environment, please see [Environment.cpp](src/Environment.cpp). Furthermore, if you want to modify the delivery points, they are defined in [Simulate.cpp](src/Simulate.cpp) and [SimulateCoop.cpp](src/SimulateCoop.cpp) for each method respectivly. Likewise, to specify the number of agents, go to file [Rollout.cpp](src/Rollout.cpp) or [Coop.cpp](src/Coop.cpp).
 
 ## Changing the layout
 
