@@ -1,12 +1,6 @@
 # Multiagent Rollout with Reshuffling for Warehouse Robots Path Planning
 
-- [About](#About)
-- [Installation](#Installation)
-- [How to edit the scenario](#How-to-edit-the-scenario)
-
-![demo](https://drive.google.com/file/d/1EZqgfNPTczF6M6czArqzirt6KuHrFbYL/view?usp=sharing)
-![demo](https://giphy.com/embed/sr2ksjKHq1DnrWBwKE)
-
+<img src="https://media.giphy.com/media/sr2ksjKHq1DnrWBwKE/giphy.gif" width="100%">
 
 # About
 This code is part of the paper [*Multiagent Rollout with Reshuffling for Warehouse Robots Path Planning*](https://arxiv.org/abs/2211.08201).
@@ -28,10 +22,6 @@ For benchmarking purposes, the **[Cooperative A*](https://www.semanticscholar.or
 make coop && ./coop
 ```
 <!--Explain the output of the program-->
-# How to edit the scenario
+# How to customize scenario
 
-If you want to modify the layout or the cost function of the environment, please see [Environment.cpp](src/Environment.cpp). If you want to modify the delivery points, they are defined in [Simulate.cpp](src/Simulate.cpp) and [SimulateCoop.cpp](src/SimulateCoop.cpp) for each method respectivly. Likewise, to specify the number of agents, go to file [Rollout.cpp](src/Rollout.cpp) or [Coop.cpp](src/Coop.cpp).
-
-## Changing the layout
-
-## Changing the cost function
+If you want to modify the layout or the cost function of the environment, please see [Environment.cpp](src/Environment.cpp). Furthermore, if you want to modify the delivery points, they are defined in [Simulate.cpp](src/Simulate.cpp) and [SimulateCoop.cpp](src/SimulateCoop.cpp) for each method respectivly. Likewise, to specify the number of agents, go to file [Rollout.cpp](src/Rollout.cpp) or [Coop.cpp](src/Coop.cpp).
