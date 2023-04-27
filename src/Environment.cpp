@@ -277,7 +277,7 @@ double Environment::step(std::vector<int> &controls, std::vector<std::pair<int, 
 
 
     int swapPenalized[m_agentPositions.size()];
-    for(int i = 0; i < tot_dim; ++i)
+    for(int i = 0; i < m_agentPositions.size(); ++i)
         swapPenalized[i] = 0;
     // Check for and penalize swaps 
     for(size_t i = 0; i < m_agentPositions.size(); ++i){
