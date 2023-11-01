@@ -307,10 +307,12 @@ double Environment::step(std::vector<int> &controls, std::vector<std::pair<int, 
     for(size_t agent_index = 0; agent_index < m_agentPositions.size(); ++agent_index){
         
         if(controls[agent_index] != 0)
+	{
             cost += c_step;
 
         // Update matrix
         envMat(newPositions[agent_index].first, newPositions[agent_index].second) = oldEl[agent_index];
+	}
 
         // If an agent reaches its target
         if(newPositions[agent_index] == targets[agent_index] && m_agentPositions[agent_index] != newPositions[agent_index]){
