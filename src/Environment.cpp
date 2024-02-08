@@ -314,7 +314,7 @@ double Environment::step(std::vector<int> &controls, std::vector<std::pair<int, 
 
         // If an agent reaches its target
         if(newPositions[agent_index] == targets[agent_index] && m_agentPositions[agent_index] != newPositions[agent_index]){
-            if(targets[agent_index].first != 1 || targets[agent_index].first != m_height - 2){
+            if(targets[agent_index].first != 1 && targets[agent_index].first != m_height - 2){
                 if(envMat(newPositions[agent_index].first, newPositions[agent_index].second) > 0){ // If the agent has a box
                     cost += c_dropOff * discountFactors.arr[m_stepCount];
                     m_boxesLeft--;
