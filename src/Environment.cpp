@@ -39,24 +39,6 @@ Environment::Environment(int wallOffset, int boxOffset, int n, int agentCount) :
         envMat(i, m_width - 1) = wall;
     }
 
-    /*
-    // Populate matrix with agents
-    int offset = 0;
-    for(int i = 0; i < agentCount/2; i+=2){ 
-        int n_i = (i < agentCount/2) ? (1) : (m_height - 3);
-        int n_j = (i < agentCount/2) ? (4 + i) : (4 + i - agentCount/4);
-        if(i == agentCount / 4)
-            offset = 0;
-        envMat(n_i, n_j + offset) = -firstAgent - i;
-        m_agentPositions.push_back(std::pair<int, int>(n_i, n_j));
-
-        envMat(n_i + 1, n_j + offset) = -firstAgent - i - 1;
-        m_agentPositions.push_back(std::pair<int, int>(n_i + 1, n_j ));
-
-        offset++;
-    }
-    */
-
     int placedAgents = 0;
     int i = 2;
     while(placedAgents < agentCount){
