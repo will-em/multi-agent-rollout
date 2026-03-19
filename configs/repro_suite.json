@@ -1,0 +1,16 @@
+{
+  "experiments": [
+    {
+      "name": "ppo_smoke",
+      "config": "configs/ppo_smoke.json"
+    },
+    {
+      "name": "dqn_smoke",
+      "config": "configs/dqn_smoke.json"
+    },
+    {
+      "name": "compare_both_small",
+      "config": "configs/compare_both_small.json"
+    }
+  ]
+}
